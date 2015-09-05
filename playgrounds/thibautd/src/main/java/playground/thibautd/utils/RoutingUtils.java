@@ -25,6 +25,7 @@ import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.router.StageActivityTypes;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
+import org.matsim.core.scoring.ScoreInfo;
 import org.matsim.population.algorithms.PlanAlgorithm;
 
 import java.util.ArrayList;
@@ -142,12 +143,17 @@ public class RoutingUtils {
 		}
 
 		@Override
-		public void setScore(Double score) {
+		public void setScoreInfo(ScoreInfo score) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		public Double getScore() {
+			throw new UnsupportedOperationException();
+		}
+		
+		@Override
+		public ScoreInfo getScoreInfo() {
 			throw new UnsupportedOperationException();
 		}
 	}

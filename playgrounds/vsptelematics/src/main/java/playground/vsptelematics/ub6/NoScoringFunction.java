@@ -23,6 +23,7 @@ import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.core.scoring.ScoreInfo;
 import org.matsim.core.scoring.ScoringFunction;
 
 
@@ -87,9 +88,9 @@ public class NoScoringFunction implements ScoringFunction {
 	 * @see org.matsim.core.scoring.ScoringFunction#getScore()
 	 */
 	@Override
-	public double getScore() {
-		double oldScore = this.plan.getScore();
-		this.plan.setScore(null); //prevents msa in events2score
+	public ScoreInfo getScoreInfo() {
+		ScoreInfo oldScore = this.plan.getScoreInfo();
+		this.plan.setScoreInfo(null); //prevents msa in events2score
 		return oldScore;
 	}
 

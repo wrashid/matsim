@@ -28,6 +28,8 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.facilities.ActivityFacilities;
@@ -124,8 +126,8 @@ public class ParkAndRideScoringFunction implements ScoringFunction {
 	}
 
 	@Override
-	public double getScore() {
-		return delegate.getScore() + penalty.getPenalty();
+	public ScoreInfo getScoreInfo() {
+		return new ScoreInfoImpl(delegate.getScoreInfo().getScore() + penalty.getPenalty());
 	}
 
 	private Coord extractCoord(final Activity activity) {

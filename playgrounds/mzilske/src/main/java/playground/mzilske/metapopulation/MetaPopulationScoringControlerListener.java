@@ -25,6 +25,7 @@ package playground.mzilske.metapopulation;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.controler.events.ScoringEvent;
 import org.matsim.core.controler.listener.ScoringListener;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 import javax.inject.Inject;
 
@@ -41,7 +42,7 @@ class MetaPopulationScoringControlerListener implements ScoringListener {
                 score += person.getSelectedPlan().getScore();
             }
             MetaPopulationPlan plan = metaPopulation.getSelectedPlan();
-            plan.setScore(score / metaPopulation.getPersons().size());
+            plan.setScoreInfo(new ScoreInfoImpl(score / metaPopulation.getPersons().size()));
         }
     }
 

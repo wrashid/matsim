@@ -84,7 +84,7 @@ public class BasicFitness implements FitnessFunction<Plan> {
 
 		scoringFunction.finish();
 
-		score = scoringFunction.getScore();
+		score = scoringFunction.getScoreInfo().getScore();
 
 		if (Double.isNaN( score )) {
 			throw new RuntimeException( "got a NaN score for plan "+plan );

@@ -29,6 +29,7 @@ import org.matsim.core.controler.events.IterationEndsEvent;
 import org.matsim.core.controler.listener.IterationEndsListener;
 import org.matsim.core.population.LegImpl;
 import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 public class Scorer implements  IterationEndsListener {
 
@@ -66,7 +67,7 @@ public class Scorer implements  IterationEndsListener {
 				if (oldScore == null)
 					oldScore = 0.0;
 
-				plan.setScore(alpha * -tt / 3600.0 + (1 - alpha) * oldScore);		
+				plan.setScoreInfo(new ScoreInfoImpl(alpha * -tt / 3600.0 + (1 - alpha) * oldScore));		
 			}
 		}
 		

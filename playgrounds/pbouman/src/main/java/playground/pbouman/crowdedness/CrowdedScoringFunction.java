@@ -23,6 +23,8 @@ import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.core.api.experimental.events.EventsManager;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunction;
 
 import playground.pbouman.crowdedness.events.CrowdedPenaltyEvent;
@@ -141,8 +143,8 @@ public class CrowdedScoringFunction implements ScoringFunction {
 	}
 
 	@Override
-	public double getScore() {
-		return this.score + delegate.getScore();
+	public ScoreInfo getScoreInfo() {
+		return new ScoreInfoImpl(this.score + delegate.getScoreInfo().getScore());
 	}
 
 	@Override

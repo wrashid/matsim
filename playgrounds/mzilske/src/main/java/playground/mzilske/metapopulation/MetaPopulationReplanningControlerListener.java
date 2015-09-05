@@ -38,6 +38,7 @@ import org.matsim.core.replanning.GenericPlanStrategyImpl;
 import org.matsim.core.replanning.GenericStrategyManager;
 import org.matsim.core.replanning.ReplanningContext;
 import org.matsim.core.replanning.selectors.ExpBetaPlanSelector;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 class MetaPopulationReplanningControlerListener implements ReplanningListener {
 
@@ -63,10 +64,10 @@ class MetaPopulationReplanningControlerListener implements ReplanningListener {
                 MetaPopulationPlan selectedPlan = metaPopulation.getSelectedPlan();
                 Person person = new PersonImpl(Id.create("wurst", Person.class));
                 PlanImpl p0 = new PlanImpl();
-                p0.setScore(0.0);
+                p0.setScoreInfo(new ScoreInfoImpl(0.0));
                 person.addPlan(p0);
                 PlanImpl p1 = new PlanImpl();
-                p1.setScore(selectedPlan.getScore());
+                p1.setScoreInfo(new ScoreInfoImpl(selectedPlan.getScore()));
                 person.addPlan(p1);
 
                 double newScaleFactor = selectedPlan.getScaleFactor() * (ExpBetaPlanSelector.getSelectionProbability(new ExpBetaPlanSelector<Plan, Person>(1.0), person, p1) / 0.5);

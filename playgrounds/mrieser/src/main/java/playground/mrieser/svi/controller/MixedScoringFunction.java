@@ -22,6 +22,7 @@ package playground.mrieser.svi.controller;
 import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
+import org.matsim.core.scoring.ScoreInfo;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionAccumulator;
 import org.matsim.core.scoring.functions.CharyparNagelActivityScoring;
@@ -69,7 +70,7 @@ public class MixedScoringFunction implements ScoringFunction {
 	}
 
 	@Override
-	public double getScore() {
+	public ScoreInfo getScoreInfo() {
 		// TODO adapt score based on DynusT
 		throw new RuntimeException("not yet implemented");
 //		return this.delegate.getScore();

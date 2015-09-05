@@ -35,6 +35,7 @@ import org.matsim.contrib.freight.jsprit.MatsimJspritFactory;
 import org.matsim.contrib.freight.router.TimeAndSpaceTourRouter;
 import org.matsim.core.replanning.ReplanningContext;
 import org.matsim.core.replanning.modules.GenericPlanStrategyModule;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 /**
  * This is an attempt to construct a second strategy which solves the pick-and-delivery problem using jsprig
@@ -90,7 +91,7 @@ public class SolvePickupAndDeliveryProblem implements GenericPlanStrategyModule<
 		for ( ScheduledTour tour : newPlan.getScheduledTours() ) {
 			carrierPlan.getScheduledTours().add(tour) ;
 		}
-		carrierPlan.setScore(newPlan.getScore());
+		carrierPlan.setScoreInfo(new ScoreInfoImpl(newPlan.getScore()));
 		
 	}
 

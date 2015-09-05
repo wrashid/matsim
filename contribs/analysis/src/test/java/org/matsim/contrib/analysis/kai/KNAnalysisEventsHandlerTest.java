@@ -45,6 +45,7 @@ import org.matsim.core.population.LegImpl;
 import org.matsim.core.population.PersonImpl;
 import org.matsim.core.population.PlanImpl;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.geometry.CoordImpl;
 import org.matsim.core.utils.misc.CRCChecksum;
 import org.matsim.core.utils.misc.Time;
@@ -84,7 +85,7 @@ public class KNAnalysisEventsHandlerTest {
 		plan.createAndAddActivity("act4", new CoordImpl(200.0, 200.0));
 		plan.createAndAddLeg("undefined");
 		plan.createAndAddActivity("act5", new CoordImpl(200.0, 200.0));
-		plan.setScore(12.);
+		plan.setScoreInfo(new ScoreInfoImpl(12.));
 
 		this.network = scenario.getNetwork();
 		Node fromNode = this.network.getFactory().createNode(Id.create("123456", Node.class), new CoordImpl(100.0, 100.0));

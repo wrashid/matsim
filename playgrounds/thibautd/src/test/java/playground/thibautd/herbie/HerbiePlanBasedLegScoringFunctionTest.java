@@ -398,8 +398,8 @@ public class HerbiePlanBasedLegScoringFunctionTest {
 
 			Assert.assertEquals(
 					"wrong score for "+plan.getPlanElements().subList(0,until),
-					base.getScore(),
-					planBased.getScore(),
+					base.getScoreInfo().getScore(),
+					planBased.getScoreInfo().getScore(),
 					MatsimTestUtils.EPSILON);
 		}
 	}

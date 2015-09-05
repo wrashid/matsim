@@ -8,6 +8,7 @@ import org.matsim.core.population.routes.GenericRoute;
 import org.matsim.core.router.TripRouter;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.TripStructureUtils.Trip;
+import org.matsim.core.scoring.ScoreInfo;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.population.algorithms.PlanAlgorithm;
@@ -24,7 +25,7 @@ public class BasePlanImpl implements BasePlan {
 	private final static String EMPTY = "empty"; 
 	//Attributes
 	private final List<PlanElement> planElements = new ArrayList<PlanElement>();
-	private Double score;
+	private ScoreInfo scoreInfo;
 	private Person person;
 
 	//Static methods
@@ -183,12 +184,16 @@ public class BasePlanImpl implements BasePlan {
 		return this.getPerson().getSelectedPlan() == this;
 	}
 	@Override
-	public void setScore(Double score) {
-		this.score = score;
+	public void setScoreInfo(ScoreInfo scoreInfo) {
+		this.scoreInfo = scoreInfo;
+	}
+	@Override
+	public ScoreInfo getScoreInfo() {
+		return scoreInfo;
 	}
 	@Override
 	public Double getScore() {
-		return score;
+		return scoreInfo.getScore();
 	}
 	@Override
 	public Person getPerson() {

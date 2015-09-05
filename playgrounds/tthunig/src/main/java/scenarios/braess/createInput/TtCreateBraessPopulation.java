@@ -18,6 +18,7 @@ import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.Route;
 import org.matsim.core.population.PopulationWriter;
 import org.matsim.core.population.routes.LinkNetworkRouteImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 import playground.dgrether.DgPaths;
 
@@ -176,7 +177,7 @@ public class TtCreateBraessPopulation {
 		plan.addActivity(startAct);
 		plan.addLeg(leg);
 		plan.addActivity(drainAct);
-		plan.setScore(initPlanScore);
+		plan.setScoreInfo(new ScoreInfoImpl(initPlanScore));
 		
 		return plan;
 	}

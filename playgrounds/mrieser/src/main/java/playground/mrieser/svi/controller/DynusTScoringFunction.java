@@ -25,6 +25,8 @@ import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionAccumulator.ActivityScoring;
 import org.matsim.core.scoring.ScoringFunctionAccumulator.LegScoring;
@@ -76,7 +78,7 @@ public class DynusTScoringFunction implements ScoringFunction {
 	}
 
 	@Override
-	public double getScore() {
+	public ScoreInfo getScoreInfo() {
 		if (Double.isNaN(this.score)) {
 			
 			Leg prevLeg = null;
@@ -159,7 +161,7 @@ public class DynusTScoringFunction implements ScoringFunction {
 			this.legScorer.finish();
 			this.score = this.actScorer.getScore() + this.legScorer.getScore();
 		}
-		return this.score;
+		return new ScoreInfoImpl(this.score);
 	}
 
 	public void reset() {

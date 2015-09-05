@@ -19,6 +19,7 @@ import org.matsim.core.replanning.PlanStrategyImpl;
 import org.matsim.core.replanning.ReplanningContext;
 import org.matsim.core.replanning.selectors.RandomPlanSelector;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfo;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.functions.CharyparNagelScoringFunctionFactory;
@@ -89,8 +90,8 @@ public class OwnScoringFunctionAndReplanning {
 		}
 
 		@Override
-		public double getScore() {
-			return delegate.getScore();
+		public ScoreInfo getScoreInfo() {
+			return delegate.getScoreInfo();
 		}
 
 		@Override

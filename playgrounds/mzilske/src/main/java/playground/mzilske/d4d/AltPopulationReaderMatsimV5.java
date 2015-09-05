@@ -49,6 +49,7 @@ import org.matsim.core.population.PlanImpl;
 import org.matsim.core.population.PopulationReader;
 import org.matsim.core.population.routes.GenericRouteImpl;
 import org.matsim.core.population.routes.LinkNetworkRouteImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.geometry.CoordImpl;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.facilities.ActivityFacility;
@@ -181,7 +182,7 @@ class AltPopulationReaderMatsimV5 implements PopulationReader {
 		Plan plan = new PlanImpl();
 		String score = xmlr.getAttributeValue("", "score");
 		if (score!=null) {
-			plan.setScore(Double.parseDouble(score));
+			plan.setScoreInfo(new ScoreInfoImpl(Double.parseDouble(score)));
 		}
 
 		String type = xmlr.getAttributeValue("", "type");

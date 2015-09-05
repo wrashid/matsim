@@ -34,6 +34,7 @@ import org.matsim.core.controler.listener.StartupListener;
 import org.matsim.core.population.PlanImpl;
 import org.matsim.core.replanning.selectors.ExpBetaPlanSelector;
 import org.matsim.core.replanning.selectors.RandomPlanSelector;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.SumScoringFunction;
 
 import javax.inject.Inject;
@@ -85,7 +86,7 @@ class ClonesControlerListener implements Provider<ControlerListener> {
                         person.setSelectedPlan(plan);
                         SumScoringFunction.BasicScoring scoring = cloneService.createNewScoringFunction(person);
                         scoring.finish();
-                        plan.setScore(scoring.getScore());
+                        plan.setScoreInfo(new ScoreInfoImpl(scoring.getScore()));
                     }
                     person.setSelectedPlan(planSelector.selectPlan(person));
                 }

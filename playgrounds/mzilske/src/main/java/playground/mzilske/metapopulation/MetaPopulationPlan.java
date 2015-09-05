@@ -23,26 +23,32 @@
 package playground.mzilske.metapopulation;
 
 import org.matsim.api.core.v01.population.BasicPlan;
+import org.matsim.core.scoring.ScoreInfo;
 
 class MetaPopulationPlan implements BasicPlan {
 
     private double scaleFactor;
-    private Double score;
+    private ScoreInfo scoreInfo;
 
     public MetaPopulationPlan(double scaleFactor) {
         this.scaleFactor = scaleFactor;
     }
 
     @Override
-    public void setScore(Double score) {
-        this.score = score;
+    public void setScoreInfo(ScoreInfo scoreInfo) {
+        this.scoreInfo = scoreInfo;
+    }
+
+    @Override
+    public ScoreInfo getScoreInfo() {
+        return this.scoreInfo;
     }
 
     @Override
     public Double getScore() {
-        return this.score;
+        return this.scoreInfo.getScore();
     }
-
+    
     public double getScaleFactor() {
         return scaleFactor;
     }

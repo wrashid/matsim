@@ -41,6 +41,7 @@ import org.matsim.core.population.PopulationImpl;
 import org.matsim.core.population.PopulationReader;
 import org.matsim.core.population.routes.GenericRoute;
 import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.io.MatsimXmlParser;
 import org.matsim.core.utils.io.UncheckedIOException;
 import org.matsim.facilities.ActivityFacility;
@@ -202,7 +203,7 @@ public class PopulationReaderWeeklyMatsim extends MatsimXmlParser implements Pop
 		String scoreString = atts.getValue(ATTR_PLAN_SCORE);
 		if (scoreString != null) {
 			double score = Double.parseDouble(scoreString);
-			this.currplan.setScore(score);
+			this.currplan.setScoreInfo(new ScoreInfoImpl(score));
 		}
 
 		atts.getValue(ATTR_PLAN_TYPE);

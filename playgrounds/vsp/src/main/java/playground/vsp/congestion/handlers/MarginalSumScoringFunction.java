@@ -54,8 +54,8 @@ public class MarginalSumScoringFunction {
         	throw new RuntimeException("Missing start or end time! The provided activity is probably the first or last activity. Aborting...");
         }
 
-		double scoreA0 = sumScoringA.getScoreInfo();
-		double scoreB0 = sumScoringB.getScoreInfo();
+		double scoreA0 = sumScoringA.getScoreInfo().getScore();
+		double scoreB0 = sumScoringB.getScoreInfo().getScore();
 
 		Activity activityWithoutDelay = new ActivityImpl(activity);
 		activityWithoutDelay.setStartTime(activity.getStartTime() - delay);
@@ -69,8 +69,8 @@ public class MarginalSumScoringFunction {
 		sumScoringA.finish();
 		sumScoringB.finish();
 		
-		double scoreA1 = sumScoringA.getScoreInfo();
-		double scoreB1 = sumScoringB.getScoreInfo();
+		double scoreA1 = sumScoringA.getScoreInfo().getScore();
+		double scoreB1 = sumScoringB.getScoreInfo().getScore();
 		
 		double scoreWithDelay = scoreA1 - scoreA0;
 		double scoreWithoutDelay = scoreB1 - scoreB0;
@@ -99,8 +99,8 @@ public class MarginalSumScoringFunction {
         	throw new RuntimeException("activityEvening is not the last activity. Or why does it have an end time? Aborting...");
         }
 		        
-		double scoreA0 = delegateA.getScoreInfo();
-		double scoreB0 = delegateB.getScoreInfo();
+		double scoreA0 = delegateA.getScoreInfo().getScore();
+		double scoreB0 = delegateB.getScoreInfo().getScore();
 				
 		delegateA.handleActivity(activityMorning);
 		delegateB.handleActivity(activityMorning);
@@ -118,8 +118,8 @@ public class MarginalSumScoringFunction {
 		delegateA.finish();
 		delegateB.finish();
 		
-		double scoreA1 = delegateA.getScoreInfo();
-		double scoreB1 = delegateB.getScoreInfo();
+		double scoreA1 = delegateA.getScoreInfo().getScore();
+		double scoreB1 = delegateB.getScoreInfo().getScore();
 		
 		double scoreWithDelay = scoreA1 - scoreA0;
 		double scoreWithoutDelay = scoreB1 - scoreB0;

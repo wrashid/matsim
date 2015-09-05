@@ -6,6 +6,8 @@ import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 
@@ -122,9 +124,9 @@ public class AgentPropertiesScoringFunctionFactory implements ScoringFunctionFac
 			}
 
 			@Override
-			public double getScore()
+			public ScoreInfo getScoreInfo()
 			{
-				return score;
+				return new ScoreInfoImpl(score);
 			}
 
 			@Override

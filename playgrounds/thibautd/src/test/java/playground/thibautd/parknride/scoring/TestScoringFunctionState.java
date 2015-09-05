@@ -37,6 +37,8 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.ActivityImpl;
 import org.matsim.core.population.LegImpl;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.utils.geometry.CoordImpl;
 
@@ -58,7 +60,7 @@ public class TestScoringFunctionState {
 		@Override
 		public void finish() {}
 		@Override
-		public double getScore() { return 0; }
+		public ScoreInfo getScoreInfo() { return new ScoreInfoImpl(0.0); }
 		@Override
 		public void handleEvent(Event event) {
 			// TODO Auto-generated method stub
