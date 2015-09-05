@@ -12,6 +12,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.routes.LinkNetworkRouteImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.io.MatsimXmlParser;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.vehicles.Vehicle;
@@ -257,7 +258,7 @@ public class CarrierPlanReader extends MatsimXmlParser {
 		}
 		if (name.equals("plan")) {
 			currentPlan = new CarrierPlan(currentCarrier, scheduledTours);
-			currentPlan.setScore(currentScore);
+			currentPlan.setScoreInfo(new ScoreInfoImpl(currentScore));
 			currentCarrier.getPlans().add(currentPlan);
 			if(this.selected){
 				currentCarrier.setSelectedPlan(currentPlan);

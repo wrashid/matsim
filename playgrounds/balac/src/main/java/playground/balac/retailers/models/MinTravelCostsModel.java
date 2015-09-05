@@ -122,7 +122,7 @@ public class MinTravelCostsModel extends RetailerModelImpl
 	    }
 
 	    function.finish();
-	    return function.getScore();
+	    return function.getScoreInfo().getScore();
   }
 
   private double handleCarLeg(Leg leg, Link fromLink, Link toLink, Network network, LeastCostPathCalculator routeAlgo)

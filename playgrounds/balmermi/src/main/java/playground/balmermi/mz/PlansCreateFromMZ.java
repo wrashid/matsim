@@ -42,6 +42,7 @@ import org.matsim.core.population.PersonImpl;
 import org.matsim.core.population.PlanImpl;
 import org.matsim.core.population.routes.LinkNetworkRouteImpl;
 import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.geometry.CoordImpl;
 
 public class PlansCreateFromMZ {
@@ -211,7 +212,7 @@ public class PlansCreateFromMZ {
 				if (plan == null) {
 					person.createAndAddPlan(true);
 					plan = person.getSelectedPlan();
-					plan.setScore(weight); // used plans score as a storage for the person weight of the MZ2005
+					plan.setScoreInfo(new ScoreInfoImpl(weight)); // used plans score as a storage for the person weight of the MZ2005
 				}
 
 				// adding acts/legs
@@ -368,7 +369,7 @@ public class PlansCreateFromMZ {
 			boolean has_changed = false;
 			Plan plan = p.getSelectedPlan();
 			PlanImpl plan2 = new org.matsim.core.population.PlanImpl(p);
-			plan2.setScore(plan.getScore());
+			plan2.setScoreInfo(plan.getScoreInfo());
 			plan2.addActivity((ActivityImpl)plan.getPlanElements().get(0));
 
 			for (int i=2; i<plan.getPlanElements().size(); i=i+2) {

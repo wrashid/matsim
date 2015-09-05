@@ -40,6 +40,7 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.misc.Counter;
 
 import org.matsim.contrib.socnetsim.framework.population.JointPlans;
@@ -153,7 +154,7 @@ public class WhoIsTheBossSelectorTest {
 				final Plan plan = factory.createPlan();
 				plan.setPerson( person );
 				person.addPlan( plan );
-				plan.setScore( random.nextDouble() * 1000 );
+				plan.setScoreInfo(new ScoreInfoImpl( random.nextDouble() * 1000 ));
 			}
 			plansPerPerson.put( id , new LinkedList<Plan>( person.getPlans() ) );
 		}

@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 import playground.johannes.coopsim.pysical.Trajectory;
 
@@ -45,7 +46,7 @@ public class EvalEngine {
 		for(Trajectory t : trajectories) {
 			double score = evaluator.evaluate(t);
 			
-			t.getPerson().getSelectedPlan().setScore(score);
+			t.getPerson().getSelectedPlan().setScoreInfo(new ScoreInfoImpl(score));
 			persons.add(t.getPerson().getId());
 		}
 	}

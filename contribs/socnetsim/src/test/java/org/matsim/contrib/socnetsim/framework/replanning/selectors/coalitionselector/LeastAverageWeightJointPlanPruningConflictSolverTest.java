@@ -28,7 +28,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.population.PersonImpl;
-
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.contrib.socnetsim.framework.population.JointPlans;
 import org.matsim.contrib.socnetsim.framework.replanning.grouping.ReplanningGroup;
 import org.matsim.contrib.socnetsim.framework.replanning.selectors.coalitionselector.CoalitionSelector.ConflictSolver;
@@ -55,13 +55,13 @@ public class LeastAverageWeightJointPlanPruningConflictSolverTest {
 			group.addPerson( person );
 			{
 				final Plan plan = jointPlans.getFactory().createIndividualPlan( person );
-				plan.setScore( 1d );
+				plan.setScoreInfo(new ScoreInfoImpl( 1d ));
 				person.addPlan( plan );
 				bigJp.put( id , plan );
 			}
 			{
 				final Plan plan = jointPlans.getFactory().createIndividualPlan( person );
-				plan.setScore( 1.2d );
+				plan.setScoreInfo(new ScoreInfoImpl( 1.2d ));
 				person.addPlan( plan );
 				smallJp.put( id , plan );
 			}
@@ -73,13 +73,13 @@ public class LeastAverageWeightJointPlanPruningConflictSolverTest {
 			group.addPerson( person );
 			{
 				final Plan plan = jointPlans.getFactory().createIndividualPlan( person );
-				plan.setScore( 1.1d );
+				plan.setScoreInfo(new ScoreInfoImpl( 1.1d ));
 				person.addPlan( plan );
 				bigJp.put( id , plan );
 			}
 			{
 				final Plan plan = jointPlans.getFactory().createIndividualPlan( person );
-				plan.setScore( 1.0d );
+				plan.setScoreInfo(new ScoreInfoImpl( 1.0d ));
 				person.addPlan( plan );
 				smallJp.put( id , plan );
 			}
@@ -91,14 +91,14 @@ public class LeastAverageWeightJointPlanPruningConflictSolverTest {
 			group.addPerson( person );
 			{
 				final Plan plan = jointPlans.getFactory().createIndividualPlan( person );
-				plan.setScore( 1d );
+				plan.setScoreInfo(new ScoreInfoImpl( 1d ));
 				person.addPlan( plan );
 				bigJp.put( id , plan );
 			}
 			{
 				final Plan plan = jointPlans.getFactory().createIndividualPlan( person );
 				// lowest score than all. Should not be removed though
-				plan.setScore( 0d );
+				plan.setScoreInfo(new ScoreInfoImpl( 0d ));
 				person.addPlan( plan );
 			}
 		}

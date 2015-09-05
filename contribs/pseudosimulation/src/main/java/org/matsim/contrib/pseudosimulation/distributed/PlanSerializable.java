@@ -13,6 +13,7 @@ import org.matsim.core.population.routes.GenericRoute;
 import org.matsim.core.population.routes.GenericRouteImpl;
 import org.matsim.core.population.routes.LinkNetworkRouteImpl;
 import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.geometry.CoordImpl;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.pt.routes.ExperimentalTransitRouteFactory;
@@ -63,7 +64,7 @@ class PlanSerializable implements Serializable {
         PlanGenome plan = new PlanGenome(population.getPersons().get(Id.createPersonId(personId)));
         plan.setGenome(genome);
         plan.setpSimScore(pSimScore);
-        plan.setScore(score);
+        plan.setScoreInfo(new ScoreInfoImpl(score));
         plan.setType(type);
         plan.setAltScoreComponents(scoreComponents);
         for (PlanElementSerializable planElementSerializable : planElements)
@@ -78,7 +79,7 @@ class PlanSerializable implements Serializable {
         PlanGenome plan = new PlanGenome(person);
         plan.setGenome(genome);
         plan.setpSimScore(pSimScore);
-        plan.setScore(score);
+        plan.setScoreInfo(new ScoreInfoImpl(score));
         plan.setType(type);
         plan.setAltScoreComponents(scoreComponents);
         for (PlanElementSerializable planElementSerializable : planElements)

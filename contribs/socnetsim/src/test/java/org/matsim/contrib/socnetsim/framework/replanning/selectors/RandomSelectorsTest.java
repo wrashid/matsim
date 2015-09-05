@@ -35,6 +35,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.population.PersonImpl;
 import org.matsim.core.population.PlanImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.misc.Counter;
 
 import org.matsim.contrib.socnetsim.framework.population.JointPlans;
@@ -67,34 +68,34 @@ public class RandomSelectorsTest {
 		PersonImpl person = new PersonImpl( Id.create( "tintin" , Person.class ) );
 		group.addPerson( person );
 		PlanImpl plan = person.createAndAddPlan( false );
-		plan.setScore( 1d );
+		plan.setScoreInfo(new ScoreInfoImpl( 1d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 5d );
+		plan.setScoreInfo(new ScoreInfoImpl( 5d ));
 
 		person = new PersonImpl( Id.create( "milou" , Person.class ) );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 10d );
+		plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( 5000d ));
 
 		person = new PersonImpl( Id.create( "tim" , Person.class ) );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 10d );
+		plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( 5000d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( -5000d ));
 
 		person = new PersonImpl( Id.create( "struppy" , Person.class ) );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -10d );
+		plan.setScoreInfo(new ScoreInfoImpl( -10d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( -5000d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( -5000d ));
 	}
 
 	@Before
@@ -110,52 +111,52 @@ public class RandomSelectorsTest {
 		PersonImpl person = new PersonImpl( id );
 		group.addPerson( person );
 		PlanImpl plan = person.createAndAddPlan( false );
-		plan.setScore( 1d );
+		plan.setScoreInfo(new ScoreInfoImpl( 1d ));
 		jp1.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 5d );
+		plan.setScoreInfo(new ScoreInfoImpl( 5d ));
 		jp2.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( 5000d ));
 		jp3.put( id , plan );
 
 		id = Id.createPersonId( "milou" );
 		person = new PersonImpl( id );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 10d );
+		plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 		jp1.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( 5000d ));
 		jp2.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( 5000d ));
 		jp3.put( id , plan );
 
 		id = Id.createPersonId( "tim" );
 		person = new PersonImpl( id );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 10d );
+		plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 		jp1.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( 5000d ));
 		jp2.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( -5000d ));
 		jp3.put( id , plan );
 
 		id = Id.createPersonId( "struppy" );
 		person = new PersonImpl( id );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -10d );
+		plan.setScoreInfo(new ScoreInfoImpl( -10d ));
 		jp1.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( -5000d ));
 		jp2.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -5000d );
+		plan.setScoreInfo(new ScoreInfoImpl( -5000d ));
 		jp3.put( id , plan );
 
 		jointPlans.addJointPlan(
@@ -184,75 +185,75 @@ public class RandomSelectorsTest {
 		PersonImpl person = new PersonImpl( id );
 		group.addPerson( person );
 		PlanImpl plan = person.createAndAddPlan( false );
-		plan.setScore( 10d );
+		plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 		jp1.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 20d );
+		plan.setScoreInfo(new ScoreInfoImpl( 20d ));
 		jp3.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 30d );
+		plan.setScoreInfo(new ScoreInfoImpl( 30d ));
 		jp5.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 40d );
+		plan.setScoreInfo(new ScoreInfoImpl( 40d ));
 		jp7.put( id , plan );
 
 		id = Id.createPersonId( "milou" );
 		person = new PersonImpl( id );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -200d );
+		plan.setScoreInfo(new ScoreInfoImpl( -200d ));
 		jp1.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( -100d );
+		plan.setScoreInfo(new ScoreInfoImpl( -100d ));
 		jp4.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 500d );
+		plan.setScoreInfo(new ScoreInfoImpl( 500d ));
 		jp5.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 200d );
+		plan.setScoreInfo(new ScoreInfoImpl( 200d ));
 		jp8.put( id , plan );
 
 		id = Id.createPersonId( "tim" );
 		person = new PersonImpl( id );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 10d );
+		plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 100d );
+		plan.setScoreInfo(new ScoreInfoImpl( 100d ));
 		jp4.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 11d );
+		plan.setScoreInfo(new ScoreInfoImpl( 11d ));
 		jp6.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 101d );
+		plan.setScoreInfo(new ScoreInfoImpl( 101d ));
 		jp7.put( id , plan );
 
 		id = Id.createPersonId( "struppy" );
 		person = new PersonImpl( id );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 333d );
+		plan.setScoreInfo(new ScoreInfoImpl( 333d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 666d );
+		plan.setScoreInfo(new ScoreInfoImpl( 666d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 777d );
+		plan.setScoreInfo(new ScoreInfoImpl( 777d ));
 		jp6.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 444d );
+		plan.setScoreInfo(new ScoreInfoImpl( 444d ));
 		jp8.put( id , plan );
 
 		id = Id.createPersonId( "haddock" );
 		person = new PersonImpl( id );
 		group.addPerson( person );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 500d );
+		plan.setScoreInfo(new ScoreInfoImpl( 500d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 5d );
+		plan.setScoreInfo(new ScoreInfoImpl( 5d ));
 		jp3.put( id , plan );
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 100d );
+		plan.setScoreInfo(new ScoreInfoImpl( 100d ));
 		plan = person.createAndAddPlan( false );
-		plan.setScore( 10d );
+		plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 		jp5.put( id , plan );
 
 		jointPlans.addJointPlan(

@@ -32,6 +32,7 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.network.NetworkImpl;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.ActivityImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.pt.transitSchedule.api.TransitRouteStop;
@@ -108,7 +109,7 @@ public class PopulationFromESRIShapeFielGeneratorPT extends
 		((ActivityImpl)act3).setCoord(lll.getCoord());
 		act3.setEndTime(0);
 		plan.addActivity(act3);
-		plan.setScore(0.);
+		plan.setScoreInfo(new ScoreInfoImpl(0.));
 		pers.addPlan(plan);
 		
 	}
@@ -143,7 +144,7 @@ public class PopulationFromESRIShapeFielGeneratorPT extends
 		((ActivityImpl)act3).setCoord(lll.getCoord());
 		act3.setEndTime(0);
 		plan.addActivity(act3);
-		plan.setScore(0.);
+		plan.setScoreInfo(new ScoreInfoImpl(0.));
 		pers.addPlan(plan);
 		
 	}

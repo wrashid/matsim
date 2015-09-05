@@ -36,7 +36,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.population.PersonImpl;
 import org.matsim.core.population.PlanImpl;
-
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.contrib.socnetsim.framework.population.JointPlan;
 import org.matsim.contrib.socnetsim.framework.population.JointPlans;
 import org.matsim.contrib.socnetsim.framework.replanning.grouping.GroupPlans;
@@ -92,38 +92,38 @@ public class CoalitionSelectorTest {
 						PersonImpl person = new PersonImpl( Id.create( "tintin" , Person.class ) );
 						group.addPerson( person );
 						PlanImpl plan = person.createAndAddPlan( false );
-						plan.setScore( 1d );
+						plan.setScoreInfo(new ScoreInfoImpl( 1d ));
 						plan = person.createAndAddPlan( false );
-						plan.setScore( 5d );
+						plan.setScoreInfo(new ScoreInfoImpl( 5d ));
 						toBeSelected.add( plan );
 
 						person = new PersonImpl( Id.create( "milou" , Person.class ) );
 						group.addPerson( person );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( 10d );
+						plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 						plan = person.createAndAddPlan( false );
-						plan.setScore( 5000d );
+						plan.setScoreInfo(new ScoreInfoImpl( 5000d ));
 						toBeSelected.add( plan );
 
 						person = new PersonImpl( Id.create( "tim" , Person.class ) );
 						group.addPerson( person );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( 10d );
+						plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 						plan = person.createAndAddPlan( false );
-						plan.setScore( 5000d );
+						plan.setScoreInfo(new ScoreInfoImpl( 5000d ));
 						toBeSelected.add( plan );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( -5000d );
+						plan.setScoreInfo(new ScoreInfoImpl( -5000d ));
 
 						person = new PersonImpl( Id.create( "struppy" , Person.class ) );
 						group.addPerson( person );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( -10d );
+						plan.setScoreInfo(new ScoreInfoImpl( -10d ));
 						toBeSelected.add( plan );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( -5000d );
+						plan.setScoreInfo(new ScoreInfoImpl( -5000d ));
 						plan = person.createAndAddPlan( false );
-						plan.setScore( -5000d );
+						plan.setScoreInfo(new ScoreInfoImpl( -5000d ));
 
 						final GroupPlans exp = new GroupPlans( Collections.<JointPlan>emptyList() , toBeSelected );
 						return new Fixture(
@@ -146,36 +146,36 @@ public class CoalitionSelectorTest {
 						PersonImpl person = new PersonImpl( Id.createPersonId( "tintin" ) );
 						group.addPerson( person );
 						PlanImpl plan = person.createAndAddPlan( false );
-						plan.setScore( 1d );
+						plan.setScoreInfo(new ScoreInfoImpl( 1d ));
 						jp1.put( person.getId() , plan );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( -1d );
+						plan.setScoreInfo(new ScoreInfoImpl( -1d ));
 
 						person = new PersonImpl( Id.createPersonId( "milou" ) );
 						group.addPerson( person );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( -10d );
+						plan.setScoreInfo(new ScoreInfoImpl( -10d ));
 						jp1.put( person.getId() , plan );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( 5000000000d );
+						plan.setScoreInfo(new ScoreInfoImpl( 5000000000d ));
 						jp2.put( person.getId() , plan );
 
 						person = new PersonImpl( Id.createPersonId( "tim" ) );
 						group.addPerson( person );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( 10d );
+						plan.setScoreInfo(new ScoreInfoImpl( 10d ));
 						jp3.put( person.getId() , plan );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( 5d );
+						plan.setScoreInfo(new ScoreInfoImpl( 5d ));
 						jp2.put( person.getId() , plan );
 
 						person = new PersonImpl( Id.createPersonId( "struppy" ) );
 						group.addPerson( person );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( -10d );
+						plan.setScoreInfo(new ScoreInfoImpl( -10d ));
 						jp3.put( person.getId() , plan );
 						plan = person.createAndAddPlan( false );
-						plan.setScore( -500d );
+						plan.setScoreInfo(new ScoreInfoImpl( -500d ));
 
 						jointPlans.addJointPlan(
 								jointPlans.getFactory().createJointPlan(

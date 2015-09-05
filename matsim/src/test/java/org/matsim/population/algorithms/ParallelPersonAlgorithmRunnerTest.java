@@ -32,6 +32,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.PersonImpl;
 import org.matsim.core.scenario.ScenarioImpl;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 /**
  * Tests the class {@link ParallelPersonAlgorithmRunner}.
@@ -99,7 +100,7 @@ public class ParallelPersonAlgorithmRunnerTest {
 			ParallelPersonAlgorithmRunner.run(population, 2, new AbstractPersonAlgorithm() {
 				@Override
 				public void run(Person person) {
-					person.getPlans().get(0).setScore(null); // this will result in an IndexOutOfBoundsException
+					person.getPlans().get(0).setScoreInfo(new ScoreInfoImpl(null)); // this will result in an IndexOutOfBoundsException
 				}
 			});
 			Assert.fail("Expected Exception, got none.");

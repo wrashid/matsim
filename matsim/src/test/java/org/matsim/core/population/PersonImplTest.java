@@ -29,6 +29,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.replanning.selectors.BestPlanSelector;
 import org.matsim.core.replanning.selectors.RandomUnscoredPlanSelector;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.testcases.MatsimTestCase;
 
 /**
@@ -49,35 +50,35 @@ public class PersonImplTest extends MatsimTestCase {
 		person = new PersonImpl(Id.create(1, Person.class));
 		plans[0] = person.createAndAddPlan(false);
 		plans[1] = person.createAndAddPlan(false);
-		plans[1].setScore(0.0);
+		plans[1].setScoreInfo(new ScoreInfoImpl(0.0));
 		plans[2] = person.createAndAddPlan(false);
 		plans[3] = person.createAndAddPlan(false);
-		plans[3].setScore(-50.0);
+		plans[3].setScoreInfo(new ScoreInfoImpl(-50.0));
 		plans[4] = person.createAndAddPlan(false);
-		plans[4].setScore(50.0);
+		plans[4].setScoreInfo(new ScoreInfoImpl(50.0));
 		plans[5] = person.createAndAddPlan(false);
-		plans[5].setScore(50.0);
+		plans[5].setScoreInfo(new ScoreInfoImpl(50.0));
 		plans[6] = person.createAndAddPlan(false);
-		plans[6].setScore(60.0);
+		plans[6].setScoreInfo(new ScoreInfoImpl(60.0));
 		plans[7] = person.createAndAddPlan(false);
 		plans[8] = person.createAndAddPlan(false);
-		plans[8].setScore(-10.0);
+		plans[8].setScoreInfo(new ScoreInfoImpl(-10.0));
 		plans[9] = person.createAndAddPlan(false);
 		population.addPerson(person);
 
 		// now test if we all for plans without score are returned
 		Plan plan = new RandomUnscoredPlanSelector<Plan, Person>().selectPlan(person);
 		assertNull(plan.getScore());
-		plan.setScore(1.0);
+		plan.setScoreInfo(new ScoreInfoImpl(1.0));
 		plan = new RandomUnscoredPlanSelector<Plan, Person>().selectPlan(person);
 		assertNull(plan.getScore());
-		plan.setScore(2.0);
+		plan.setScoreInfo(new ScoreInfoImpl(2.0));
 		plan = new RandomUnscoredPlanSelector<Plan, Person>().selectPlan(person);
 		assertNull(plan.getScore());
-		plan.setScore(3.0);
+		plan.setScoreInfo(new ScoreInfoImpl(3.0));
 		plan = new RandomUnscoredPlanSelector<Plan, Person>().selectPlan(person);
 		assertNull(plan.getScore());
-		plan.setScore(4.0);
+		plan.setScoreInfo(new ScoreInfoImpl(4.0));
 		plan = new RandomUnscoredPlanSelector<Plan, Person>().selectPlan(person);
 		assertNull(plan);
 		for (int i = 0; i < plans.length; i++) {
@@ -153,9 +154,9 @@ public class PersonImplTest extends MatsimTestCase {
 	public void testGetBestPlan() {
 		PersonImpl person = new PersonImpl(Id.create(1, Person.class));
 		Plan p1 = new PlanImpl();
-		p1.setScore(90.0);
+		p1.setScoreInfo(new ScoreInfoImpl(90.0));
 		Plan p2 = new PlanImpl();
-		p2.setScore(89.0);
+		p2.setScoreInfo(new ScoreInfoImpl(89.0));
 		person.addPlan(p1);
 		person.addPlan(p2);
 		Plan p = new BestPlanSelector<Plan, Person>().selectPlan(person);
@@ -168,11 +169,11 @@ public class PersonImplTest extends MatsimTestCase {
 	public void testGetBestPlan_multipleBest() {
 		PersonImpl person = new PersonImpl(Id.create(1, Person.class));
 		Plan p1 = new PlanImpl();
-		p1.setScore(11.0);
+		p1.setScoreInfo(new ScoreInfoImpl(11.0));
 		Plan p2 = new PlanImpl();
-		p2.setScore(5.0);
+		p2.setScoreInfo(new ScoreInfoImpl(5.0));
 		Plan p3 = new PlanImpl();
-		p3.setScore(11.0);
+		p3.setScoreInfo(new ScoreInfoImpl(11.0));
 		person.addPlan(p1);
 		person.addPlan(p2);
 		person.addPlan(p3);
@@ -187,7 +188,7 @@ public class PersonImplTest extends MatsimTestCase {
 		PersonImpl person = new PersonImpl(Id.create(1, Person.class));
 		Plan p1 = new PlanImpl();
 		Plan p2 = new PlanImpl();
-		p2.setScore(80.0);
+		p2.setScoreInfo(new ScoreInfoImpl(80.0));
 		person.addPlan(p1);
 		person.addPlan(p2);
 		Plan p = new BestPlanSelector<Plan, Person>().selectPlan(person);

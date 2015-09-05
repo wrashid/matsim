@@ -5,6 +5,8 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.SumScoringFunction.*;
 import org.matsim.core.utils.misc.Time;
@@ -90,7 +92,7 @@ public class DisaggregatedSumScoringFunction implements ScoringFunction {
 	 * Add the score of all functions.
 	 */
 	@Override
-	public double getScoreInfo() {
+	public ScoreInfo getScoreInfo() {
 		double score = 0.0;
 		for (BasicScoring basicScoringFunction : basicScoringFunctions) {
             double contribution = basicScoringFunction.getScore();
@@ -99,7 +101,7 @@ public class DisaggregatedSumScoringFunction implements ScoringFunction {
 //			}
             score += contribution;
 		}
-		return score;
+		return new ScoreInfoImpl(score);
 	}
 	
 	public double getActivityTotalScore() {

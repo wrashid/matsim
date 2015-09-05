@@ -40,6 +40,7 @@ import org.matsim.core.population.PlanImpl;
 import org.matsim.core.population.routes.LinkNetworkRouteImpl;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.geometry.CoordImpl;
 
 /**
@@ -107,7 +108,7 @@ public class PathSizeLogitSelectorTest extends AbstractPlanSelectorTest {
 		p1.addActivity(a);
 		p1.addLeg(leg);
 		p1.addActivity(b);
-		p1.setScore(-10.0);
+		p1.setScoreInfo(new ScoreInfoImpl(-10.0));
 		person.addPlan(p1);
 
 		assertNotNull(selector.selectPlan(person));
@@ -130,7 +131,7 @@ public class PathSizeLogitSelectorTest extends AbstractPlanSelectorTest {
 		p2.addActivity(a);
 		p2.addLeg(leg);
 		p2.addActivity(b);
-		p2.setScore(-10.0);
+		p2.setScoreInfo(new ScoreInfoImpl(-10.0));
 		person.addPlan(p2);
 
 		a = new org.matsim.core.population.ActivityImpl("h", l6.getId());
@@ -151,12 +152,12 @@ public class PathSizeLogitSelectorTest extends AbstractPlanSelectorTest {
 		p3.addActivity(a);
 		p3.addLeg(leg);
 		p3.addActivity(b);
-		p3.setScore(-10.0);
+		p3.setScoreInfo(new ScoreInfoImpl(-10.0));
 		person.addPlan(p3);
 		assertNotNull(selector.selectPlan(person));
 
 		// ... and test with multiple plans where the sum of all scores stays negative
-		p3.setScore(15.0);
+		p3.setScoreInfo(new ScoreInfoImpl(15.0));
 		assertNotNull(selector.selectPlan(person));
 
 		// test with only one plan, but with NEGATIVE_INFINITY...
@@ -177,7 +178,7 @@ public class PathSizeLogitSelectorTest extends AbstractPlanSelectorTest {
 		p1.addActivity(a);
 		p1.addLeg(leg);
 		p1.addActivity(b);
-		p1.setScore(Double.NEGATIVE_INFINITY);
+		p1.setScoreInfo(new ScoreInfoImpl(Double.NEGATIVE_INFINITY));
 		person.addPlan(p1);
 		assertNotNull(selector.selectPlan(person));
 
@@ -209,7 +210,7 @@ public class PathSizeLogitSelectorTest extends AbstractPlanSelectorTest {
 		p1.addActivity(a);
 		p1.addLeg(leg);
 		p1.addActivity(b);
-		p1.setScore(0.0);
+		p1.setScoreInfo(new ScoreInfoImpl(0.0));
 		person.addPlan(p1);
 
 		assertNotNull(selector.selectPlan(person));
@@ -243,7 +244,7 @@ public class PathSizeLogitSelectorTest extends AbstractPlanSelectorTest {
 		p1.addActivity(a);
 		p1.addLeg(leg);
 		p1.addActivity(b);
-		p1.setScore(-10.0);
+		p1.setScoreInfo(new ScoreInfoImpl(-10.0));
 		person.addPlan(p1);
 
 		a = new org.matsim.core.population.ActivityImpl("h", l6.getId());
@@ -263,7 +264,7 @@ public class PathSizeLogitSelectorTest extends AbstractPlanSelectorTest {
 		p2.addActivity(a);
 		p2.addLeg(leg);
 		p2.addActivity(b);
-		p2.setScore(-10.0);
+		p2.setScoreInfo(new ScoreInfoImpl(-10.0));
 		person.addPlan(p2);
 
 		a = new org.matsim.core.population.ActivityImpl("h", l6.getId());
@@ -284,7 +285,7 @@ public class PathSizeLogitSelectorTest extends AbstractPlanSelectorTest {
 		p3.addActivity(a);
 		p3.addLeg(leg);
 		p3.addActivity(b);
-		p3.setScore(-10.0);
+		p3.setScoreInfo(new ScoreInfoImpl(-10.0));
 		person.addPlan(p3);
 
 		PathSizeLogitSelector selector = new PathSizeLogitSelector(this.config.planCalcScore(), network);

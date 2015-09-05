@@ -41,6 +41,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.MatsimPopulationReader;
 import org.matsim.core.population.PersonImpl;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.collections.Tuple;
 import org.matsim.core.utils.misc.Counter;
 
@@ -257,7 +258,7 @@ public class FullyExploredPlansProvider {
 				final Plan plan = factory.createPlan();
 				plan.setPerson( person );
 				person.addPlan( plan );
-				plan.setScore( random.nextDouble() * 1000 );
+				plan.setScoreInfo(new ScoreInfoImpl( random.nextDouble() * 1000 ));
 			}
 			plansPerPerson.put( id , new LinkedList<Plan>( person.getPlans() ) );
 		}
@@ -341,7 +342,7 @@ public class FullyExploredPlansProvider {
 					// we HAVE to do something like this because this stupid PersonImpl
 					// doesn't accept to have no plan selected at import...
 					final Plan dummyPlan = scenario.getPopulation().getFactory().createPlan();
-					dummyPlan.setScore( null );
+					dummyPlan.setScoreInfo(new ScoreInfoImpl( null ));
 					p.addPlan( dummyPlan );
 					((PersonImpl) p).setSelectedPlan( dummyPlan );
 				}

@@ -37,6 +37,7 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.network.NetworkImpl;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.ActivityImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.geometry.geotools.MGC;
 import org.matsim.core.utils.gis.ShapeFileReader;
 import org.opengis.feature.simple.SimpleFeature;
@@ -193,7 +194,7 @@ public class PopulationFromESRIShapeFileGenerator {
 			act2.setEndTime(0);
 			((ActivityImpl)act2).setCoord(this.scenario.getNetwork().getLinks().get(this.safeLinkId).getCoord());
 			plan.addActivity(act2);
-			plan.setScore(0.);
+			plan.setScoreInfo(new ScoreInfoImpl(0.));
 			pers.addPlan(plan);
 		}
 	}

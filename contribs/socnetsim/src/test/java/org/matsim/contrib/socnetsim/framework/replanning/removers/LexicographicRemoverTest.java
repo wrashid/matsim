@@ -29,7 +29,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.population.PersonImpl;
-
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.contrib.socnetsim.framework.population.JointPlan;
 import org.matsim.contrib.socnetsim.framework.population.JointPlanFactory;
 import org.matsim.contrib.socnetsim.framework.population.JointPlans;
@@ -53,7 +53,7 @@ public class LexicographicRemoverTest {
 
 			for ( double score = 0; score < 3; score++ ) {
 				final Plan plan = jointPlans.getFactory().createIndividualPlan(  person );
-				plan.setScore( score );
+				plan.setScoreInfo(new ScoreInfoImpl( score ));
 				person.addPlan( plan );
 				if ( score == 0 ) toRemove.put( person.getId() , plan );
 			}
@@ -130,7 +130,7 @@ public class LexicographicRemoverTest {
 
 		final Person p = group.getPersons().get( 0 );
 		final Plan indivPlan = jointPlans.getFactory().createIndividualPlan( p );
-		indivPlan.setScore( 0d );
+		indivPlan.setScoreInfo(new ScoreInfoImpl( 0d ));
 		p.addPlan( indivPlan );
 
 		test( new Fixture(
@@ -154,7 +154,7 @@ public class LexicographicRemoverTest {
 
 			final Plan plan = factory.createIndividualPlan( person );
 			person.addPlan( plan );
-			plan.setScore( scores[ i ] );
+			plan.setScoreInfo(new ScoreInfoImpl( scores[ i ] ));
 
 			plans.put( person.getId() , plan );
 		}

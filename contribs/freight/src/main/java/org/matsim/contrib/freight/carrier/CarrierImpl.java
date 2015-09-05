@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 /**
  * This is a carrier that has capabilities and resources, jobs and plans to fulfill its obligations.
@@ -128,7 +129,7 @@ public class CarrierImpl implements Carrier {
 		}
 		CarrierPlan copiedPlan = new CarrierPlan(plan2copy.getCarrier(), tours);
 		double initialScoreOfCopiedPlan = plan2copy.getScore();
-		copiedPlan.setScore(initialScoreOfCopiedPlan);
+		copiedPlan.setScoreInfo(new ScoreInfoImpl(initialScoreOfCopiedPlan));
 		return copiedPlan;
 	
 	}

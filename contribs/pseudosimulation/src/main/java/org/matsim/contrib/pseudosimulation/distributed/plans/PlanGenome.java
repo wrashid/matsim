@@ -11,6 +11,8 @@ import org.matsim.core.population.ActivityImpl;
 import org.matsim.core.population.LegImpl;
 import org.matsim.core.population.PlanImpl;
 import org.matsim.core.scenario.CustomizableUtils;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.misc.Time;
 
 import org.matsim.contrib.pseudosimulation.distributed.scoring.ScoreComponentType;
@@ -32,7 +34,7 @@ public class PlanGenome implements Plan {
     ArrayList<PlanScoreComponent> altScoreComponents = new ArrayList<>();
     private double pSimScore;
     private String genome = "";
-    private Double score = null;
+    private ScoreInfo scoreInfo = null;
     private Person person = null;
     private String type = null;
     private Customizable customizableDelegate;
@@ -193,12 +195,17 @@ public class PlanGenome implements Plan {
 
     @Override
     public final Double getScore() {
-        return this.score;
+        return this.scoreInfo.getScore();
     }
-
+    
     @Override
-    public void setScore(final Double score) {
-        this.score = score;
+    public final ScoreInfo getScoreInfo() {
+        return this.scoreInfo;
+    }
+    
+    @Override
+    public void setScoreInfo(final ScoreInfo scoreInfo) {
+        this.scoreInfo = scoreInfo;
     }
 
     @Override
@@ -264,7 +271,7 @@ public class PlanGenome implements Plan {
      */
     public final void copyFrom(final Plan in) {
         this.getPlanElements().clear();
-        setScore(in.getScore());
+        setScoreInfo(new ScoreInfoImpl(in.getScore()));
         this.setType(in.getType());
         for (PlanElement pe : in.getPlanElements()) {
             if (pe instanceof Activity) {

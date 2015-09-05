@@ -30,6 +30,7 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.collections.Tuple;
 
 import playground.johannes.coopsim.eval.Evaluator;
@@ -278,7 +279,7 @@ public class SimulationEngine {
 			
 			for(int i = 0; i < scores.size(); i++) {
 				Tuple<Plan, Double> tuple = scores.get(i);
-				tuple.getFirst().setScore(tuple.getSecond());
+				tuple.getFirst().setScoreInfo(new ScoreInfoImpl(tuple.getSecond()));
 			}
 		}
 

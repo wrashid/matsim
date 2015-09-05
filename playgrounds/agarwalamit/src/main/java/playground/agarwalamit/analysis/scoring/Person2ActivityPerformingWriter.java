@@ -35,6 +35,8 @@ import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.population.ActivityImpl;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.functions.CharyparNagelActivityScoring;
@@ -156,9 +158,9 @@ public class Person2ActivityPerformingWriter {
 
 		Map<String, Double> actType2Util = personId2Act2UtilPerf.get(p.getId());
 		if(actType2Util.containsKey(activity.getType())){
-			actType2Util.put(activity.getType(), sf.getScore() + actType2Util.get(activity.getType()));
+			actType2Util.put(activity.getType(), sf.getScoreInfo().getScore() + actType2Util.get(activity.getType()));
 		} else {
-			actType2Util.put(activity.getType(), sf.getScore());
+			actType2Util.put(activity.getType(), sf.getScoreInfo().getScore());
 		}
 	}
 
@@ -256,8 +258,8 @@ public class Person2ActivityPerformingWriter {
 		}
 
 		@Override
-		public double getScore() {
-			return this.delegate.getScore();
+		public ScoreInfo getScoreInfo() {
+			return new ScoreInfoImpl(this.delegate.getScore());
 		}
 	}
 }

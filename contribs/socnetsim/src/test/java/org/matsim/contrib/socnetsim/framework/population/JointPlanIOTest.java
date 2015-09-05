@@ -40,6 +40,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.MatsimPopulationReader;
 import org.matsim.core.scenario.ScenarioImpl;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.testcases.MatsimTestUtils;
 
 /**
@@ -145,7 +146,7 @@ public class JointPlanIOTest {
 				final Plan plan = factory.createPlan();
 				plan.setPerson( person );
 				person.addPlan( plan );
-				plan.setScore( (double) k );
+				plan.setScoreInfo(new ScoreInfoImpl( (double) k ));
 			}
 			plansPerPerson.put( id , new LinkedList<Plan>( person.getPlans() ) );
 		}

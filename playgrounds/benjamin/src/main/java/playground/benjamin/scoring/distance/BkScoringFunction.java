@@ -32,6 +32,8 @@ import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.population.ActivityImpl;
 import org.matsim.core.population.LegImpl;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.ScoringFunctionAdapter;
 import org.matsim.core.scoring.functions.ActivityUtilityParameters;
@@ -135,8 +137,8 @@ public class BkScoringFunction extends ScoringFunctionAdapter {
 		}
 	}
 
-	public double getScore() {
-		return this.score;
+	public ScoreInfo getScoreInfo() {
+		return new ScoreInfoImpl(score);
 	}
 
 

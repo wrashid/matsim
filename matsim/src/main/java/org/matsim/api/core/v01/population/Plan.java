@@ -57,11 +57,5 @@ public interface Plan extends MatsimPopulationObject, Customizable, BasicPlan {
 	 * you are using this method!.
 	 */
 	public void setPerson(Person person);
-	
-	public void setScoreInfo(ScoreInfo score);
-	
-	public ScoreInfo getScoreInfo();
-
-	public abstract Double getScore();
 
 }

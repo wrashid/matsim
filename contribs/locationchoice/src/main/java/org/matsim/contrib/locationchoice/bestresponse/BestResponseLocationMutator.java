@@ -39,6 +39,7 @@ import org.matsim.core.population.ActivityImpl;
 import org.matsim.core.population.PlanImpl;
 import org.matsim.core.router.MultiNodeDijkstra;
 import org.matsim.core.router.TripRouter;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.utils.geometry.CoordImpl;
 import org.matsim.core.utils.geometry.CoordUtils;
@@ -252,7 +253,7 @@ public final class BestResponseLocationMutator extends RecursiveLocationMutator 
 //		System.err.println("expected score of new plan is: " + score ) ;
 //		System.err.println("existing score of old plan is: " + bestPlanSoFar.getScore() ) ;
 		if (score > bestPlanSoFar.getScore() + 0.0000000000001) {
-			plan.setScore(score);
+			plan.setScoreInfo(new ScoreInfoImpl(score));
 			((PlanImpl)bestPlanSoFar).getPlanElements().clear();
 			((PlanImpl)bestPlanSoFar).copyFrom(plan);
 		}

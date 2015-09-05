@@ -34,6 +34,7 @@ import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.contrib.freight.carrier.ScheduledTour;
 import org.matsim.contrib.freight.carrier.TimeWindow;
 import org.matsim.contrib.freight.carrier.Tour;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 public class TestMatsimTransformer {
 	
@@ -241,7 +242,7 @@ public class TestMatsimTransformer {
         VehicleRoutingProblem vehicleRoutingProblem = VehicleRoutingProblem.Builder.newInstance().addAllJobs(services1).addAllJobs(services2).addVehicle(v1).addVehicle(v2).build();
 
 		CarrierPlan plan = new CarrierPlan(CarrierImpl.newInstance(Id.create("myCarrier", Carrier.class)), sTours);
-		plan.setScore(-100.0);
+		plan.setScoreInfo(new ScoreInfoImpl(-100.0));
 		VehicleRoutingProblemSolution solution = MatsimJspritFactory.createSolution(plan, vehicleRoutingProblem);
 		assertNotNull(solution);
 		assertEquals(100.0, solution.getCost(), 0.01);

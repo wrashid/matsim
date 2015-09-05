@@ -24,6 +24,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.population.PersonImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 /**
  * Test for {@link BestPlanSelector}.
@@ -47,37 +48,37 @@ public class BestPlanSelectorTest extends AbstractPlanSelectorTest {
 		Plan plan;
 		person.createAndAddPlan(false);
 		plan = person.createAndAddPlan(false);
-		plan.setScore(10.0);
+		plan.setScoreInfo(new ScoreInfoImpl(10.0));
 		plan = person.createAndAddPlan(false);
-		plan.setScore(-50.0);
+		plan.setScoreInfo(new ScoreInfoImpl(-50.0));
 		plan = person.createAndAddPlan(false);
-		plan.setScore(40.0);
+		plan.setScoreInfo(new ScoreInfoImpl(40.0));
 		plan = person.createAndAddPlan(false);
-		plan.setScore(30.0);
+		plan.setScoreInfo(new ScoreInfoImpl(30.0));
 		plan = person.createAndAddPlan(false);
-		plan.setScore(-20.0);
+		plan.setScoreInfo(new ScoreInfoImpl(-20.0));
 
 		GenericPlanSelector<Plan, Person> selector = new BestPlanSelector<Plan, Person>();
 
 		plan = selector.selectPlan(person);
 		assertEquals(40.0, plan.getScore().doubleValue(), 0.0);
-		plan.setScore(null);
+		plan.setScoreInfo(new ScoreInfoImpl(null));
 
 		plan = selector.selectPlan(person);
 		assertEquals(30.0, plan.getScore().doubleValue(), 0.0);
-		plan.setScore(null);
+		plan.setScoreInfo(new ScoreInfoImpl(null));
 
 		plan = selector.selectPlan(person);
 		assertEquals(10.0, plan.getScore().doubleValue(), 0.0);
-		plan.setScore(null);
+		plan.setScoreInfo(new ScoreInfoImpl(null));
 
 		plan = selector.selectPlan(person);
 		assertEquals(-20.0, plan.getScore().doubleValue(), 0.0);
-		plan.setScore(null);
+		plan.setScoreInfo(new ScoreInfoImpl(null));
 
 		plan = selector.selectPlan(person);
 		assertEquals(-50.0, plan.getScore().doubleValue(), 0.0);
-		plan.setScore(null);
+		plan.setScoreInfo(new ScoreInfoImpl(null));
 
 		plan = selector.selectPlan(person);
 		assertNull(plan.getScore());

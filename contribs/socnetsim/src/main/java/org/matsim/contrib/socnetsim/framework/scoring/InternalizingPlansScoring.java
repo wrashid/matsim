@@ -36,6 +36,7 @@ import org.matsim.core.controler.listener.IterationStartsListener;
 import org.matsim.core.controler.listener.ScoringListener;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.scoring.EventsToScore;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.utils.collections.MapUtils;
 import org.matsim.contrib.socnetsim.framework.population.SocialNetwork;
@@ -138,7 +139,7 @@ public class InternalizingPlansScoring implements PlansScoring, ScoringListener,
 		if ( score == null ) throw new NullPointerException( "got null score for person "+p );
 		if ( score.isNaN() ) throw new RuntimeException( "got NaN score for person "+p );
 
-		p.getSelectedPlan().setScore( score );
+		p.getSelectedPlan().setScoreInfo( new ScoreInfoImpl(score) );
 	}
 
 	private static double getScore(final Person p) {

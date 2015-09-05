@@ -31,6 +31,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.events.EventsUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.collections.Tuple;
 
 import playground.johannes.coopsim.analysis.TrajectoryAnalyzer;
@@ -213,7 +214,7 @@ public class SimEngine {
 		 */
 		for(int i = 0; i < alter2Scores.size(); i++) {
 			Tuple<Plan, Double> tuple = alter2Scores.get(i);
-			tuple.getFirst().setScore(tuple.getSecond());
+			tuple.getFirst().setScoreInfo(new ScoreInfoImpl(tuple.getSecond()));
 		}
 		/*
 		 * if state rejected, reset scores of level 1 alters
@@ -221,7 +222,7 @@ public class SimEngine {
 		if(!accept) {
 			for(int i = 0; i < alter1Scores.size(); i++) {
 				Tuple<Plan, Double> tuple = alter1Scores.get(i);
-				tuple.getFirst().setScore(tuple.getSecond());
+				tuple.getFirst().setScoreInfo(new ScoreInfoImpl(tuple.getSecond()));
 			}
 		}
 		Profiler.pause("evaluation & postprocessing");

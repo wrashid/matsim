@@ -39,6 +39,7 @@ import org.matsim.core.router.costcalculators.TravelTimeAndDistanceBasedTravelDi
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioElementsModule;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.functions.CharyparNagelScoringFunctionModule;
 import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime;
 import org.matsim.core.utils.io.UncheckedIOException;
@@ -603,7 +604,7 @@ public class SlaveControler implements IterationStartsListener, StartupListener,
         WaitTimeCalculatorSerializable.printCallStatisticsAndReset();
         while (iterator.hasNext()) {
             Map.Entry<Id<Person>, Double> entry = iterator.next();
-            scenario.getPopulation().getPersons().get(entry.getKey()).getSelectedPlan().setScore(entry.getValue());
+            scenario.getPopulation().getPersons().get(entry.getKey()).getSelectedPlan().setScoreInfo(new ScoreInfoImpl(entry.getValue()));
         }
     }
 }

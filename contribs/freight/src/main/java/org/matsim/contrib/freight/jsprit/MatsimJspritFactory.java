@@ -52,6 +52,7 @@ import org.matsim.contrib.freight.carrier.TimeWindow;
 import org.matsim.contrib.freight.carrier.Tour;
 import org.matsim.contrib.freight.carrier.Tour.Leg;
 import org.matsim.contrib.freight.carrier.Tour.TourElement;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 
 /**
@@ -420,7 +421,7 @@ public class MatsimJspritFactory {
 			tours.add(scheduledTour);
 		}
 		CarrierPlan carrierPlan = new CarrierPlan(carrier, tours);
-		carrierPlan.setScore(solution.getCost()*(-1));
+		carrierPlan.setScoreInfo(new ScoreInfoImpl(solution.getCost()*(-1)));
 		return carrierPlan;
 	}
 	

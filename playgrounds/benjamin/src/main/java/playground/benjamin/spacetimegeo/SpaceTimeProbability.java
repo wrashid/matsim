@@ -42,6 +42,7 @@ import org.matsim.core.network.NetworkImpl;
 import org.matsim.core.population.PopulationFactoryImpl;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.roadpricing.ControlerDefaultsWithRoadPricingModule;
 import org.matsim.roadpricing.RoadPricingConfigGroup;
 
@@ -293,7 +294,7 @@ public class SpaceTimeProbability {
 			plan.addLeg(leg2);
 			
 			plan.addActivity(home);
-			plan.setScore(1000.0);
+			plan.setScoreInfo(new ScoreInfoImpl(1000.0));
 			person.addPlan(plan);
 		}
 		scenario.getPopulation().addPerson(person);

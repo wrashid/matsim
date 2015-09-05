@@ -45,6 +45,7 @@ import org.matsim.core.replanning.selectors.GenericPlanSelector;
 import org.matsim.core.replanning.selectors.PlanSelector;
 import org.matsim.core.replanning.selectors.RandomPlanSelector;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 public class StrategyManagerTest {
 
@@ -214,19 +215,19 @@ public class StrategyManagerTest {
 		person = new PersonImpl(Id.create(1, Person.class));
 		plans[0] = person.createAndAddPlan(false);
 		plans[1] = person.createAndAddPlan(false);
-		plans[1].setScore(Double.valueOf(0.0));
+		plans[1].setScoreInfo(new ScoreInfoImpl(Double.valueOf(0.0)));
 		plans[2] = person.createAndAddPlan(false);
 		plans[3] = person.createAndAddPlan(false);
-		plans[3].setScore(Double.valueOf(-50.0));
+		plans[3].setScoreInfo(new ScoreInfoImpl(Double.valueOf(-50.0)));
 		plans[4] = person.createAndAddPlan(false);
-		plans[4].setScore(Double.valueOf(50.0));
+		plans[4].setScoreInfo(new ScoreInfoImpl(Double.valueOf(50.0)));
 		plans[5] = person.createAndAddPlan(false);
-		plans[5].setScore(Double.valueOf(50.0));
+		plans[5].setScoreInfo(new ScoreInfoImpl(Double.valueOf(50.0)));
 		plans[6] = person.createAndAddPlan(false);
-		plans[6].setScore(Double.valueOf(60.0));
+		plans[6].setScoreInfo(new ScoreInfoImpl(Double.valueOf(60.0)));
 		plans[7] = person.createAndAddPlan(false);
 		plans[8] = person.createAndAddPlan(false);
-		plans[8].setScore(Double.valueOf(-10.0));
+		plans[8].setScoreInfo(new ScoreInfoImpl(Double.valueOf(-10.0)));
 		plans[9] = person.createAndAddPlan(false);
 		population.addPerson(person);
 
@@ -239,7 +240,7 @@ public class StrategyManagerTest {
 			manager.run(population, i, null);
 			Plan plan = person.getSelectedPlan();
 			assertNull("plan has not undefined score in iteration " + i, plan.getScore());
-			plan.setScore(Double.valueOf(i));
+			plan.setScoreInfo(new ScoreInfoImpl(Double.valueOf(i)));
 		}
 
 		/* There are no more unscored plans now, so in the next "iteration" our
@@ -265,7 +266,7 @@ public class StrategyManagerTest {
 		PlanImpl[] plans = new PlanImpl[7];
 		for (int i = 0; i < plans.length; i++) {
 			plans[i] = p.createAndAddPlan(false);
-			plans[i].setScore(Double.valueOf(i*10));
+			plans[i].setScoreInfo(new ScoreInfoImpl(Double.valueOf(i*10)));
 		}
 		Population pop = ScenarioUtils.createScenario(ConfigUtils.createConfig()).getPopulation();
 		pop.addPerson(p);

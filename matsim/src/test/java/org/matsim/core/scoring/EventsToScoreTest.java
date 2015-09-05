@@ -211,9 +211,9 @@ public class EventsToScoreTest extends MatsimTestCase {
 		}
 
 		@Override
-		public double getScoreInfo() {
+		public ScoreInfo getScoreInfo() {
 			this.cntGetScore++;
-			return 0;
+			return new ScoreInfoImpl(0.0);
 		}
 
         public void reset() {

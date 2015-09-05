@@ -54,6 +54,8 @@ import org.matsim.core.controler.listener.*;
 import org.matsim.core.router.costcalculators.TravelTimeAndDistanceBasedTravelDisutilityFactory;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.charts.XYLineChart;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.core.utils.io.UncheckedIOException;
@@ -509,7 +511,7 @@ public class RunPSim {
             Iterator<Map.Entry<Id<Person>, Double>> iterator = selectedPlanScoreMemory.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<Id<Person>, Double> entry = iterator.next();
-                matsimControler.getScenario().getPopulation().getPersons().get(entry.getKey()).getSelectedPlan().setScore(entry.getValue());
+                matsimControler.getScenario().getPopulation().getPersons().get(entry.getKey()).getSelectedPlan().setScoreInfo(new ScoreInfoImpl(entry.getValue()));
             }
         }
 

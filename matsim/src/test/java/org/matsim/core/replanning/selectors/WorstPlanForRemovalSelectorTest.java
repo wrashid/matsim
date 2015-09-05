@@ -25,6 +25,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.core.population.PersonImpl;
 import org.matsim.core.population.PlanImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 public class WorstPlanForRemovalSelectorTest extends AbstractPlanSelectorTest {
 
@@ -43,14 +44,14 @@ public class WorstPlanForRemovalSelectorTest extends AbstractPlanSelectorTest {
 		PersonImpl person = new PersonImpl(Id.create(1, Person.class));
 
 		PlanImpl plan1 = new org.matsim.core.population.PlanImpl(person);
-		plan1.setScore(15.0);
+		plan1.setScoreInfo(new ScoreInfoImpl(15.0));
 		PlanImpl plan2 = new org.matsim.core.population.PlanImpl(person);
-		plan2.setScore(22.0);
+		plan2.setScoreInfo(new ScoreInfoImpl(22.0));
 		PlanImpl plan3 = new org.matsim.core.population.PlanImpl(person);
 		PlanImpl plan4 = new org.matsim.core.population.PlanImpl(person);
-		plan4.setScore(1.0);
+		plan4.setScoreInfo(new ScoreInfoImpl(1.0));
 		PlanImpl plan5 = new org.matsim.core.population.PlanImpl(person);
-		plan5.setScore(18.0);
+		plan5.setScoreInfo(new ScoreInfoImpl(18.0));
 		person.addPlan(plan1);
 		person.addPlan(plan2);
 		person.addPlan(plan3);
@@ -91,16 +92,16 @@ public class WorstPlanForRemovalSelectorTest extends AbstractPlanSelectorTest {
 		PersonImpl person = new PersonImpl(Id.create(1, Person.class));
 
 		PlanImpl plan1 = new org.matsim.core.population.PlanImpl(person);
-		plan1.setScore(15.0);
+		plan1.setScoreInfo(new ScoreInfoImpl(15.0));
 		PlanImpl plan2 = new org.matsim.core.population.PlanImpl(person);
-		plan2.setScore(22.0);
+		plan2.setScoreInfo(new ScoreInfoImpl(22.0));
 		PlanImpl plan3 = new org.matsim.core.population.PlanImpl(person);
 		PlanImpl plan4 = new org.matsim.core.population.PlanImpl(person);
-		plan4.setScore(1.0);
+		plan4.setScoreInfo(new ScoreInfoImpl(1.0));
 		PlanImpl plan5 = new org.matsim.core.population.PlanImpl(person);
-		plan5.setScore(18.0);
+		plan5.setScoreInfo(new ScoreInfoImpl(18.0));
 		PlanImpl plan6 = new org.matsim.core.population.PlanImpl(person);
-		plan6.setScore(21.0);
+		plan6.setScoreInfo(new ScoreInfoImpl(21.0));
 
 		plan1.setType("type1");
 		plan2.setType("type2");

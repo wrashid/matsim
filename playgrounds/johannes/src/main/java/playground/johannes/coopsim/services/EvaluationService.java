@@ -21,6 +21,8 @@ package playground.johannes.coopsim.services;
 
 import java.util.Collection;
 
+import org.matsim.core.scoring.ScoreInfoImpl;
+
 import playground.johannes.coopsim.eval.Evaluator;
 import playground.johannes.coopsim.pysical.Trajectory;
 
@@ -48,7 +50,7 @@ public class EvaluationService implements SimService<Object> {
 		Collection<Trajectory> trajectories = mobsimService.get();
 		for(Trajectory t : trajectories) {
 			double score = evaluator.evaluate(t);
-			t.getPerson().getSelectedPlan().setScore(score);
+			t.getPerson().getSelectedPlan().setScoreInfo(new ScoreInfoImpl(score));
 		}
 	}
 

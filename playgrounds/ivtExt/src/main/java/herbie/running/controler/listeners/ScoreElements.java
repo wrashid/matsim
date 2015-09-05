@@ -89,7 +89,7 @@ public class ScoreElements implements StartupListener, ScoringListener, Shutdown
 			if (sf instanceof ScoringFunctionAccumulator) {
 				if (((ScoringFunctionAccumulator) sf).getActivityScoringFunctions().get(0) instanceof ActivityScoringFunction) {
 					asf = (ActivityScoringFunction) ((ScoringFunctionAccumulator) sf).getActivityScoringFunctions().get(0);
-					d = sumScoreParts.get("sum") + sf.getScore();
+					d = sumScoreParts.get("sum") + sf.getScoreInfo().getScore();
 					sumScoreParts.put("sum", d);
 					d = sumScoreParts.get("perf") + asf.getPerformanceScore();
 					sumScoreParts.put("perf", d);

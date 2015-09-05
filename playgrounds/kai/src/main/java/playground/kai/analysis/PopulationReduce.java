@@ -31,6 +31,7 @@ import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.core.api.internal.MatsimWriter;
 import org.matsim.core.config.Config;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.config.ConfigUtils;
 
 /**
@@ -61,7 +62,7 @@ class PopulationReduce {
 			
 			for ( Plan planIn : personIn.getPlans() ) {
 				Plan planOut = popOut.getFactory().createPlan() ;
-				planOut.setScore(planIn.getScore()) ;
+				planOut.setScoreInfo(planIn.getScoreInfo()) ;
 				Activity actIn = (Activity) planIn.getPlanElements().get(0) ;
 				planOut.addActivity(actIn) ;
 				personOut.addPlan(planOut);

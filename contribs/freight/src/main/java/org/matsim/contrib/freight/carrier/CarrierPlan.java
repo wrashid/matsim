@@ -2,6 +2,7 @@ package org.matsim.contrib.freight.carrier;
 
 import java.util.Collection;
 import org.matsim.api.core.v01.population.BasicPlan;
+import org.matsim.core.scoring.ScoreInfo;
 
 /**
  * 
@@ -16,7 +17,7 @@ public class CarrierPlan implements BasicPlan {
 	
 	private final Collection<ScheduledTour> scheduledTours;
 
-	private Double score = null;
+	private ScoreInfo scoreInfo = null;
 
 	public CarrierPlan(final Carrier carrier, final Collection<ScheduledTour> scheduledTours) {
 		this.scheduledTours = scheduledTours;
@@ -28,13 +29,17 @@ public class CarrierPlan implements BasicPlan {
 	}
 
 	@Override
+	public ScoreInfo getScoreInfo() {
+		return scoreInfo;
+	}
+	@Override
 	public Double getScore() {
-		return score;
+		return scoreInfo.getScore();
 	}
 
 	@Override
-	public void setScore(Double score) {
-		this.score = score;
+	public void setScoreInfo(ScoreInfo scoreInfo) {
+		this.scoreInfo = scoreInfo;
 	}
 
 	public Collection<ScheduledTour> getScheduledTours() {

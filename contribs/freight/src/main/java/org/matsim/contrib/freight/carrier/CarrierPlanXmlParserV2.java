@@ -14,6 +14,7 @@ import org.matsim.contrib.freight.carrier.CarrierCapabilities.Builder;
 import org.matsim.contrib.freight.carrier.CarrierCapabilities.FleetSize;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.routes.LinkNetworkRouteImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.io.MatsimXmlParser;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.vehicles.EngineInformation;
@@ -324,7 +325,7 @@ class CarrierPlanXmlParserV2 extends MatsimXmlParser {
 		}
 		else if (name.equals("plan")) {
 			currentPlan = new CarrierPlan(currentCarrier, scheduledTours);
-			currentPlan.setScore(currentScore);
+			currentPlan.setScoreInfo(new ScoreInfoImpl(currentScore));
 			currentCarrier.getPlans().add(currentPlan);
 			if(this.selected){
 				currentCarrier.setSelectedPlan(currentPlan);

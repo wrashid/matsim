@@ -325,7 +325,7 @@ class CarrierAgent implements ActivityStartEventHandler, ActivityEndEventHandler
 			return;
 		}
 		scoringFunction.finish();
-		carrier.getSelectedPlan().setScore(scoringFunction.getScore());
+		carrier.getSelectedPlan().setScoreInfo(scoringFunction.getScoreInfo());
 	}
 
 	@Override

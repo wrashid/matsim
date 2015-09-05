@@ -22,6 +22,7 @@ import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.core.population.ActivityImpl;
+import org.matsim.core.scoring.ScoreInfo;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.core.scoring.SumScoringFunction;
 import org.matsim.core.scoring.SumScoringFunction.BasicScoring;
@@ -37,8 +38,8 @@ public class MySumScoringFunction implements ScoringFunction {
 	
 	@Override
 	public final void handleActivity(Activity activity) {
-		double pScore = pDelegate.getScore();
-		double score = delegate.getScore() ;
+		double pScore = pDelegate.getScoreInfo().getScore();
+		double score = delegate.getScoreInfo().getScore() ;
 		
 		delegate.handleActivity(activity);
 		
@@ -47,10 +48,10 @@ public class MySumScoringFunction implements ScoringFunction {
 		pDelegate.handleActivity(pseudoActivity);
 		
 		// score change by regular activity
-		double diff = delegate.getScore() - score ;
+		double diff = delegate.getScoreInfo().getScore() - score ;
 		
 		// score change by pseudo activity
-		double pDiff = pDelegate.getScore() - pScore ;
+		double pDiff = pDelegate.getScoreInfo().getScore() - pScore ;
 		
 		// score diff caused by one second
 		
@@ -89,8 +90,8 @@ public class MySumScoringFunction implements ScoringFunction {
 	}
 
 	@Override
-	public double getScore() {
-		return delegate.getScore() ;
+	public ScoreInfo getScoreInfo() {
+		return delegate.getScoreInfo() ;
 	}
 
 	public void addScoringFunction(BasicScoring scoringFunction) {

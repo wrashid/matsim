@@ -23,11 +23,12 @@ import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.population.ActivityImpl;
 import org.matsim.core.population.LegImpl;
 import org.matsim.core.population.PlanImpl;
+import org.matsim.core.scoring.ScoreInfoImpl;
 
 public class PlanUtils {
 	
 	public static void copyPlanFieldsToFrom(PlanImpl planTarget, PlanImpl planTemplate) {
-		planTarget.setScore(planTemplate.getScore());
+		planTarget.setScoreInfo(new ScoreInfoImpl(planTemplate.getScore()));
 		
 		int actLegIndex = 0;
 		for (PlanElement pe : planTarget.getPlanElements()) {

@@ -18,6 +18,8 @@ import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.algorithms.SnapshotGenerator;
 import org.matsim.core.mobsim.framework.Mobsim;
 import org.matsim.core.mobsim.qsim.QSim;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunction;
 import org.matsim.vis.otfvis.OTFClientLive;
 import org.matsim.vis.otfvis.OTFFileWriter;
@@ -130,9 +132,9 @@ public class Visualiser {
 			}
 
 			@Override
-			public double getScore() {
+			public ScoreInfo getScoreInfo() {
 				// TODO Auto-generated method stub
-				return 0;
+				return new ScoreInfoImpl(0.0);
 			}
 
 		
