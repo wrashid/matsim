@@ -65,7 +65,7 @@ public class HeterogeneousCharyparNagelScoringFunctionForAnalysisFactoryTest {
 			}
 		}
 		testee.finish();
-		double score = testee.getScore();
+		double score = testee.getScoreInfo();
 		EventsToScore eventsToScore = new EventsToScore(f.scenario, heterogeneousCharyparNagelScoringFunctionForAnalysisFactory);
 		double scoreFromEvents = calcScoreFromEvents(eventsToScore, f);
 		assertEquals("Score computed from the plan elements should be the same as score computed from stream of events constructed from plan elements.", score, scoreFromEvents, EPSILON);
@@ -84,7 +84,7 @@ public class HeterogeneousCharyparNagelScoringFunctionForAnalysisFactoryTest {
 			}
 		}
 		testee.finish();
-		double score = testee.getScore();
+		double score = testee.getScoreInfo();
 		EventsToScore eventsToScore = new EventsToScore(f.scenario, heterogeneousCharyparNagelScoringFunctionForAnalysisFactory);
 		double scoreFromEvents = calcScoreFromEvents(eventsToScore, f);
 		assertEquals("Score computed from the plan elements should be the same as score computed from stream of events constructed from plan elements.", score, scoreFromEvents, EPSILON);
@@ -478,9 +478,9 @@ public class HeterogeneousCharyparNagelScoringFunctionForAnalysisFactoryTest {
 
 		testee.agentStuck(16 * 3600 + 7.5 * 60);
 		testee.finish();
-		testee.getScore();
+		testee.getScoreInfo();
 
-		assertEquals(24 * -18.0 - 6.0 * 0.50, testee.getScore(), EPSILON); // stuck penalty + 30min traveling
+		assertEquals(24 * -18.0 - 6.0 * 0.50, testee.getScoreInfo(), EPSILON); // stuck penalty + 30min traveling
 
 		// test 2 where traveling has the biggest impact
 		f.config.planCalcScore().setLateArrival_utils_hr(-3.0);
@@ -493,9 +493,9 @@ public class HeterogeneousCharyparNagelScoringFunctionForAnalysisFactoryTest {
 		testee.handleLeg((Leg) f.plan.getPlanElements().get(3));
 		testee.agentStuck(16 * 3600 + 7.5 * 60);
 		testee.finish();
-		testee.getScore();
+		testee.getScoreInfo();
 
-		assertEquals(24 * -6.0 - 6.0 * 0.50, testee.getScore(), EPSILON); // stuck penalty + 30min traveling
+		assertEquals(24 * -6.0 - 6.0 * 0.50, testee.getScoreInfo(), EPSILON); // stuck penalty + 30min traveling
 	}
 
 	@Test
@@ -582,7 +582,7 @@ public class HeterogeneousCharyparNagelScoringFunctionForAnalysisFactoryTest {
 		testee.handleActivity((Activity) f.plan.getPlanElements().get(2));
 		testee.finish();
 
-		assertEquals(perf * 3.0 * Math.log(2.5 / zeroUtilDurW) + perf * 7.0 * Math.log(7.0 / zeroUtilDurH), testee.getScore(), EPSILON);
+		assertEquals(perf * 3.0 * Math.log(2.5 / zeroUtilDurW) + perf * 7.0 * Math.log(7.0 / zeroUtilDurH), testee.getScoreInfo(), EPSILON);
 	}
 
 	/**
@@ -615,7 +615,7 @@ public class HeterogeneousCharyparNagelScoringFunctionForAnalysisFactoryTest {
 		sf1.handleActivity(act1b);
 
 		sf1.finish();
-		double score1 = sf1.getScore();
+		double score1 = sf1.getScoreInfo();
 
 		ScoringFunction sf2 = getScoringFunctionInstance(f, person1);
 		sf2.handleActivity(act1a);
@@ -626,7 +626,7 @@ public class HeterogeneousCharyparNagelScoringFunctionForAnalysisFactoryTest {
 		sf2.addMoney(4.86);
 		sf2.addMoney(-0.28);
 		sf2.finish();
-		double score2 = sf2.getScore();
+		double score2 = sf2.getScoreInfo();
 
 		assertEquals(1.23 - 2.46 + 4.86 - 0.28, score2 - score1, EPSILON);
 	}

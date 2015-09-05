@@ -115,7 +115,7 @@ public final class SumScoringFunction implements ScoringFunction {
 	 * Add the score of all functions.
 	 */
 	@Override
-	public double getScore() {
+	public ScoreInfo getScoreInfo() {
 		double score = 0.0;
 		for (BasicScoring basicScoringFunction : basicScoringFunctions) {
 			double contribution = basicScoringFunction.getScore();
@@ -129,7 +129,7 @@ public final class SumScoringFunction implements ScoringFunction {
 			}
 			score += contribution;
 		}
-		return score;
+		return new ScoreInfoImpl(score);
 	}
 
 	public void addScoringFunction(BasicScoring scoringFunction) {

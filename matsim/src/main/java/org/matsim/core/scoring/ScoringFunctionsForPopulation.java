@@ -102,7 +102,7 @@ class ScoringFunctionsForPopulation implements ActivityHandler, LegHandler {
 			scoringFunctionForAgent.handleActivity(activity);
 			agentRecords.get(agentId).addActivity(activity);
 			Collection<Double> partialScoresForAgent = partialScores.get(agentId) ;
-			partialScoresForAgent.add( scoringFunctionForAgent.getScore() ) ;
+			partialScoresForAgent.add( scoringFunctionForAgent.getScoreInfo().getScore() ) ;
 		}
 	}
 
@@ -113,7 +113,7 @@ class ScoringFunctionsForPopulation implements ActivityHandler, LegHandler {
 			scoringFunctionForAgent.handleLeg(leg);
 			agentRecords.get(agentId).addLeg(leg);
 			Collection<Double> partialScoresForAgent = partialScores.get(agentId) ;
-			partialScoresForAgent.add(scoringFunctionForAgent.getScore()) ;
+			partialScoresForAgent.add(scoringFunctionForAgent.getScoreInfo().getScore()) ;
 		}
 	}
 
@@ -122,7 +122,7 @@ class ScoringFunctionsForPopulation implements ActivityHandler, LegHandler {
 			sf.finish();
 		}
 		for ( Entry<Id<Person>, List<Double>> entry : this.partialScores.entrySet() ) {
-			entry.getValue().add(this.getScoringFunctionForAgent(entry.getKey()).getScore());
+			entry.getValue().add(this.getScoringFunctionForAgent(entry.getKey()).getScoreInfo().getScore());
 		}
 	}
 
@@ -131,7 +131,7 @@ class ScoringFunctionsForPopulation implements ActivityHandler, LegHandler {
 		for (Entry<Id<Person>, Plan> entry : agentRecords.entrySet()) {
 			PersonImpl person = new PersonImpl(entry.getKey());
 			Plan plan = entry.getValue();
-			plan.setScore(getScoringFunctionForAgent(person.getId()).getScore());
+			plan.setScoreInfo(getScoringFunctionForAgent(person.getId()).getScoreInfo());
 			person.addPlan(plan);
 			population.addPerson(person);
 			if (plan.getScore().isNaN()) {

@@ -37,6 +37,7 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.routes.GenericRoute;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.utils.geometry.CoordImpl;
 import org.matsim.core.utils.io.MatsimXmlParser;
 import org.matsim.core.utils.io.UncheckedIOException;
@@ -253,7 +254,7 @@ import org.xml.sax.Attributes;
 		String scoreString = atts.getValue("score");
 		if (scoreString != null) {
 			double score = Double.parseDouble(scoreString);
-			this.currplan.setScore(score);
+			this.currplan.setScoreInfo(new ScoreInfoImpl(score));
 		}
 
 		String type = atts.getValue(ATTR_TYPE);

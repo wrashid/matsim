@@ -211,7 +211,7 @@ public class EventsToScoreTest extends MatsimTestCase {
 		}
 
 		@Override
-		public double getScore() {
+		public double getScoreInfo() {
 			this.cntGetScore++;
 			return 0;
 		}

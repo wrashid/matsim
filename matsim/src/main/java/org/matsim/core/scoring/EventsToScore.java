@@ -179,23 +179,23 @@ public class EventsToScore implements BasicEventHandler {
 
 		for (Person person : scenario.getPopulation().getPersons().values()) {
 			ScoringFunction sf = scoringFunctionsForPopulation.getScoringFunctionForAgent(person.getId());
-			double score = sf.getScore();
+			ScoreInfo scoreInfo = sf.getScoreInfo();
 			Plan plan = person.getSelectedPlan();
 			Double oldScore = plan.getScore();
 			if (oldScore == null) {
-				plan.setScore(score);
+				plan.setScoreInfo(scoreInfo);
 				if ( plan.getScore().isNaN() ) {
 					log.warn("score is NaN; plan:" + plan.toString() );
 				}
 			} else {
 				if ( this.scoreMSAstartsAtIteration == null || this.iteration < this.scoreMSAstartsAtIteration ) {
-					final double newScore = this.learningRate * score + (1 - this.learningRate) * oldScore;
+					final double newScore = this.learningRate * scoreInfo.getScore() + (1 - this.learningRate) * oldScore;
 					if ( log.isTraceEnabled() ) { 
-						log.trace( " lrn: " + this.learningRate + " oldScore: " + oldScore + " simScore: " + score + " newScore: " + newScore );
+						log.trace( " lrn: " + this.learningRate + " oldScore: " + oldScore + " simScore: " + scoreInfo + " newScore: " + newScore );
 					}
-					plan.setScore(newScore);
+					plan.setScoreInfo(new ScoreInfoImpl(newScore));
 					if ( plan.getScore().isNaN() ) {
-						log.warn("score is NaN; plan:" + plan.toString()+" with lrn: " + this.learningRate + " oldScore: " + oldScore + " simScore: " + score + " newScore: " + newScore );
+						log.warn("score is NaN; plan:" + plan.toString()+" with lrn: " + this.learningRate + " oldScore: " + oldScore + " simScore: " + scoreInfo + " newScore: " + newScore );
 					}
 				} else {
 //					double alpha = 1./(this.iteration - this.scoreMSAstartsAtIteration + 1) ;
@@ -211,11 +211,11 @@ public class EventsToScore implements BasicEventHandler {
 					this.msaContributions.put(plan,msaContribs+1) ;
 					double alpha = 1./(msaContribs+1) ;
 
-					final double newScore = alpha * score + (1.-alpha) * oldScore;
+					final double newScore = alpha * scoreInfo.getScore() + (1.-alpha) * oldScore;
 					if ( log.isTraceEnabled() ) {
-						log.trace( " alpha: " + alpha + " oldScore: " + oldScore + " simScore: " + score + " newScore: " + newScore );
+						log.trace( " alpha: " + alpha + " oldScore: " + oldScore + " simScore: " + scoreInfo + " newScore: " + newScore );
 					}
-					plan.setScore( newScore ) ;
+					plan.setScoreInfo( new ScoreInfoImpl(newScore) ) ;
 					if ( plan.getScore().isNaN() ) {
 						log.warn("score is NaN; plan:" + plan.toString() );
 					}
@@ -237,7 +237,7 @@ public class EventsToScore implements BasicEventHandler {
 				}
 			}
 
-			this.scoreSum += score;
+			this.scoreSum += scoreInfo.getScore();
 			this.scoreCount++;
 		}
 	}
@@ -273,7 +273,7 @@ public class EventsToScore implements BasicEventHandler {
 		ScoringFunction scoringFunction = getScoringFunctionForAgent(agentId);
 		if (scoringFunction == null)
 			return null;
-		return scoringFunction.getScore();
+		return scoringFunction.getScoreInfo().getScore();
 	}
 
 	@Override

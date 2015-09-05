@@ -76,7 +76,7 @@ public class DisaggregatedScoreAnalyzer implements IterationEndsListener{
 			for(String mode:legUtility2it.keySet()){
 				legUtility2it.get(mode).put(event.getIteration(), legUtility2it.get(mode).get(event.getIteration())+sf.getLegScores().get(mode));
 			};	
-			this.sumUtility2it.put(event.getIteration(), sumUtility2it.get(event.getIteration())+sf.getScore());
+			this.sumUtility2it.put(event.getIteration(), sumUtility2it.get(event.getIteration())+sf.getScoreInfo());
 		}
 
 

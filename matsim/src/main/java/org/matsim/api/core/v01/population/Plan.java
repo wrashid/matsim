@@ -22,6 +22,7 @@ package org.matsim.api.core.v01.population;
 
 import org.matsim.api.core.v01.Customizable;
 import org.matsim.core.api.internal.MatsimPopulationObject;
+import org.matsim.core.scoring.ScoreInfo;
 
 import java.util.List;
 
@@ -56,5 +57,11 @@ public interface Plan extends MatsimPopulationObject, Customizable, BasicPlan {
 	 * you are using this method!.
 	 */
 	public void setPerson(Person person);
+	
+	public void setScoreInfo(ScoreInfo score);
+	
+	public ScoreInfo getScoreInfo();
+
+	public abstract Double getScore();
 
 }

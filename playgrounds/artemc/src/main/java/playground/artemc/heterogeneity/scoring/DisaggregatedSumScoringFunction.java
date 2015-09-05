@@ -90,7 +90,7 @@ public class DisaggregatedSumScoringFunction implements ScoringFunction {
 	 * Add the score of all functions.
 	 */
 	@Override
-	public double getScore() {
+	public double getScoreInfo() {
 		double score = 0.0;
 		for (BasicScoring basicScoringFunction : basicScoringFunctions) {
             double contribution = basicScoringFunction.getScore();

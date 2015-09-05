@@ -27,6 +27,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.*;
 import org.matsim.core.scenario.CustomizableUtils;
+import org.matsim.core.scoring.ScoreInfo;
 import org.matsim.core.utils.misc.Time;
 
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public class PlanImpl implements Plan {
 
 	protected ArrayList<PlanElement> actsLegs = new ArrayList<PlanElement>();
 
-	private Double score = null;
+	private ScoreInfo scoreInfo = null;
 	private Person person = null;
 
 	private String type = null;
@@ -192,12 +193,17 @@ public class PlanImpl implements Plan {
 
 	@Override
 	public final Double getScore() {
-		return this.score;
+		return this.scoreInfo.getScore();
 	}
 
 	@Override
-	public void setScore(final Double score) {
-		this.score = score;
+	public void setScoreInfo(final ScoreInfo score) {
+		this.scoreInfo = score;
+	}
+	
+	@Override
+	public ScoreInfo getScoreInfo() {
+		return scoreInfo;
 	}
 
     @Override
@@ -261,7 +267,7 @@ public class PlanImpl implements Plan {
 	 **/
 	public final void copyFrom(final Plan in) {
         this.getPlanElements().clear();
-		setScore(in.getScore());
+		setScoreInfo(in.getScoreInfo());
 		this.setType(in.getType());
 		for (PlanElement pe : in.getPlanElements()) {
 			if (pe instanceof Activity) {

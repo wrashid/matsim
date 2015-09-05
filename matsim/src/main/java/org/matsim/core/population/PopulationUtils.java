@@ -31,6 +31,7 @@ import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.population.routes.*;
 import org.matsim.core.router.StageActivityTypes;
 import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.scoring.ScoreInfo;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.core.utils.io.UncheckedIOException;
 import org.matsim.core.utils.misc.Time;
@@ -298,7 +299,12 @@ public final class PopulationUtils {
 		}
 
 		@Override
-		public void setScore(Double score) {
+		public void setScoreInfo(ScoreInfo scoreInfo) {
+			throw new UnsupportedOperationException() ;
+		}
+		
+		@Override
+		public ScoreInfo getScoreInfo() {
 			throw new UnsupportedOperationException() ;
 		}
 

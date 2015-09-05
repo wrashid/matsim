@@ -24,6 +24,8 @@ import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.events.PersonMoneyEvent;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
+import org.matsim.core.scoring.ScoreInfo;
+import org.matsim.core.scoring.ScoreInfoImpl;
 import org.matsim.core.scoring.ScoringFunctionAdapter;
 
 /**
@@ -115,8 +117,8 @@ public class OnlyTravelTimeDependentScoringFunction extends ScoringFunctionAdapt
 	 * @return the score
 	 */
 	@Override
-	public double getScore() {
-		return score;
+	public ScoreInfo getScoreInfo() {
+		return new ScoreInfoImpl(score);
 	}
 
 	public void reset() {		

@@ -170,7 +170,7 @@ public class PlanTimesAdapter {
 		}
 
 		scoringFunction.finish();
-		return scoringFunction.getScore();
+		return scoringFunction.getScoreInfo();
 	}
 
 	private PathCosts approximateTravelTimeFromDistance(Plan thePlan, int actlegIndex, int planElementIndex, PlanElement pe) {

@@ -89,7 +89,7 @@ public interface ScoringFunction {
 
 	 * @return the score
 	 */
-	public double getScore();
+	public ScoreInfo getScoreInfo();
 
 	public void handleEvent( Event event ) ;
 
