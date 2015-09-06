@@ -193,7 +193,7 @@ public class PlanImpl implements Plan {
 
 	@Override
 	public final Double getScore() {
-		return this.scoreInfo.getScore();
+		return this.scoreInfo==null?null:this.scoreInfo.getScore();
 	}
 
 	@Override

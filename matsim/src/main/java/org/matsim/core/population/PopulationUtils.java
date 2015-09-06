@@ -305,7 +305,7 @@ public final class PopulationUtils {
 		
 		@Override
 		public ScoreInfo getScoreInfo() {
-			throw new UnsupportedOperationException() ;
+			return delegate.getScoreInfo() ;
 		}
 
 	}
