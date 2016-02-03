@@ -143,9 +143,15 @@ TeleportationArrivalEventHandler, TransitDriverStartsEventHandler, PersonEntersV
 	
 
 	@Inject
-	EventsToLegs(Network network, EventsManager eventsManager) {
+	EventsToLegs(Network network, final EventsManager eventsManager) {
 		this.network = network;
 		eventsManager.addHandler(this);
+		addLegHandler(new LegHandler() {
+			@Override
+			public void handleLeg(PersonExperiencedLeg leg) {
+				eventsManager.processEvent(leg);
+			}
+		});
 	}
 
 

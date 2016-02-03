@@ -37,14 +37,14 @@ public class EventsToPlans implements ActivityHandler, LegHandler {
 
 	@Override
 	public void handleLeg(PersonExperiencedLeg leg) {
-		if(agentRecords.get(leg.getAgentId())!=null)
-			agentRecords.get(leg.getAgentId()).addLeg(leg.getLeg());
+		if(agentRecords.get(leg.getPersonId())!=null)
+			agentRecords.get(leg.getPersonId()).addLeg(leg.getLeg());
 	}
 
 	@Override
 	public void handleActivity(PersonExperiencedActivity activity) {
-		if(agentRecords.get(activity.getAgentId())!=null)
-			agentRecords.get(activity.getAgentId()).addActivity(activity.getActivity());
+		if(agentRecords.get(activity.getPersonId())!=null)
+			agentRecords.get(activity.getPersonId()).addActivity(activity.getActivity());
 	}
 	
 	public void writeExperiencedPlans(String iterationFilename) {

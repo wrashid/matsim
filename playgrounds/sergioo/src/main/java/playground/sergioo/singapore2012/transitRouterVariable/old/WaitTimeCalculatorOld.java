@@ -166,17 +166,17 @@ public class WaitTimeCalculatorOld implements PersonDepartureEventHandler, Perso
 	
 	/*@Override
 	public void handleEvent(AdditionalTeleportationDepartureEvent event) {
-		Double startWaitingTime = agentsWaitingData.get(event.getAgentId());
+		Double startWaitingTime = agentsWaitingData.get(event.getPersonId());
 		if(startWaitingTime!=null) {
-			int legs = 0, currentLeg = agentsCurrentLeg.get(event.getAgentId());
+			int legs = 0, currentLeg = agentsCurrentLeg.get(event.getPersonId());
 			PLAN_ELEMENTS:
-			for(PlanElement planElement:population.getPersons().get(event.getAgentId()).getSelectedPlan().getPlanElements())
+			for(PlanElement planElement:population.getPersons().get(event.getPersonId()).getSelectedPlan().getPlanElements())
 				if(planElement instanceof Leg) {
 					if(currentLeg==legs) {
 						String[] leg = ((GenericRoute)((Leg)planElement).getRoute()).getRouteDescription().split(SEPARATOR);
 						String key = "("+leg[2]+")["+leg[3]+"]"+leg[1];
 						waitTimes.get(key).addWaitTime((int) (startWaitingTime/timeSlot), event.getTime()-startWaitingTime);
-						agentsWaitingData.remove(event.getAgentId());
+						agentsWaitingData.remove(event.getPersonId());
 						break PLAN_ELEMENTS;
 					}
 					else

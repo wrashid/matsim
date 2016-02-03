@@ -32,13 +32,15 @@ import org.matsim.api.core.v01.events.handler.ActivityEndEventHandler;
 import org.matsim.api.core.v01.events.handler.ActivityStartEventHandler;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
+import org.matsim.core.events.EventsUtils;
 import org.matsim.core.population.ActivityImpl;
 
 import javax.inject.Inject;
 
 /**
  * 
- * Converts a stream of Events into a stream of Activities. Passes Activities to a single ActivityHandler which must be registered with this class.
+ * Converts a stream of Events into a stream of Activities. Passes Activities to ActivityHandlers which are registered with this class,
+ * and, additionally, to the Events stream.
  * Mainly intended for scoring, but can be used for any kind of Activity related statistics. Essentially, it allows you to read
  * Activities from the simulation like you would read Activities from Plans, except that the Plan does not even need to exist.
  * <p/>
@@ -50,7 +52,7 @@ import javax.inject.Inject;
  *
  */
 public class EventsToActivities implements ActivityStartEventHandler, ActivityEndEventHandler {
-	
+
 	public interface ActivityHandler {
 	    void handleActivity(PersonExperiencedActivity activity);
 	}
@@ -63,8 +65,14 @@ public class EventsToActivities implements ActivityStartEventHandler, ActivityEn
     }
 
     @Inject
-    EventsToActivities(EventsManager eventsManager) {
+    EventsToActivities(final EventsManager eventsManager) {
         eventsManager.addHandler(this);
+        addActivityHandler(new ActivityHandler() {
+            @Override
+            public void handleActivity(PersonExperiencedActivity activity) {
+                eventsManager.processEvent(activity);
+            }
+        });
     }
 
     @Override

@@ -100,24 +100,24 @@ public class TripStatisticsCollectingEventHandler implements LegHandler, Activit
 
 	@Override
 	public void handleActivity(PersonExperiencedActivity personExperiencedActivity) {
-		if ( !collectStatistics || !personsToTrack.contains(personExperiencedActivity.getAgentId()) ) return;
+		if ( !collectStatistics || !personsToTrack.contains(personExperiencedActivity.getPersonId()) ) return;
 
 		if ( log.isTraceEnabled() ) {
-			log.trace( "handle activity "+ personExperiencedActivity.getActivity() +" for agent "+ personExperiencedActivity.getAgentId());
+			log.trace( "handle activity "+ personExperiencedActivity.getActivity() +" for agent "+ personExperiencedActivity.getPersonId());
 		}
 
 		if ( stages.isStageActivity(personExperiencedActivity.getActivity().getType() ) ) {
-			currentTrips.get(personExperiencedActivity.getAgentId()).trip.add(personExperiencedActivity.getActivity());
+			currentTrips.get(personExperiencedActivity.getPersonId()).trip.add(personExperiencedActivity.getActivity());
 			return;
 		}
 
-		final Record record = currentTrips.put(personExperiencedActivity.getAgentId(), new Record(personExperiencedActivity.getActivity()) );
+		final Record record = currentTrips.put(personExperiencedActivity.getPersonId(), new Record(personExperiencedActivity.getActivity()) );
 		if ( record == null )  return;
 		record.destination = personExperiencedActivity.getActivity();
 
 		try {
 			writer.newLine();
-			writer.write(personExperiencedActivity.getAgentId().toString());
+			writer.write(personExperiencedActivity.getPersonId().toString());
 			writer.write( "\t" );
 			writer.write( ""+record.origin.getEndTime() );
 			writer.write( "\t" );
@@ -139,7 +139,7 @@ public class TripStatisticsCollectingEventHandler implements LegHandler, Activit
 			throw new UncheckedIOException( e );
 		}
 		catch (RuntimeException e) {
-			log.error( "got exception handling "+ personExperiencedActivity.getActivity() +" for agent "+ personExperiencedActivity.getAgentId(), e );
+			log.error( "got exception handling "+ personExperiencedActivity.getActivity() +" for agent "+ personExperiencedActivity.getPersonId(), e );
 			throw e;
 		}
 	}
@@ -160,11 +160,11 @@ public class TripStatisticsCollectingEventHandler implements LegHandler, Activit
 
 	@Override
 	public void handleLeg(PersonExperiencedLeg personExperiencedLeg) {
-		if ( !collectStatistics || !personsToTrack.contains(personExperiencedLeg.getAgentId()) ) return;
+		if ( !collectStatistics || !personsToTrack.contains(personExperiencedLeg.getPersonId()) ) return;
 		if ( log.isTraceEnabled() ) {
-			log.trace( "handle leg "+ personExperiencedLeg.getLeg() +" for agent "+ personExperiencedLeg.getAgentId());
+			log.trace( "handle leg "+ personExperiencedLeg.getLeg() +" for agent "+ personExperiencedLeg.getPersonId());
 		}
-		currentTrips.get(personExperiencedLeg.getAgentId()).trip.add(personExperiencedLeg.getLeg());
+		currentTrips.get(personExperiencedLeg.getPersonId()).trip.add(personExperiencedLeg.getLeg());
 	}
 
 	@Override

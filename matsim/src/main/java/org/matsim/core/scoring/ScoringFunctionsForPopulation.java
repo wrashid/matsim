@@ -60,7 +60,7 @@ import org.matsim.core.utils.io.IOUtils;
  * @author michaz
  *
  */
-class ScoringFunctionsForPopulation implements BasicEventHandler, ExperiencedPlansService, EventsToActivities.ActivityHandler, EventsToLegs.LegHandler {
+class ScoringFunctionsForPopulation implements BasicEventHandler, ExperiencedPlansService {
 
 	private final static Logger log = Logger.getLogger(ScoringFunctionsForPopulation.class);
 	private final PlansConfigGroup plansConfigGroup;
@@ -83,16 +83,13 @@ class ScoringFunctionsForPopulation implements BasicEventHandler, ExperiencedPla
 	private final Map<Id<Person>, TDoubleCollection> partialScores = new LinkedHashMap<>();
 
 	@Inject
-	ScoringFunctionsForPopulation(EventsManager eventsManager, EventsToActivities eventsToActivities, EventsToLegs eventsToLegs,
-			PlansConfigGroup plansConfigGroup, Network network, Population population, ScoringFunctionFactory scoringFunctionFactory) {
+	ScoringFunctionsForPopulation(EventsManager eventsManager, PlansConfigGroup plansConfigGroup, Network network, Population population, ScoringFunctionFactory scoringFunctionFactory) {
 		this.plansConfigGroup = plansConfigGroup;
 		this.network = network;
 		this.population = population;
 		this.scoringFunctionFactory = scoringFunctionFactory;
 		reset();
 		eventsManager.addHandler(this);
-		eventsToActivities.addActivityHandler(this);
-		eventsToLegs.addLegHandler(this);
 	}
 
 	private void reset() {
@@ -121,32 +118,6 @@ class ScoringFunctionsForPopulation implements BasicEventHandler, ExperiencedPla
 	@Override
 	public Map<Id<Person>, Plan> getAgentRecords() {
 		return this.agentRecords;
-	}
-
-	@Override
-	public void handleActivity(PersonExperiencedActivity event) {
-		Id<Person> agentId = event.getAgentId();
-		Activity activity = event.getActivity();
-		ScoringFunction scoringFunctionForAgent = this.getScoringFunctionForAgent(agentId);
-		if (scoringFunctionForAgent != null) {
-			scoringFunctionForAgent.handleActivity(activity);
-			this.agentRecords.get(agentId).addActivity(activity);
-			TDoubleCollection partialScoresForAgent = this.partialScores.get(agentId);
-			partialScoresForAgent.add( scoringFunctionForAgent.getScore());
-		}
-	}
-
-	@Override
-	public void handleLeg(PersonExperiencedLeg event) {
-		Id<Person> agentId = event.getAgentId();
-		Leg leg = event.getLeg();
-		ScoringFunction scoringFunctionForAgent = this.getScoringFunctionForAgent(agentId);
-		if (scoringFunctionForAgent != null) {
-			scoringFunctionForAgent.handleLeg(leg);
-			agentRecords.get(agentId).addLeg(leg);
-			TDoubleCollection partialScoresForAgent = this.partialScores.get(agentId);
-			partialScoresForAgent.add(scoringFunctionForAgent.getScore());
-		}
 	}
 
 	public void finishScoringFunctions() {
@@ -192,20 +163,32 @@ class ScoringFunctionsForPopulation implements BasicEventHandler, ExperiencedPla
 
 	@Override
 	public void handleEvent(Event event) {
-		// this is for the stuff that is directly based on events.
-		// note that this passes on _all_ person events, even those already passed above.
-		// for the time being, not all PersonEvents may "implement HasPersonId".
-		// link enter/leave events are NOT passed on, for performance reasons.
-		// kai/dominik, dec'12
-		if ( event instanceof HasPersonId) {
+		if (event instanceof HasPersonId) {
+			// not all person-referring Events implement HasPersonId.
+			// link enter/leave events are NOT passed on, for performance reasons.
+
 			ScoringFunction sf = getScoringFunctionForAgent( ((HasPersonId)event).getPersonId());
 			if (sf != null) {
-				if ( event instanceof PersonStuckEvent) {
-					sf.agentStuck( event.getTime() ) ;
-				} else if ( event instanceof PersonMoneyEvent) {
-					sf.addMoney( ((PersonMoneyEvent)event).getAmount() ) ;
+				if (event instanceof PersonExperiencedActivity) {
+					Id<Person> agentId = ((PersonExperiencedActivity) event).getPersonId();
+					Activity activity = ((PersonExperiencedActivity) event).getActivity();
+					sf.handleActivity(activity);
+					this.agentRecords.get(agentId).addActivity(activity);
+					TDoubleCollection partialScoresForAgent = this.partialScores.get(agentId);
+					partialScoresForAgent.add(sf.getScore());
+				} else if (event instanceof PersonExperiencedLeg) {
+					Id<Person> agentId = ((PersonExperiencedLeg) event).getPersonId();
+					Leg leg = ((PersonExperiencedLeg) event).getLeg();
+					sf.handleLeg(leg);
+					agentRecords.get(agentId).addLeg(leg);
+					TDoubleCollection partialScoresForAgent = this.partialScores.get(agentId);
+					partialScoresForAgent.add(sf.getScore());
+				} else if (event instanceof PersonStuckEvent) {
+					sf.agentStuck( event.getTime());
+				} else if (event instanceof PersonMoneyEvent) {
+					sf.addMoney(((PersonMoneyEvent)event).getAmount());
 				} else {
-					sf.handleEvent( event ) ;
+					sf.handleEvent(event);
 				}
 			}
 		}

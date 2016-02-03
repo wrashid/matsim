@@ -72,13 +72,13 @@ public class ActivityHistogram implements ActivityHandler, ActivityStartEventHan
 		if (personExperiencedActivity.getActivity().getStartTime() == Time.UNDEFINED_TIME  ) {
 			handleStart( 0,
 					personExperiencedActivity.getActivity().getType(),
-					personExperiencedActivity.getAgentId());
+					personExperiencedActivity.getPersonId());
 		}
 		if (personExperiencedActivity.getActivity().getEndTime() != Time.UNDEFINED_TIME ) {
 			handleEnd(
 					personExperiencedActivity.getActivity().getEndTime(),
 					personExperiencedActivity.getActivity().getType(),
-					personExperiencedActivity.getAgentId());
+					personExperiencedActivity.getPersonId());
 		}
 	}
 
