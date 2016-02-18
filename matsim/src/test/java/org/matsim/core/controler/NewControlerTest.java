@@ -19,7 +19,7 @@ public class NewControlerTest {
 		Config config = testUtils.loadConfig("examples/equil/config.xml");
 		config.controler().setLastIteration(1);
 		config.controler().setOutputDirectory(testUtils.getOutputDirectory());
-		final Scenario scenario = ScenarioUtils.createScenario(config);
+		final Scenario scenario = ScenarioUtils.loadScenario(config);
 		com.google.inject.Injector injector = Injector.createInjector(config, new AbstractModule() {
 			@Override
 			public void install() {
