@@ -20,7 +20,9 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
-public class ScoringFunctionsForPopulationTest {
+public class ScoringFunctionsForPopulationStressIT {
+
+	static final int MAX = 1000000;
 
 	@Test(expected = RuntimeException.class)
 	public void exceptionInScoringFunctionPropagates() {
@@ -80,11 +82,36 @@ public class ScoringFunctionsForPopulationTest {
 	}
 
 	@Test
-	public void works() {
+	public void workWithNewEventsManager() {
 		Config config = ConfigUtils.createConfig();
 		config.parallelEventHandling().setNumberOfThreads(8);
 		config.parallelEventHandling().setOneThreadPerHandler(true);
-		config.parallelEventHandling().setSynchronizeOnSimSteps(false);
+		work(config);
+	}
+
+	@Test
+	public void workWithOldEventsManager() {
+		Config config = ConfigUtils.createConfig();
+		config.parallelEventHandling().setNumberOfThreads(8);
+		work(config);
+	}
+
+	@Test
+	public void workWithNewEventsManagerOld() {
+		Config config = ConfigUtils.createConfig();
+		config.parallelEventHandling().setNumberOfThreads(8);
+		config.parallelEventHandling().setOneThreadPerHandler(true);
+		workOld(config);
+	}
+
+	@Test
+	public void workWithOldEventsManagerOld() {
+		Config config = ConfigUtils.createConfig();
+		config.parallelEventHandling().setNumberOfThreads(8);
+		workOld(config);
+	}
+
+	private void work(Config config) {
 		PlanCalcScoreConfigGroup.ActivityParams work = new PlanCalcScoreConfigGroup.ActivityParams("work");
 		work.setTypicalDuration(100.0);
 		config.planCalcScore().addActivityParams(work);
@@ -142,7 +169,6 @@ public class ScoringFunctionsForPopulationTest {
 		};
 		ScoringFunctionsForPopulation scoringFunctionsForPopulation = new ScoringFunctionsForPopulation(events, new EventsToActivities(events), new EventsToLegs(scenario.getNetwork(), events), config.plans(), scenario.getNetwork(), scenario.getPopulation(), scoringFunctionFactory);
 		scoringFunctionsForPopulation.onIterationStarts();
-		int MAX = 10000;
 		events.initProcessing();
 		for (int i=0; i<MAX; i++) {
 			events.processEvent(new PersonMoneyEvent(i*200, personId, 1.0));
@@ -150,11 +176,85 @@ public class ScoringFunctionsForPopulationTest {
 			events.processEvent(new ActivityEndEvent(i*200 + 100, personId, Id.createLinkId(0), null, "work"));
 			events.processEvent(new PersonDepartureEvent(i*200+100, personId, Id.createLinkId(0), "car"));
 			events.processEvent(new PersonArrivalEvent(i*200+200, personId, Id.createLinkId(0), "car"));
+			events.afterSimStep(i*200+200);
 		}
 		events.finishProcessing();
 		scoringFunctionsForPopulation.finishScoringFunctions();
 		assertEquals(60.0 * MAX, scoringFunctionsForPopulation.getScoringFunctionForAgent(personId).getScore(), 1.0);
 	}
+
+	private void workOld(Config config) {
+		PlanCalcScoreConfigGroup.ActivityParams work = new PlanCalcScoreConfigGroup.ActivityParams("work");
+		work.setTypicalDuration(100.0);
+		config.planCalcScore().addActivityParams(work);
+		PlanCalcScoreConfigGroup.ModeParams car = new PlanCalcScoreConfigGroup.ModeParams("car");
+		car.setMarginalUtilityOfTraveling(0.0);
+		car.setMarginalUtilityOfDistance(0.0);
+		car.setConstant(-1.0);
+		config.planCalcScore().addModeParams(car);
+		final Scenario scenario = ScenarioUtils.createScenario(config);
+		Id<Person> personId = Id.createPersonId(1);
+		scenario.getPopulation().addPerson(scenario.getPopulation().getFactory().createPerson(personId));
+		EventsManager events = EventsUtils.createEventsManager(config);
+		ScoringFunctionFactory scoringFunctionFactory = new ScoringFunctionFactory() {
+			ScoringFunctionFactory delegate = new CharyparNagelScoringFunctionFactory(scenario);
+			@Override
+			public ScoringFunction createNewScoringFunction(final Person person) {
+				return new ScoringFunction() {
+					ScoringFunction delegateFunction = delegate.createNewScoringFunction(person);
+					@Override
+					public void handleActivity(Activity activity) {
+						delegateFunction.handleActivity(activity);
+					}
+
+					@Override
+					public void handleLeg(Leg leg) {
+						delegateFunction.handleLeg(leg);
+					}
+
+					@Override
+					public void agentStuck(double time) {
+						delegateFunction.agentStuck(time);
+					}
+
+					@Override
+					public void addMoney(double amount) {
+						delegateFunction.addMoney(amount);
+					}
+
+					@Override
+					public void finish() {
+						delegateFunction.finish();
+					}
+
+					@Override
+					public double getScore() {
+						return delegateFunction.getScore();
+					}
+
+					@Override
+					public void handleEvent(Event event) {
+						delegateFunction.handleEvent(event);
+					}
+				};
+			}
+		};
+		ScoringFunctionsForPopulationOld scoringFunctionsForPopulation = new ScoringFunctionsForPopulationOld(events, new EventsToActivities(events), new EventsToLegs(scenario.getNetwork(), events), config.plans(), scenario.getNetwork(), scenario.getPopulation(), scoringFunctionFactory);
+		scoringFunctionsForPopulation.onIterationStarts();
+		events.initProcessing();
+		for (int i=0; i<MAX; i++) {
+			events.processEvent(new PersonMoneyEvent(i*200, personId, 1.0));
+			events.processEvent(new ActivityStartEvent(i*200, personId, Id.createLinkId(0), null, "work"));
+			events.processEvent(new ActivityEndEvent(i*200 + 100, personId, Id.createLinkId(0), null, "work"));
+			events.processEvent(new PersonDepartureEvent(i*200+100, personId, Id.createLinkId(0), "car"));
+			events.processEvent(new PersonArrivalEvent(i*200+200, personId, Id.createLinkId(0), "car"));
+			events.afterSimStep(i*200+200);
+		}
+		events.finishProcessing();
+		scoringFunctionsForPopulation.finishScoringFunctions();
+		assertEquals(60.0 * MAX, scoringFunctionsForPopulation.getScoringFunctionForAgent(personId).getScore(), 1.0);
+	}
+
 
 	@Test
 	public void unlikelyTimingOfScoringFunctionStillWorks() {
