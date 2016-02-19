@@ -84,7 +84,6 @@ public class ScoringFunctionsForPopulationStressIT {
 	@Test
 	public void workWithNewEventsManager() {
 		Config config = ConfigUtils.createConfig();
-		config.parallelEventHandling().setNumberOfThreads(8);
 		config.parallelEventHandling().setOneThreadPerHandler(true);
 		work(config);
 	}
@@ -99,7 +98,6 @@ public class ScoringFunctionsForPopulationStressIT {
 	@Test
 	public void workWithNewEventsManagerOld() {
 		Config config = ConfigUtils.createConfig();
-		config.parallelEventHandling().setNumberOfThreads(8);
 		config.parallelEventHandling().setOneThreadPerHandler(true);
 		workOld(config);
 	}
