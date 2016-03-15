@@ -6,7 +6,8 @@ public class MultiRunBerlinTaxiLauncher
     {
         int runs = 1;
         String paramDir = args[0];
-        String specificParamDir = args[0] + "/" + args[1];
+//        String specificParamDir = args[0] + "/" + args[1];
+        String specificParamDir =  args[1];
 
         TaxiLauncherParams params = TaxiLauncherParams.readParams(paramDir, specificParamDir);
         MultiRunTaxiLauncher.run(runs, params);
