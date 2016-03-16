@@ -24,11 +24,15 @@ import java.util.EnumSet;
 
 import org.matsim.contrib.dvrp.data.VrpData;
 import org.matsim.contrib.dvrp.run.VrpLauncherUtils.TravelTimeSource;
+import org.matsim.core.api.experimental.events.EventsManager;
+import org.matsim.core.events.algorithms.EventWriter;
+import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.mobsim.qsim.QSim;
 import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
 
 import playground.michalm.taxi.util.stats.*;
+import playground.michalm.util.MovingAgentsRegister;
 
 
 class MultiRunTaxiLauncher
@@ -40,6 +44,10 @@ class MultiRunTaxiLauncher
 
     private boolean warmup;
     private PrintWriter pw;
+    private EventWriter eventWriter;
+    private MovingAgentsRegister movingAgents;
+
+
 
 
     MultiRunTaxiLauncher(TaxiLauncherParams params)
@@ -63,11 +71,20 @@ class MultiRunTaxiLauncher
     @Override
     public void beforeQSim(QSim qSim)
     {
+        EventsManager events = qSim.getEventsManager();
+
         if (warmup) {
             travelTimeCalculator = TravelTimeCalculator.create(scenario.getNetwork(),
                     scenario.getConfig().travelTimeCalculator());
             qSim.getEventsManager().addHandler(travelTimeCalculator);
         }
+        if (params.eventsOutFile != null) {
+            eventWriter = new EventWriterXML(params.eventsOutFile);
+            events.addHandler(eventWriter);
+        }
+        movingAgents = new MovingAgentsRegister();
+        events.addHandler(movingAgents);
+        
     }
 
 
@@ -91,7 +108,7 @@ class MultiRunTaxiLauncher
     }
 
 
-    private static final int STATS_HOURS = 25;
+    private static final int STATS_HOURS = 30;
 
 
     void run(int runs)
@@ -182,6 +199,15 @@ class MultiRunTaxiLauncher
         params.validate();
         run(runs);
     }
+    
+    @Override
+    public void afterQSim(QSim qSim)
+    {
+        if (params.eventsOutFile != null) {
+            eventWriter.closeFile();
+        }
+    }
+
 
 
     static void run(int runs, TaxiLauncherParams params)

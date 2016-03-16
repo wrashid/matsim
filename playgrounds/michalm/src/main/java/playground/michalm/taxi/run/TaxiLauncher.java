@@ -73,6 +73,7 @@ class TaxiLauncher
         QSimConfigGroup qsc = scenario.getConfig().qsim();
         qsc.setStorageCapFactor(params.storageCapFactor);
         qsc.setFlowCapFactor(params.flowCapFactor);
+        qsc.setEndTime(100*3600);
 
         if (params.taxiCustomersFile != null) {
             List<String> passengerIds = PersonCreatorWithRandomTaxiMode
