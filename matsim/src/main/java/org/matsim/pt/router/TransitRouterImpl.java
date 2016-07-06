@@ -20,6 +20,7 @@
 
 package org.matsim.pt.router;
 
+import com.google.inject.Inject;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
@@ -27,6 +28,7 @@ import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Route;
+import org.matsim.core.config.Config;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.GenericRouteImpl;
 import org.matsim.core.router.util.LeastCostPathCalculator.Path;
@@ -40,13 +42,15 @@ import org.matsim.pt.router.TransitRouterNetwork.TransitRouterNetworkNode;
 import org.matsim.pt.routes.ExperimentalTransitRoute;
 import org.matsim.pt.transitSchedule.api.*;
 
+import javax.inject.Singleton;
 import java.util.*;
 
 /**
- * Not thread-safe because MultiNodeDijkstra is not. Does not expect the TransitSchedule to change once constructed! michaz '13
+ * Does not expect the TransitSchedule to change once constructed! michaz '13
  *
  * @author mrieser
  */
+@Singleton
 public class TransitRouterImpl implements TransitRouter {
 
     private final TransitRouterNetwork transitNetwork;
@@ -57,6 +61,15 @@ public class TransitRouterImpl implements TransitRouter {
 
 
     private final PreparedTransitSchedule preparedTransitSchedule;
+
+	@Inject
+	TransitRouterImpl(final TransitSchedule schedule, final Config config) {
+		this(new TransitRouterConfig(
+				config.planCalcScore(),
+				config.plansCalcRoute(),
+				config.transitRouter(),
+				config.vspExperimental()), schedule);
+	}
 
 	public TransitRouterImpl(final TransitRouterConfig config, final TransitSchedule schedule) {
 		this.preparedTransitSchedule = new PreparedTransitSchedule(schedule);

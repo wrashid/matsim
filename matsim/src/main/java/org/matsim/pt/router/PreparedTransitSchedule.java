@@ -19,14 +19,11 @@
 
 package org.matsim.pt.router;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import org.matsim.pt.transitSchedule.api.*;
 
-import org.matsim.pt.transitSchedule.api.Departure;
-import org.matsim.pt.transitSchedule.api.TransitRoute;
-import org.matsim.pt.transitSchedule.api.TransitRouteStop;
-import org.matsim.pt.transitSchedule.api.TransitSchedule;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 
@@ -49,13 +46,23 @@ public class PreparedTransitSchedule {
 	 * read only.
 	 * cdobler, nov'12
 	 */
-	private final Map<TransitRoute, double[]> sortedDepartureCache = new ConcurrentHashMap<TransitRoute, double[]>();
+	private final Map<TransitRoute, double[]> sortedDepartureCache = new HashMap<>();
 
     /*
      * Conceptually, an instance of this class wraps a TransitSchedule to optimize a function of it.
      */
 	public PreparedTransitSchedule(TransitSchedule schedule) {
-		
+		for (TransitLine transitLine : schedule.getTransitLines().values()) {
+			for (TransitRoute route : transitLine.getRoutes().values()) {
+				double[] cache = new double[route.getDepartures().size()];
+				int i = 0;
+				for (Departure dep : route.getDepartures().values()) {
+					cache[i++] = dep.getDepartureTime();
+				}
+				Arrays.sort(cache);
+				sortedDepartureCache.put(route, cache);
+			}
+		}
 	}
 
 	@Deprecated
@@ -81,15 +88,6 @@ public class PreparedTransitSchedule {
 	
 		// this will search for the terminus departure that corresponds to my departure at the stop:
 		double[] cache = sortedDepartureCache.get(route);
-		if (cache == null) {
-			cache = new double[route.getDepartures().size()];
-			int i = 0;
-			for (Departure dep : route.getDepartures().values()) {
-				cache[i++] = dep.getDepartureTime();
-			}
-			Arrays.sort(cache);
-			sortedDepartureCache.put(route, cache);
-		}
 		int pos = Arrays.binarySearch(cache, earliestDepartureTimeAtTerminus);
 		if (pos < 0) {
 			// (if the departure time is not found _exactly_, binarySearch returns (-(insertion point) - 1).  That is

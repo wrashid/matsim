@@ -34,8 +34,6 @@ import org.matsim.vehicles.Vehicle;
 /**
  * TravelTime and TravelCost calculator to be used with the transit network used for transit routing.
  *
- * <em>This class is NOT thread-safe!</em>
- *
  * @author mrieser
  */
 public class TransitRouterNetworkTravelTimeAndDisutility implements TravelTime, TransitTravelDisutility {
@@ -43,9 +41,6 @@ public class TransitRouterNetworkTravelTimeAndDisutility implements TravelTime, 
 	final static double MIDNIGHT = 24.0*3600;
 
 	protected final TransitRouterConfig config;
-	private Link previousLink = null;
-	private double previousTime = Double.NaN;
-	private double cachedTravelTime = Double.NaN;
 
 	private final PreparedTransitSchedule preparedTransitSchedule;
 
@@ -86,10 +81,6 @@ public class TransitRouterNetworkTravelTimeAndDisutility implements TravelTime, 
 	
 	/**
 	 * method to allow inclusion of offVehicleWaitTime without code replication.  kai, oct'12
-	 * 
-	 * @param link
-	 * @param time
-	 * @return
 	 */
 	protected double offVehicleWaitTime(final Link link, final double time) {
 		double offVehWaitTime=0;
@@ -134,12 +125,6 @@ public class TransitRouterNetworkTravelTimeAndDisutility implements TravelTime, 
 	
 	@Override
 	public double getLinkTravelTime(final Link link, final double time, Person person, Vehicle vehicle) {
-		if ((link == this.previousLink) && (time == this.previousTime)) {
-			return this.cachedTravelTime;
-		}
-		this.previousLink = link;
-		this.previousTime = time;
-
 		TransitRouterNetworkLink wrapped = (TransitRouterNetworkLink) link;
 		TransitRouteStop fromStop = wrapped.fromNode.stop;
 		TransitRouteStop toStop = wrapped.toNode.stop;
@@ -159,28 +144,13 @@ public class TransitRouterNetworkTravelTimeAndDisutility implements TravelTime, 
 				// ( this can only happen, I think, when ``bestDepartureTime'' is after midnight but ``time'' was before )
 				time2 += MIDNIGHT;
 			}
-			this.cachedTravelTime = time2;
 			return time2;
 		}
 		// different transit routes, so it must be a line switch
-		double distance = wrapped.getLength();
-		double time2 = distance / this.config.getBeelineWalkSpeed() + this.config.getAdditionalTransferTime();
-		this.cachedTravelTime = time2;
-		return time2;
+		return wrapped.getLength() / this.config.getBeelineWalkSpeed() + this.config.getAdditionalTransferTime();
 	}
-	
-	//variables for caching offVehWaitTime
-	Link previousWaitLink;
-	double previousWaitTime;
-	double cachedVehArrivalTime;
-	
+
 	public double getVehArrivalTime(final Link link, final double now){
-		if ((link == this.previousWaitLink) && (now == this.previousWaitTime)) {
-			return this.cachedVehArrivalTime;
-		}
-		this.previousWaitLink = link;
-		this.previousWaitTime = now;
-		
 		//first find out vehicle arrival time to fromStop according to transit schedule
 		TransitRouterNetworkLink wrapped = (TransitRouterNetworkLink) link;
 		if (wrapped.getRoute() == null) { 
@@ -192,9 +162,7 @@ public class TransitRouterNetworkTravelTimeAndDisutility implements TravelTime, 
 		
 		double fromStopArrivalOffset = (fromStop.getArrivalOffset() != Time.UNDEFINED_TIME) ? fromStop.getArrivalOffset() : fromStop.getDepartureOffset();
 		double vehWaitAtStopTime = fromStop.getDepartureOffset() - fromStopArrivalOffset; //time in which the veh stops at station
-		double vehArrivalTime = nextDepartureTime - vehWaitAtStopTime;
-		cachedVehArrivalTime = vehArrivalTime ;
-		return vehArrivalTime ;		
+		return nextDepartureTime - vehWaitAtStopTime;
 	}
 
 	@Override
@@ -211,9 +179,7 @@ public class TransitRouterNetworkTravelTimeAndDisutility implements TravelTime, 
 
 	@Override
 	public double getTravelTime(Person person, Coord coord, Coord toCoord) {
-		double distance = CoordUtils.calcEuclideanDistance(coord, toCoord);
-		double initialTime = distance / config.getBeelineWalkSpeed();
-		return initialTime;
+		return CoordUtils.calcEuclideanDistance(coord, toCoord) / config.getBeelineWalkSpeed();
 	}
 
 }
