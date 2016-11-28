@@ -219,6 +219,10 @@
             <id>matsim</id>
             <url>http://dl.bintray.com/matsim/matsim</url>
         </repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
 	</repositories>
 
 	<profiles>
@@ -470,6 +474,11 @@
 			<groupId>net.sf.trove4j</groupId>
 			<artifactId>trove4j</artifactId>
 			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.graphhopper</groupId>
+			<artifactId>graphhopper</artifactId>
+			<version>0.7.0</version>
 		</dependency>
 	</dependencies>
 	<properties>

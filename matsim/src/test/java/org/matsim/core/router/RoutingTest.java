@@ -172,6 +172,20 @@ public class RoutingTest  {
 		});
 	}
 
+	@Test
+	public void testGraphHopper() {
+		doTest(new RouterProvider() {
+			@Override
+			public String getName() {
+				return "GraphHopper";
+			}
+			@Override
+			public LeastCostPathCalculatorFactory getFactory(final Network network, final TravelDisutility costCalc, final TravelTime timeCalc) {
+				return new GraphHopperLeastCostPathCalculatorFactory();
+			}
+		});
+	}
+
 	private void doTest(final RouterProvider provider) {
 //		final Config config = loadConfig("test/input/" + this.getClass().getCanonicalName().replace('.', '/') + "/config.xml");
 		final Config config = ConfigUtils.loadConfig( utils.getClassInputDirectory() + "/config.xml" );

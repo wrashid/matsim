@@ -28,8 +28,11 @@ import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.ControlerConfigGroup.EventsFileFormat;
 import org.matsim.core.config.groups.ControlerConfigGroup.RoutingAlgorithmType;
+import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.population.PopulationUtils;
+import org.matsim.core.router.GraphHopperLeastCostPathCalculatorFactory;
+import org.matsim.core.router.util.LeastCostPathCalculatorFactory;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.examples.ExamplesUtils;
@@ -110,7 +113,23 @@ public class ReRoutingIT {
 		controler.run();
 		this.evaluate();
 	}
-	
+
+	@Test
+	public void testReRoutingGraphHopper() throws MalformedURLException {
+		Scenario scenario = this.loadScenario();
+		Controler controler = new Controler(scenario);
+		controler.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				bind(LeastCostPathCalculatorFactory.class).to(GraphHopperLeastCostPathCalculatorFactory.class);
+			}
+		});
+		controler.getConfig().controler().setCreateGraphs(false);
+		controler.getConfig().controler().setDumpDataAtEnd(false);
+		controler.run();
+		this.evaluate();
+	}
+
 	private void evaluate() throws MalformedURLException {
 		Config config = utils.loadConfig(IOUtils.newUrl(utils.classInputResourcePath(), "config.xml"));
 		config.network().setInputFile(IOUtils.newUrl(ExamplesUtils.getTestScenarioURL("berlin"), "network.xml.gz").toString());
