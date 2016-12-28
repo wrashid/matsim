@@ -1,11 +1,12 @@
 package org.matsim.core.router;
 
+import com.carrotsearch.hppc.procedures.IntProcedure;
 import com.graphhopper.routing.Dijkstra;
 import com.graphhopper.routing.util.*;
+import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.storage.GraphBuilder;
 import com.graphhopper.storage.GraphHopperStorage;
 import com.graphhopper.util.EdgeIteratorState;
-import gnu.trove.procedure.TIntProcedure;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
@@ -45,7 +46,7 @@ public class GraphHopperLeastCostPathCalculatorFactory implements LeastCostPathC
         return new LeastCostPathCalculator() {
             @Override
             public Path calcLeastCostPath(Node fromNode, Node toNode, double starttime, Person person, Vehicle vehicle) {
-                final Dijkstra dijkstra = new Dijkstra(graph, car, new Weighting() {
+                final Dijkstra dijkstra = new Dijkstra(graph, new Weighting() {
                     @Override
                     public double getMinWeight(double v) {
                         return 0;
@@ -54,6 +55,11 @@ public class GraphHopperLeastCostPathCalculatorFactory implements LeastCostPathC
                     @Override
                     public double calcWeight(EdgeIteratorState edgeIteratorState, boolean b, int i) {
                         return travelCosts.getLinkTravelDisutility(edge2Link.get(edgeIteratorState.getEdge()), 0.0, null, null);
+                    }
+
+                    @Override
+                    public long calcMillis(EdgeIteratorState edgeIteratorState, boolean b, int i) {
+                        return 0;
                     }
 
                     @Override
@@ -73,11 +79,10 @@ public class GraphHopperLeastCostPathCalculatorFactory implements LeastCostPathC
                 }, TraversalMode.NODE_BASED);
                 com.graphhopper.routing.Path path = dijkstra.calcPath(matsim2Gh.get(fromNode.getId()), matsim2Gh.get(toNode.getId()));
                 final ArrayList<Node> nodes = new ArrayList<>();
-                path.calcNodes().forEach(new TIntProcedure() {
+                path.calcNodes().forEach(new IntProcedure() {
                     @Override
-                    public boolean execute(int i) {
+                    public void apply(int i) {
                         nodes.add(network.getNodes().get(gh2Matsim.get(i)));
-                        return true;
                     }
                 });
                 ArrayList<Link> links = new ArrayList<>();

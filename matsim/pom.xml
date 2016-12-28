@@ -476,9 +476,9 @@
 			<version>3.0.3</version>
 		</dependency>
 		<dependency>
-			<groupId>com.graphhopper</groupId>
-			<artifactId>graphhopper</artifactId>
-			<version>0.7.0</version>
+			<groupId>com.github.graphhopper.graphhopper</groupId>
+			<artifactId>graphhopper-core</artifactId>
+			<version>jitpack-41ec3626e2-1</version>
 		</dependency>
 	</dependencies>
 	<properties>
