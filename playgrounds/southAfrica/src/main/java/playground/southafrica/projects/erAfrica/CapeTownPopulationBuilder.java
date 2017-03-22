@@ -69,14 +69,14 @@ import playground.southafrica.utilities.Header;
  * 
  * @author jwjoubert
  */
-public class Phase1PopulationBuilder {
-	final private static Logger LOG = Logger.getLogger(Phase1PopulationBuilder.class);
+public class CapeTownPopulationBuilder {
+	final private static Logger LOG = Logger.getLogger(CapeTownPopulationBuilder.class);
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Header.printHeader(Phase1PopulationBuilder.class.toString(), args);
+		Header.printHeader(CapeTownPopulationBuilder.class.toString(), args);
 
 		/* Parse the arguments */
 		String censusPopulationFolder = args[0]; /* This should be in WGS84_SA_Albers. */
