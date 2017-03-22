@@ -20,6 +20,7 @@
 
 package org.matsim.api.core.v01;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -108,8 +109,9 @@ public abstract class Id<T> implements Comparable<Id<T>> {
 	 *
 	 * @param <T>
 	 */
-	private static class IdImpl<T> extends Id<T> {
+	private static class IdImpl<T> extends Id<T> implements Serializable{
 
+		private static final long serialVersionUID = 1L;
 		private final String id; 
 		
 		/*package*/ IdImpl(final String id) {
