@@ -42,6 +42,7 @@ import org.matsim.facilities.FacilitiesUtils;
 
 import playground.southafrica.freight.digicore.algorithms.djcluster.containers.DigicoreCluster;
 import playground.southafrica.freight.digicore.algorithms.postclustering.ClusteredChainGenerator;
+import playground.southafrica.freight.digicore.algorithms.postclustering.FacilityToActivityAssigner;
 import playground.southafrica.freight.digicore.containers.DigicoreVehicle;
 import playground.southafrica.freight.digicore.containers.DigicoreVehicles;
 import playground.southafrica.freight.digicore.io.DigicoreVehiclesReader;
@@ -54,7 +55,7 @@ import playground.southafrica.utilities.gis.MyMultiFeatureReader;
  * Class to cluster the activities of Digicore vehicles' activity chains using
  * the {@link DJCluster} approach. Once clustered, the activity chains are <i>not</i>
  * adjusted. Rather, the clustering outputs can be used as inputs to a class 
- * such as {@link ClusteredChainGenerator}. 
+ * such as {@link ClusteredChainGenerator} (now deprecated) or {@link FacilityToActivityAssigner}. 
  *
  * @author jwjoubert
  */

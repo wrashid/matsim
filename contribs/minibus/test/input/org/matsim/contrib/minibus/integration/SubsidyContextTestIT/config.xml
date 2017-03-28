@@ -8,9 +8,7 @@
 
 <module name="p" >
 		<param name="pIdentifier" value="para_" />
-		<param name="operatorType" value="CarefulMultiPlanOperator" />
-		<param name="welfareMaximization" value="false" />
-		
+		<param name="operatorType" value="CarefulMultiPlanOperator" />		
 		<param name="numberOfOperators" value="10" />
 		<param name="numberOfIterationsForProspecting" value="10" />
 		<param name="initialBudget" value="200000.0" />
@@ -90,7 +88,7 @@
 		<!-- Specifies the file format for writing events. Currently supported: txt, xml. Multiple values can be specified separated by commas (','). -->
 		<param name="eventsFileFormat" value="xml" />
 		<param name="firstIteration" value="0" />
-		<param name="lastIteration" value="1" />
+		<param name="lastIteration" value="30" />
 
 		<!-- The type of routing (least cost path) algorithm used, may have the values: Dijkstra or AStarLandmarks -->
 		<param name="routingAlgorithmType" value="AStarLandmarks" />

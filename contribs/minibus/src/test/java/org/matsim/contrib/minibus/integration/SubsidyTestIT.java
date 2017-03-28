@@ -47,7 +47,7 @@ import org.matsim.testcases.MatsimTestUtils;
 * @author ikaddoura
 */
 
-public class SubsidyPControlerTest2IT implements TabularFileHandler {
+public class SubsidyTestIT implements TabularFileHandler {
 	
 	private static final String gridScenarioDirectory = "http://svn.vsp.tu-berlin.de/repos/public-svn/matsim/scenarios/countries/atlantis/minibus/input/";
 
@@ -58,26 +58,25 @@ public class SubsidyPControlerTest2IT implements TabularFileHandler {
 	@Test
 	public final void testSubsidyPControler() {
 		
-		Config config2 = ConfigUtils.loadConfig( utils.getClassInputDirectory() + "config.xml", new PConfigGroup() ) ;
+		Config config = ConfigUtils.loadConfig( utils.getClassInputDirectory() + "config.xml", new PConfigGroup() ) ;
 		
-		PConfigGroup pConfig2 = (PConfigGroup) config2.getModules().get(PConfigGroup.GROUP_NAME);
-		pConfig2.setWelfareMaximization(true);
-		pConfig2.addParam("operatorType", "WelfareCarefulMultiPlanOperator");
+		PConfigGroup pConfig = (PConfigGroup) config.getModules().get(PConfigGroup.GROUP_NAME);
+		pConfig.setSubsidyApproach("perPassenger");
 		
-		config2.network().setInputFile(gridScenarioDirectory  + "network.xml");
-		config2.transit().setVehiclesFile(gridScenarioDirectory + "transitVehicles.xml");
-		config2.transit().setTransitScheduleFile(gridScenarioDirectory + "transitSchedule_10min.xml");
-		config2.plans().setInputFile(gridScenarioDirectory + "population_1000_per_hour_each_from_6_to_10.xml.gz");
-		config2.controler().setOutputDirectory(utils.getOutputDirectory());
+		config.network().setInputFile(gridScenarioDirectory  + "network.xml");
+		config.transit().setVehiclesFile(gridScenarioDirectory + "transitVehicles.xml");
+		config.transit().setTransitScheduleFile(gridScenarioDirectory + "transitSchedule_10min.xml");
+		config.plans().setInputFile(gridScenarioDirectory + "population_1000_per_hour_each_from_6_to_10.xml.gz");
+		config.controler().setOutputDirectory(utils.getOutputDirectory());
 		
-		Scenario scenario2 = ScenarioUtils.loadScenario(config2);	
-		Controler controler2 = new Controler(scenario2);
+		Scenario scenario = ScenarioUtils.loadScenario(config);	
+		Controler controler = new Controler(scenario);
 		
-		controler2.getConfig().controler().setCreateGraphs(true);
-		controler2.getConfig().controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
+		controler.getConfig().controler().setCreateGraphs(true);
+		controler.getConfig().controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists );
 		
-		controler2.addOverridingModule(new PModule()) ;
-		controler2.run();
+		controler.addOverridingModule(new PModule()) ;
+		controler.run();
 		
 		// Check standard output files	
 		
