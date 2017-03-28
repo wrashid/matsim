@@ -23,6 +23,7 @@ package playground.jjoubert.projects.wb.tiff;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +41,10 @@ import javax.imageio.spi.IIORegistry;
 import javax.imageio.stream.ImageInputStream;
 
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
+import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.core.utils.io.IOUtils;
+import org.matsim.core.utils.misc.Counter;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -53,7 +58,6 @@ import mil.nga.tiff.Rasters;
 import mil.nga.tiff.TIFFImage;
 import mil.nga.tiff.TiffReader;
 import mil.nga.tiff.io.ByteReader;
-import mil.nga.tiff.io.IOUtils;
 import mil.nga.tiff.util.TiffConstants;
 import playground.southafrica.utilities.Header;
 
@@ -70,8 +74,10 @@ public class ReadGtiTiff {
 	 */
 	public static void main(String[] args) {
 		Header.printHeader(ReadGtiTiff.class.toString(), args);
-		runTiff(args);
+//		runTiff(args);
 //		runGdal(args);
+		runBrianExample(args[0], args[1]);
+		
 		Header.printFooter();
 	}
 
@@ -115,6 +121,8 @@ public class ReadGtiTiff {
 
 		bi.flush();
 	}
+	
+	
 
 	public static void displayMetadata(Node root) {
 		displayMetadata(root, 0);
@@ -223,6 +231,135 @@ public class ReadGtiTiff {
 
 	}
 	
+	private static void runBrianExample(String geotiffFile, String rFile){
+		GeoTiffImage gti = new GeoTiffImage(new File(geotiffFile));
+		gti.convertImageToR(rFile);
+	}
+	
+	
+	
+	private static class GeoTiffImage{
+		private double originLongitude;
+		private double originLatitude;
+		private double incrementLongitude;
+		private double incrementLatitude;
+		private TIFFImage image;
+		
+		public GeoTiffImage(File geoTiffFile) {
+			this.image = null;
+			try {
+				this.image = TiffReader.readTiff(geoTiffFile);
+			} catch (IOException e) {
+				throw new RuntimeException("Cannot read GeoTIFF file " + geoTiffFile.getAbsolutePath());
+			}  
+			
+			FileDirectoryEntry modelPixelScale = null;;
+			FileDirectoryEntry modelTiePoint = null;
+			FileDirectoryEntry geoDoubleParams;
+			FileDirectoryEntry geoAsciiParams;
+			for(FileDirectory fileDirectory: this.image.getFileDirectories()){ 
+				FileDirectoryEntry geoKeyDirectory = fileDirectory.get(FieldTagType.GeoKeyDirectory); 
+				if(geoKeyDirectory != null){ 
+					// Parse the keys out of the values 
+					// values[3] is the number of keys defined 
+					// Similar to https://github.com/constantinius/geotiff.js/blob/master/src/geotiff.js parseGeoKeyDirectory method  
+					// Parse those keys similar to https://github.com/constantinius/geotiff.js/blob/master/src/geotiffimage.js  
+					// Parsing those keys would use information from these tags 
+					modelPixelScale = fileDirectory.get(FieldTagType.ModelPixelScale); 
+					modelTiePoint = fileDirectory.get(FieldTagType.ModelTiepoint); 
+					geoDoubleParams = fileDirectory.get(FieldTagType.GeoDoubleParams); 
+					geoAsciiParams = fileDirectory.get(FieldTagType.GeoAsciiParams); 
+				}
+			}
+			
+			/* Get the origin. Ignoring elevation. */
+			Object o = modelTiePoint.getValues();
+			if(o instanceof ArrayList<?>){
+				ArrayList<?> mtp = (ArrayList<?>) o;
+				originLongitude = (double) mtp.get(3);
+				originLatitude = (double) mtp.get(4);
+			} else{
+				throw new IllegalArgumentException("Model tie points object is not of type ArrayList<?>");
+			}
+			
+			/* Get the pixel increments. */
+			Object oo = modelPixelScale.getValues();
+			if(oo instanceof ArrayList<?>){
+				ArrayList<?> mtp = (ArrayList<?>) oo;
+				incrementLongitude = (double) mtp.get(0);
+				incrementLatitude = (double) mtp.get(1);
+			} else{
+				throw new IllegalArgumentException("Model pixel scales object is not of type ArrayList<?>");
+			}
+//			LOG.info("Done");
+		}
+		
+		private void convertImageToR(String filename){
+			Counter counter = new Counter("  pixels # ");
+			
+			BufferedWriter bw = IOUtils.getBufferedWriter(filename);
+			try{
+				bw.write("xMin,yMin,xMax,yMax,value");
+				bw.newLine();
+				
+				/* Process each pixel. */
+				Rasters rasters = this.image.getFileDirectory(0).readRasters();
+				for(int x = 0; x < rasters.getWidth(); x++){
+					for(int y = 0; y < rasters.getHeight(); y++){
+						Number[] num = rasters.getPixel(x, y);
+						if(num.length > 1){
+							LOG.warn("Pixel value has length " + num.length);
+						}
+						short s = 0;
+						if(num[0] instanceof Short){
+							s = (short)num[0];
+						} else{
+							LOG.warn("Pixel does not have a value of type `short`, but " + num[0].getClass().toString());
+						}
+						
+						/* Get the coordinates of the pixel. */
+						double[] da = getCoordArray(x, y);
+						bw.write(String.format("%.10f,%.10f,%.10f,%.10f,%d\n", 
+								da[0], da[1], da[2], da[3], s ));
+						counter.incCounter();
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Cannot write to " + filename);
+			} finally{
+				try {
+					bw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException("Cannot close " + filename);
+				}
+			}
+			counter.printCounter();
+		}
+		
+		/**
+		 * Returns the coordinates of the bottom-left and top-right corners of 
+		 * the pixel, in the format [xmin, ymin, xmax, ymax]. 
+		 * @param x
+		 * @param y
+		 * @return
+		 */
+		public double[] getCoordArray(int x, int y){
+			double[] da = {
+					this.originLongitude + x*this.incrementLongitude,
+					this.originLatitude - (y+1)*this.incrementLatitude,
+					this.originLongitude + (x+1)*this.incrementLongitude,
+					this.originLatitude - y*this.incrementLatitude,
+			};
+			return da;
+		}
+	}
+	
+	
+	
+	
+	
 	private class GeoKeys{
 		private final short keydirectoryVersion;
 		private final short keyRevision;
@@ -237,5 +374,7 @@ public class ReadGtiTiff {
 			this.numberOfKeys = numberOfKeys;
 		}
 	}
+	
+	
 
 }
