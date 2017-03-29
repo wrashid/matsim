@@ -55,34 +55,34 @@ public class MultilayerInstanceWriter extends MatsimXmlWriter implements MatsimW
 	
 	public void writeV1(final String filename){
 		String dtd = "http://matsim.org/files/dtd/multilayerNetwork_v1.dtd";
-		MultilayerInstanceWriterHandler handler = new MultilayerInstanceWriterHandlerImpl_v1();
+//		MultilayerInstanceWriterHandler handler = new MultilayerInstanceWriterHandlerImpl_v1();
 		
-		try {
-			openFile(filename);
-			writeXmlHead();
-			writeDoctype("multilayerNetwork", dtd);
-			
-			handler.startVehicles(this.vehicles, this.writer);
-			for(DigicoreVehicle vehicle : this.vehicles.getVehicles().values()){
-				handler.startVehicle(vehicle, this.writer);
-				for(DigicoreChain chain : vehicle.getChains()){
-					handler.startChain(this.writer);
-					List<DigicoreActivity> activities = chain.getAllActivities();
-					for(DigicoreActivity activity : activities){
-						handler.startActivity(activity, this.writer);
-						handler.endActivity(this.writer);
-					}
-					handler.endChain(this.writer);
-				}
-				handler.endVehicle(this.writer);
-				counter.incCounter();
-			}
-			counter.printCounter();
-			handler.endVehicles(this.writer);
-			this.writer.close();
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
+//		try {
+//			openFile(filename);
+//			writeXmlHead();
+//			writeDoctype("multilayerNetwork", dtd);
+//			
+//			handler.startVehicles(this.vehicles, this.writer);
+//			for(DigicoreVehicle vehicle : this.vehicles.getVehicles().values()){
+//				handler.startVehicle(vehicle, this.writer);
+//				for(DigicoreChain chain : vehicle.getChains()){
+//					handler.startChain(this.writer);
+//					List<DigicoreActivity> activities = chain.getAllActivities();
+//					for(DigicoreActivity activity : activities){
+//						handler.startActivity(activity, this.writer);
+//						handler.endActivity(this.writer);
+//					}
+//					handler.endChain(this.writer);
+//				}
+//				handler.endVehicle(this.writer);
+//				counter.incCounter();
+//			}
+//			counter.printCounter();
+//			handler.endVehicles(this.writer);
+//			this.writer.close();
+//		} catch (IOException e) {
+//			throw new UncheckedIOException(e);
+//		}
 	}
 }
 
