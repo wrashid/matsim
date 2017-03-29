@@ -21,6 +21,7 @@
  */
 package playground.jjoubert.projects.wb.tiff;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.io.BufferedWriter;
@@ -233,7 +234,7 @@ public class ReadGtiTiff {
 	
 	private static void runBrianExample(String geotiffFile, String rFile){
 		GeoTiffImage gti = new GeoTiffImage(new File(geotiffFile));
-		gti.convertImageToR(rFile);
+		gti.convertImageToRTwo(rFile);
 	}
 	
 	
@@ -243,6 +244,7 @@ public class ReadGtiTiff {
 		private double originLatitude;
 		private double incrementLongitude;
 		private double incrementLatitude;
+		private Map<Short, Color> colorMap;
 		private TIFFImage image;
 		
 		public GeoTiffImage(File geoTiffFile) {
@@ -257,6 +259,8 @@ public class ReadGtiTiff {
 			FileDirectoryEntry modelTiePoint = null;
 			FileDirectoryEntry geoDoubleParams;
 			FileDirectoryEntry geoAsciiParams;
+			FileDirectoryEntry colorMapEntry = null;
+			FileDirectoryEntry photometric = null;
 			for(FileDirectory fileDirectory: this.image.getFileDirectories()){ 
 				FileDirectoryEntry geoKeyDirectory = fileDirectory.get(FieldTagType.GeoKeyDirectory); 
 				if(geoKeyDirectory != null){ 
@@ -269,6 +273,9 @@ public class ReadGtiTiff {
 					modelTiePoint = fileDirectory.get(FieldTagType.ModelTiepoint); 
 					geoDoubleParams = fileDirectory.get(FieldTagType.GeoDoubleParams); 
 					geoAsciiParams = fileDirectory.get(FieldTagType.GeoAsciiParams); 
+					colorMapEntry = fileDirectory.get(FieldTagType.ColorMap);
+					photometric = fileDirectory.get(FieldTagType.PhotometricInterpretation);
+				LOG.info("Done reading field tags");
 				}
 			}
 			
@@ -291,6 +298,26 @@ public class ReadGtiTiff {
 			} else{
 				throw new IllegalArgumentException("Model pixel scales object is not of type ArrayList<?>");
 			}
+			
+			/* Get the field colors from the colormap. */
+			colorMap = new TreeMap<>();
+			double intensity = Math.pow(2, 16);
+			Object ooo = colorMapEntry.getValues();
+			if(ooo instanceof ArrayList<?>){
+				ArrayList<?> cma = (ArrayList<?>) ooo;
+				for(int i = 0; i < cma.size()/3; i++){
+					int r = (int) Math.round(( Double.valueOf(cma.get(i).toString()) / intensity)*255);
+					int g = (int) Math.round(( Double.valueOf(cma.get(i+(1*256)).toString()) / intensity)*255);
+					int b = (int) Math.round(( Double.valueOf(cma.get(i+(2*256)).toString()) / intensity)*255);
+					
+					Color c = new Color(r, g, b);
+					short index = (short) i;
+					if(!colorMap.containsKey(index)){
+						colorMap.put(index, c);
+					}
+				}
+			}
+			
 //			LOG.info("Done");
 		}
 		
@@ -322,6 +349,58 @@ public class ReadGtiTiff {
 						bw.write(String.format("%.10f,%.10f,%.10f,%.10f,%d\n", 
 								da[0], da[1], da[2], da[3], s ));
 						counter.incCounter();
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Cannot write to " + filename);
+			} finally{
+				try {
+					bw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException("Cannot close " + filename);
+				}
+			}
+			counter.printCounter();
+		}
+		
+		private void convertImageToRTwo(String filename){
+			Counter counter = new Counter("  pixels # ");
+			
+			BufferedWriter bw = IOUtils.getBufferedWriter(filename);
+			try{
+				bw.write("poly,lon,lat,value,r,g,b");
+				bw.newLine();
+				
+				/* Process each pixel. */
+				int index = 0;
+				Rasters rasters = this.image.getFileDirectory(0).readRasters();
+				for(int x = 0; x < rasters.getWidth(); x++){
+					for(int y = 0; y < rasters.getHeight(); y++){
+						Number[] num = rasters.getPixel(x, y);
+						if(num.length > 1){
+							LOG.warn("Pixel value has length " + num.length);
+						}
+						short s = 0;
+						if(num[0] instanceof Short){
+							s = (short)num[0];
+						} else{
+							LOG.warn("Pixel does not have a value of type `short`, but " + num[0].getClass().toString());
+						}
+						
+						/* Get the coordinates of the pixel. */
+						double[] da = getCoordArray(x, y);
+						Color c = this.colorMap.get(s);
+						
+						bw.write(String.format("%d,%.10f,%.10f,%d,%d,%d,%d\n", index, da[0], da[1], s, c.getRed(), c.getGreen(), c.getBlue()));
+						bw.write(String.format("%d,%.10f,%.10f,%d,%d,%d,%d\n", index, da[2], da[1], s, c.getRed(), c.getGreen(), c.getBlue()));
+						bw.write(String.format("%d,%.10f,%.10f,%d,%d,%d,%d\n", index, da[2], da[3], s, c.getRed(), c.getGreen(), c.getBlue()));
+						bw.write(String.format("%d,%.10f,%.10f,%d,%d,%d,%d\n", index, da[0], da[3], s, c.getRed(), c.getGreen(), c.getBlue()));
+						bw.write(String.format("%d,%.10f,%.10f,%d,%d,%d,%d\n", index, da[0], da[1], s, c.getRed(), c.getGreen(), c.getBlue()));
+						
+						counter.incCounter();
+						index++;
 					}
 				}
 			} catch (IOException e) {
@@ -374,7 +453,6 @@ public class ReadGtiTiff {
 			this.numberOfKeys = numberOfKeys;
 		}
 	}
-	
 	
 
 }
