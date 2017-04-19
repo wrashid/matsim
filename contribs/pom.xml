@@ -80,6 +80,39 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>libs/</classpathPrefix>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+				<!--<configuration>-->
+				<!--  <additionalparam>-Xdoclint:none</additionalparam>-->
+				<!--</configuration>-->
+				<!--added the above three lines as per
+                    http://stackoverflow.com/questions/15886209/maven-is-not-working-in-java-8-when-javadoc-tags-are-incomplete
+                    to make javadoc less picky about syntax errors. But does not work on jenkins.  kai, jun'16-->
+				<configuration>
+					<linksource>true</linksource>
+				</configuration>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -92,23 +125,6 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-assembly-plugin</artifactId>
 					<version>2.2.1</version>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>2.10.1</version>
-					<!--<configuration>-->
-					<!--  <additionalparam>-Xdoclint:none</additionalparam>-->
-					<!--</configuration>-->
-					<!--added the above three lines as per
-					    http://stackoverflow.com/questions/15886209/maven-is-not-working-in-java-8-when-javadoc-tags-are-incomplete
-					    to make javadoc less picky about syntax errors. But does not work on jenkins.  kai, jun'16-->
-					<configuration>
-						<linksource>true</linksource>
-					</configuration>
-				</plugin>
-				<plugin>
-					<artifactId>maven-assembly-plugin</artifactId>
 					<configuration>
 						<descriptors>
 							<descriptor>src/main/assembly/assembly-release.xml</descriptor>
@@ -123,17 +139,6 @@
 							</goals>
 						</execution>
 					</executions>
-				</plugin>
-				<plugin>
-					<artifactId>maven-jar-plugin</artifactId>
-					<configuration>
-						<archive>
-							<manifest>
-								<addClasspath>true</addClasspath>
-								<classpathPrefix>libs/</classpathPrefix>
-							</manifest>
-						</archive>
-					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
