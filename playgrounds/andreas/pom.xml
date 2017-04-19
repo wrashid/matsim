@@ -74,5 +74,15 @@
 		<artifactId>signals</artifactId>
 		<version>0.9.0</version>
 	</dependency>
+      <dependency>
+          <groupId>org.openstreetmap.osmosis</groupId>
+          <artifactId>osmosis-set</artifactId>
+          <version>0.45</version>
+      </dependency>
+	  <dependency>
+		  <groupId>org.openstreetmap.osmosis</groupId>
+		  <artifactId>osmosis-areafilter</artifactId>
+		  <version>0.43-RELEASE</version>
+	  </dependency>
   </dependencies>
 </project>
