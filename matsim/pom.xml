@@ -5,7 +5,7 @@
 	<groupId>org.matsim</groupId>
 	<artifactId>matsim</artifactId>
 	<name>MATSim</name>
-	<version>0.9.0-SNAPSHOT</version>
+	<version>0.9.0</version>
 	<description>Multi-Agent Transport Simulation</description>
 	<url>http://ci.matsim.org:8080/job/MATSim_M2/ws/matsim/target/site</url>
 	<inceptionYear>2005</inceptionYear>
@@ -115,6 +115,32 @@
                         </configuration>
 					</execution>
 				</executions>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>libs/</classpathPrefix>
+							<mainClass>org.matsim.run.gui.Gui</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptors>
+						<descriptor>src/main/assembly/assembly-release.xml</descriptor>
+					</descriptors>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -131,6 +157,62 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.1</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<quiet>true</quiet>
+					<header>MATSim API</header>
+					<excludePackageNames>org.matsim.jaxb:org.matsim.jaxb.*</excludePackageNames>
+					<groups>
+						<group>
+							<title>api</title>
+							<packages>org.matsim.api:org.matsim.api.*</packages>
+						</group>
+						<group>
+							<title>run</title>
+							<packages>org.matsim.run:org.matsim.run.*</packages>
+						</group>
+						<group>
+							<title>core</title>
+							<packages>org.matsim.core:org.matsim.core.*</packages>
+						</group>
+						<group>
+							<title>pt</title>
+							<packages>org.matsim.pt:org.matsim.pt.*</packages>
+						</group>
+						<group>
+							<title>utils</title>
+							<packages>org.matsim.utils:org.matsim.utils.*</packages>
+						</group>
+						<group>
+							<title>withinday</title>
+							<packages>org.matsim.withinday:org.matsim.withinday.*</packages>
+						</group>
+						<group>
+							<title>vis</title>
+							<packages>org.matsim.vis:org.matsim.vis.*</packages>
+						</group>
+					</groups>
+					<additionalDependencies>
+						<additionalDependency>
+							<groupId>org.matsim</groupId>
+							<artifactId>matsim-tutorial</artifactId>
+							<version>0.9.0-SNAPSHOT</version>
+						</additionalDependency>
+					</additionalDependencies>
+					<detectLinks>true</detectLinks>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 				<version>2.19.1</version>
 				<executions>
@@ -143,58 +225,6 @@
 				</executions>
 			</plugin>
 		</plugins>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<version>2.10.1</version>
-					<configuration>
-						<quiet>true</quiet>
-						<header>MATSim API</header>
-						<excludePackageNames>org.matsim.jaxb:org.matsim.jaxb.*</excludePackageNames>
-						<groups>
-							<group>
-								<title>api</title>
-								<packages>org.matsim.api:org.matsim.api.*</packages>
-							</group>
-							<group>
-								<title>run</title>
-								<packages>org.matsim.run:org.matsim.run.*</packages>
-							</group>
-							<group>
-								<title>core</title>
-								<packages>org.matsim.core:org.matsim.core.*</packages>
-							</group>
-							<group>
-								<title>pt</title>
-								<packages>org.matsim.pt:org.matsim.pt.*</packages>
-							</group>
-							<group>
-								<title>utils</title>
-								<packages>org.matsim.utils:org.matsim.utils.*</packages>
-							</group>
-							<group>
-								<title>withinday</title>
-								<packages>org.matsim.withinday:org.matsim.withinday.*</packages>
-							</group>
-							<group>
-								<title>vis</title>
-								<packages>org.matsim.vis:org.matsim.vis.*</packages>
-							</group>
-						</groups>
-						<additionalDependencies>
-							<additionalDependency>
-								<groupId>org.matsim</groupId>
-								<artifactId>matsim-tutorial</artifactId>
-								<version>0.9.0-SNAPSHOT</version>
-							</additionalDependency>
-						</additionalDependencies>
-						<detectLinks>true</detectLinks>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 	</build>
 
 	<reporting>
@@ -249,14 +279,6 @@
 								<threshold>Low</threshold>
 							</configuration>
 						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-javadoc-plugin</artifactId>
-							<version>2.10.1</version>
-							<configuration>
-								<linksource>true</linksource>
-							</configuration>
-						</plugin>
 					</plugins>
 				</pluginManagement>
 			</build>
@@ -288,70 +310,6 @@
 
 				</plugins>
 			</reporting>
-		</profile>
-		<profile>
-			<id>nightly</id>
-			<!-- special settings for building a jar as nightly-build -->
-			<!-- that can be used without maven -->
-			<build>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<artifactId>maven-jar-plugin</artifactId>
-							<configuration>
-								<archive>
-									<manifest>
-										<addClasspath>true</addClasspath>
-										<classpathPrefix>libs/</classpathPrefix>
-										<mainClass>org.matsim.run.gui.Gui</mainClass>
-									</manifest>
-								</archive>
-							</configuration>
-						</plugin>
-					</plugins>
-				</pluginManagement>
-			</build>
-		</profile>
-		<profile>
-			<id>release</id>
-			<build>
-				<defaultGoal>package</defaultGoal>
-				<plugins>
-					<plugin>
-						<artifactId>maven-assembly-plugin</artifactId>
-						<configuration>
-							<descriptors>
-								<descriptor>src/main/assembly/assembly-release.xml</descriptor>
-							</descriptors>
-						</configuration>
-						<executions>
-							<execution>
-								<id>make-assembly</id> <!-- this is used for inheritance merges -->
-								<phase>package</phase> <!-- bind to the packaging phase -->
-								<goals>
-									<goal>single</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<artifactId>maven-jar-plugin</artifactId>
-							<configuration>
-								<archive>
-									<manifest>
-										<addClasspath>true</addClasspath>
-										<classpathPrefix>libs/</classpathPrefix>
-										<mainClass>org.matsim.run.gui.Gui</mainClass>
-									</manifest>
-								</archive>
-							</configuration>
-						</plugin>
-					</plugins>
-				</pluginManagement>
-			</build>
 		</profile>
         <profile>
             <id>bintray</id>
@@ -448,7 +406,7 @@
 		<dependency>
 			<groupId>org.matsim</groupId>
 			<artifactId>matsim-examples</artifactId>
-			<version>0.9.0-SNAPSHOT</version>
+			<version>0.9.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
