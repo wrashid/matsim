@@ -22,6 +22,10 @@
 		<developerConnection>scm:git:git@github.com:matsim-org/matsim.git</developerConnection>
 	</scm>
 	<distributionManagement>
+		<repository>
+			<id>bintray</id>
+			<url>https://api.bintray.com/maven/matsim/matsim/matsim</url>
+		</repository>
 		<snapshotRepository>
 			<id>oss-jfrog-artifactory</id>
 			<name>artifactory-snapshots</name>
@@ -311,29 +315,6 @@
 				</plugins>
 			</reporting>
 		</profile>
-        <profile>
-            <id>bintray</id>
-            <distributionManagement>
-                <!--Defining this in a separate profile, because deploying to bintray requires not building the test
-                    jar artifact, because it is too big for bintray.
-
-                    This means deploying works like this:
-
-                    mvn deploy -Pbintray
-
-                    And nothing bad will happen if you forget the -Pbintray, it just won't do it because the repository
-                    is not defined.
-
-                    -->
-                <repository>
-                    <id>bintray</id>
-                    <url>https://api.bintray.com/maven/matsim/matsim/matsim</url>
-                </repository>
-            </distributionManagement>
-            <properties>
-                <skipTestJar>true</skipTestJar>
-            </properties>
-        </profile>
 	</profiles>
 
 	<dependencies>
