@@ -114,9 +114,6 @@
 						<goals>
 							<goal>test-jar</goal>
 						</goals>
-                        <configuration>
-                            <skip>${skipTestJar}</skip>
-                        </configuration>
 					</execution>
 				</executions>
 				<configuration>
@@ -415,6 +412,5 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<svnRevision>${buildNumber}</svnRevision>
 		<geotools.version>13.0</geotools.version>
-        <skipTestJar>false</skipTestJar> <!--Overridden in the bintray profile-->
     </properties>
 </project>
