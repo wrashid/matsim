@@ -38,7 +38,7 @@ import org.matsim.vis.otfvis.OTFVisConfigGroup;
 /**
  *
  */
-public class RunDrtExampleTest {
+public class RunDrtExampleIT {
 	@Rule
 	public MatsimTestUtils utils = new MatsimTestUtils();
 

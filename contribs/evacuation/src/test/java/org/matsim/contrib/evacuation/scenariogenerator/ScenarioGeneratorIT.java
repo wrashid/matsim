@@ -46,7 +46,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ScenarioGeneratorTest {
+public class ScenarioGeneratorIT {
 	
 	@Rule
 	public MatsimTestUtils testUtils = new MatsimTestUtils();
