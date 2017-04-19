@@ -36,11 +36,11 @@ import tutorial.config.RunFromConfigfileExample;
  *
  */
 @RunWith(Parameterized.class)
-public class ExamplesByConfigfileTest {
+public class ExamplesByConfigfileIT {
 	
 	private String configFile;
 
-	public ExamplesByConfigfileTest( String configFile ) {
+	public ExamplesByConfigfileIT(String configFile ) {
 		this.configFile = configFile ;
 	}
 	

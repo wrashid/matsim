@@ -19,29 +19,33 @@
  *  *                                                                         *
  *  * ***********************************************************************
  */
-package tutorial.programming.example22MobsimListener;
+package tutorial.programming.simpleadaptivesignalengine;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.matsim.core.utils.misc.CRCChecksum;
 import org.matsim.testcases.MatsimTestUtils;
+
+import tutorial.programming.simpleAdaptiveSignalEngine.RunSimpleAdaptiveSignalExample;
 
 /**
  * @author tthunig
  *
  */
-public class MobsimListenerExampleTest {
-
-	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
-
-	/**
-	 * Test method for {@link RunMobsimListenerExample}
-	 */
-	@SuppressWarnings("static-method")
+public class RunSimpleAdaptiveSignalExampleIT {
+	
+	@Rule public MatsimTestUtils testUtils = new MatsimTestUtils();
+	
 	@Test
-	public final void testMain() {
-		RunMobsimListenerExample.outputDirectory = utils.getOutputDirectory() + "/mobsim-listener";
-		RunMobsimListenerExample.main(null);
+	public void testRunSimpleAdaptiveSignalExample(){
+		String[] args = {testUtils.getOutputDirectory()};
+		RunSimpleAdaptiveSignalExample.main(args);
+		
+		// compare event files
+		Assert.assertEquals("different event files", 
+				CRCChecksum.getCRCFromFile(testUtils.getOutputDirectory() + "output_events.xml.gz"), 
+				CRCChecksum.getCRCFromFile(testUtils.getClassInputDirectory() + "output_events.xml.gz"));
 	}
-
 	
 }

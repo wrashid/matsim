@@ -44,7 +44,7 @@ import java.net.MalformedURLException;
  *
  * @author mrieser
  */
-public class ResumableRunsTest {
+public class ResumableRunsIT {
 
 	@Rule
 	public MatsimTestUtils utils = new MatsimTestUtils();

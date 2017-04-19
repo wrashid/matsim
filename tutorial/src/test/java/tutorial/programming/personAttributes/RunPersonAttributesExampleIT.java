@@ -1,9 +1,10 @@
 /* *********************************************************************** *
  * project: org.matsim.*
+ * RunPersonAttributesExample.java
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2015 by the members listed in the COPYING,        *
+ * copyright       : (C) 2009 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -17,35 +18,22 @@
  *                                                                         *
  * *********************************************************************** */
 
-package tutorial.programming.example21TUBclass;
-
-import java.io.File;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import org.matsim.core.utils.io.IOUtils;
-
-import tutorial.programming.example21tutorialTUBclass.leastCostPath.RunLeastCostPathCalculatorExample;
-
 /**
- * @author  jbischoff
- *
+ * 
  */
-public class IntegrationTest {
+package tutorial.programming.personAttributes;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.matsim.testcases.MatsimTestUtils;
+
+public class RunPersonAttributesExampleIT {
+
+	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 
 	@Test
-	@Ignore
-	public void test() {
-		final String pathname = "./output/example";
-		try{
-		IOUtils.deleteDirectory(new File(pathname),false);
-		}
-		catch (IllegalArgumentException e){
-			
-		}
-		RunLeastCostPathCalculatorExample.main(null);
-		IOUtils.deleteDirectory(new File(pathname),false);
-
+	public void test(){
+		tutorial.programming.personAttributes.RunPersonAttributesExample.main(null);
 	}
-
+	
 }

@@ -17,30 +17,35 @@
  *                                                                         *
  * *********************************************************************** */
 
-package tutorial.programming.planStrategyForRemoval;
+package tutorial.programming.example21TUBclass;
 
-import org.junit.Assert;
-import org.junit.Rule;
+import java.io.File;
+
+import org.junit.Ignore;
 import org.junit.Test;
-import org.matsim.testcases.MatsimTestUtils;
+import org.matsim.core.utils.io.IOUtils;
+
+import tutorial.programming.example21tutorialTUBclass.leastCostPath.RunLeastCostPathCalculatorExample;
 
 /**
-* @author ikaddoura
-*/
-
-public class RunPlanStrategyForRemovalExampleTest {
-
-	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
+ * @author  jbischoff
+ *
+ */
+public class IT {
 
 	@Test
-	public final void testMain() {
-		
-		try {
-			RunPlanSelectorForRemovalExample.main(null);
-		} catch(Exception e) {
-			Assert.fail(e.toString());
+	@Ignore
+	public void test() {
+		final String pathname = "./output/example";
+		try{
+		IOUtils.deleteDirectory(new File(pathname),false);
 		}
+		catch (IllegalArgumentException e){
+			
+		}
+		RunLeastCostPathCalculatorExample.main(null);
+		IOUtils.deleteDirectory(new File(pathname),false);
+
 	}
 
 }
-

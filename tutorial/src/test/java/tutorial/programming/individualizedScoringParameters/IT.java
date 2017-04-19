@@ -8,7 +8,7 @@ import java.io.File;
 /**
  * @author thibautd
  */
-public class IntegrationTest {
+public class IT {
 	@Test
 	public void testMain() {
 		final String pathname = "output/exampleIndividualScores/";

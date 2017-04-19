@@ -48,7 +48,7 @@ import java.util.List;
  * 
  * @author mrieser / senozon
  */
-public class NonAlternativingPlanElementsIntegrationTest {
+public class NonAlternatingPlanElementsIT {
 
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils();
 

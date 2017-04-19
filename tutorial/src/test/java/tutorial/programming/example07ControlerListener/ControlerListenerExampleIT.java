@@ -25,7 +25,7 @@ import java.io.File;
 import org.junit.Test;
 import org.matsim.core.utils.io.IOUtils;
 
-public class ControlerListenerExampleTest {
+public class ControlerListenerExampleIT {
 	
 	/**
 	 * Test method for {@link tutorial.programming.example07ControlerListener.RunControlerListenerExample#main(java.lang.String[])}.

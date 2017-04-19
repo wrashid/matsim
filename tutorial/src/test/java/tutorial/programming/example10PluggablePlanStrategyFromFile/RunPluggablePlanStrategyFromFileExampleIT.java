@@ -3,7 +3,7 @@ package tutorial.programming.example10PluggablePlanStrategyFromFile;
 import org.junit.Test;
 
 
-public class RunPluggablePlanStrategyFromFileExampleTest {
+public class RunPluggablePlanStrategyFromFileExampleIT {
 
 	@Test
 	public void testMain() {

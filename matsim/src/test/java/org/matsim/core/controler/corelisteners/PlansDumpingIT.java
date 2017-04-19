@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author mrieser
  */
-public class PlansDumpingTest {
+public class PlansDumpingIT {
 
 	@Rule public MatsimTestUtils util = new MatsimTestUtils();
 

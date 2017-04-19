@@ -56,7 +56,7 @@ import javax.inject.Provider;
  *
  * @author mrieser
  */
-public class DeterministicMultithreadedReplanningTest {
+public class DeterministicMultithreadedReplanningIT {
 
 	@Rule
 	public MatsimTestUtils testUtils = new MatsimTestUtils();

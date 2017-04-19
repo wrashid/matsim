@@ -7,7 +7,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.utils.io.IOUtils;
 
-public class RunMobsimWithMultipleModeVehiclesExampleTest {
+public class RunMobsimWithMultipleModeVehiclesExampleIT {
 
 	@Test
 	public void test() {
