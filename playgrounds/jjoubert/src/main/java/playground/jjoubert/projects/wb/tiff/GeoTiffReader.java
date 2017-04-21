@@ -30,8 +30,15 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
+import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.core.utils.misc.Counter;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
 
 import mil.nga.tiff.FieldTagType;
 import mil.nga.tiff.FileDirectory;
@@ -78,6 +85,63 @@ public class GeoTiffReader {
 	private void convertImageToR(String file){
 		this.gti.convertImageToR(file);
 	}
+
+	/**
+	 * Returns the number of <i>useful</i> pixels. That is, pixels with
+	 * values greater than zero. 
+	 * @return
+	 */
+	public int getNumberOfPixels(){
+		return this.getImage().getNumberOfUsefulPixels();
+	}
+	
+	public int getWidth(){
+		return this.gti.getWidth();
+	}
+
+	public int getHeight(){
+		return this.gti.getHeight();
+	}
+	
+	public GtiLandCover getLandCover(int x, int y){
+		short s = this.gti.getValue(x, y);
+		return GtiLandCover.parseLandcoverFromCode(s);
+	}
+	
+	public Coord getPixelCentre(int x, int y){
+		double[] da = this.gti.getPixelCentre(x, y);
+		return CoordUtils.createCoord(da[0], da[1]);
+	}
+	
+	/**
+	 * Calculates the area for the pixel. It is assumed that the given 
+	 * {@link CoordinateTransformation} will convert the pixel's coordinates
+	 * from (the default) WGS84 to some projected coordinate reference system.
+	 * <p></p>
+	 * Consequently, the calculated area should be in square meters.
+	 * @param x
+	 * @param y
+	 * @param ct
+	 * @return
+	 */
+	public double calculatePixelAreaSqm(int x, int y, CoordinateTransformation ct){
+		double area = 0.0;
+		double[] da = this.gti.getPixelCoordArray(x, y);
+		Coord bl = ct.transform(CoordUtils.createCoord(da[0], da[1]));
+		Coord br = ct.transform(CoordUtils.createCoord(da[2], da[1]));
+		Coord tr = ct.transform(CoordUtils.createCoord(da[2], da[3]));
+		Coord tl = ct.transform(CoordUtils.createCoord(da[0], da[3]));
+		Coordinate c1 = new Coordinate(bl.getX(), bl.getY());
+		Coordinate c2 = new Coordinate(br.getX(), br.getY());
+		Coordinate c3 = new Coordinate(tr.getX(), tr.getY());
+		Coordinate c4 = new Coordinate(tl.getX(), tl.getY());
+		Coordinate[]ca = {c1,c2,c3,c4,c1};
+		Polygon polygon = new GeometryFactory().createPolygon(ca);
+		area = polygon.getArea();
+		
+		return area;
+	}
+	
 	
 	class GeoTiffImage{
 		private Double originLongitude;
@@ -86,6 +150,7 @@ public class GeoTiffReader {
 		private Double incrementLatitude;
 		private Map<Short, Color> colorMap;
 		private TIFFImage image;
+		private final Rasters rasters;
 		
 		public GeoTiffImage(File geoTiffFile) {
 			this.image = null;
@@ -166,6 +231,10 @@ public class GeoTiffReader {
 					}
 				}
 			}
+			
+			/* Get the rasters so that we need not duplicate code so much. */
+			this.rasters = this.image.getFileDirectory(0).readRasters();
+
 		}
 		
 		public Color getPixelColor(short value){
@@ -198,24 +267,14 @@ public class GeoTiffReader {
 				
 				/* Process each pixel. */
 				int index = 0;
-				Rasters rasters = this.image.getFileDirectory(0).readRasters();
 				for(int x = 0; x < rasters.getWidth(); x++){
 					for(int y = 0; y < rasters.getHeight(); y++){
-						Number[] num = rasters.getPixel(x, y);
-						if(num.length > 1){
-							LOG.warn("Pixel value has length " + num.length);
-						}
-						short s = 0;
-						if(num[0] instanceof Short){
-							s = (short)num[0];
-						} else{
-							LOG.warn("Pixel does not have a value of type `short`, but " + num[0].getClass().toString());
-						}
+						short s = getValue(x, y);
 						
 						/* Only consider pixels with a useful, non-zero value. */
 						if(s > 0){
 							/* Get the coordinates of the pixel. */
-							double[] da = getCoordArray(x, y);
+							double[] da = getPixelCoordArray(x, y);
 							Color c = getPixelColor(s);
 							
 							bw.write(String.format("%d,%.10f,%.10f,%d,%d,%d,%d\n", index, da[0], da[1], s, c.getRed(), c.getGreen(), c.getBlue()));
@@ -250,7 +309,7 @@ public class GeoTiffReader {
 		 * @param y
 		 * @return
 		 */
-		public double[] getCoordArray(int x, int y){
+		private double[] getPixelCoordArray(int x, int y){
 			double[] da = {
 					this.originLongitude + x*this.incrementLongitude,
 					this.originLatitude - (y+1)*this.incrementLatitude,
@@ -258,6 +317,66 @@ public class GeoTiffReader {
 					this.originLatitude - y*this.incrementLatitude,
 			};
 			return da;
+		}
+		
+		/**
+		 * Returns the coordinate of the centre of the pixel in the format
+		 * [x, y].
+		 * @param x
+		 * @param y
+		 * @return
+		 */
+		private double[] getPixelCentre(int x, int y){
+			double[] pixelBox = getPixelCoordArray(x, y);
+			double xAvg = (pixelBox[0]+pixelBox[2])/2;
+			double yAvg = (pixelBox[1]+pixelBox[3])/2;
+			double[] da = {xAvg, yAvg};
+			return da;
+		}
+		
+		/**
+		 * Returns the number of <i>useful</i> pixels. That is, pixels with
+		 * values greater than zero. 
+		 * @return
+		 */
+		private int getNumberOfUsefulPixels(){
+			int usefulPixels = 0;
+			for(int x = 0; x < rasters.getWidth(); x++){
+				for(int y = 0; y < rasters.getHeight(); y++){
+					short s = getValue(x, y);
+					
+					/* Only consider pixels with a useful, non-zero value. */
+					if(s > 0){
+						usefulPixels++;
+					}
+				}
+			}
+			LOG.info("Total number of pixels with non-zero values: " + usefulPixels);
+			return usefulPixels;
+		}
+		
+		
+		private int getWidth(){
+			return this.image.getFileDirectory(0).readRasters().getWidth();
+		}
+
+		
+		private int getHeight(){
+			return this.image.getFileDirectory(0).readRasters().getHeight();
+		}
+		
+		private short getValue(int x, int y){
+			Number[] num = rasters.getPixel(x, y);
+			if(num.length > 1){
+				LOG.warn("Pixel value has length " + num.length);
+			}
+			short s = 0;
+			if(num[0] instanceof Short){
+				s = (short)num[0];
+			} else{
+				LOG.warn("Pixel does not have a value of type `short`, but " + num[0].getClass().toString());
+			}
+			return s;
 		}
 	}
 }
