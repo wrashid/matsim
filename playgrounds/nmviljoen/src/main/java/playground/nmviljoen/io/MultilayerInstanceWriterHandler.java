@@ -23,7 +23,68 @@ package playground.nmviljoen.io;
 import java.io.BufferedWriter;
 import java.io.IOException;
 
+import playground.nmviljoen.gridExperiments.NmvLink;
+import playground.nmviljoen.gridExperiments.NmvNode;
+
 public interface MultilayerInstanceWriterHandler {
+	
+	/* <instance> ... </instance> */
+	public void startInstance(final BufferedWriter out) throws IOException;
+	public void endInstance(final BufferedWriter out) throws IOException;
+	
+	/* <physicalNetwork> ... </physicalNetwork> */
+	public void startPhysicalNetwork(final BufferedWriter out) throws IOException;
+	public void endPhysicalNetwork(final BufferedWriter out) throws IOException;
+
+	/* <physicalNodes> ... </physicalNodes> */
+	public void startPhysicalNodes(final BufferedWriter out) throws IOException;
+	public void endPhysicalNodes(final BufferedWriter out) throws IOException;
+	
+	/* <node> ... </node> */
+	public void startPhysicalNode(final BufferedWriter out, NmvNode node) throws IOException;
+	public void endPhysicalNode(final BufferedWriter out) throws IOException;
+	
+	/* <physicalEdges> ... </physicalEdges> */
+	public void startPhysicalEdges(final BufferedWriter out) throws IOException;
+	public void endPhysicalEdges(final BufferedWriter out) throws IOException;
+	
+	/* <edge> ... </edge> */
+	public void startPhysicalEdge(final BufferedWriter out, NmvLink link) throws IOException;
+	public void endPhysicalEdge(final BufferedWriter out) throws IOException;
+	
+	
+	
+	/* <logicalNetwork> ... </logicalNetwork> */
+	public void startLogicalNetwork(final BufferedWriter out) throws IOException;
+	public void endLogicalNetwork(final BufferedWriter out) throws IOException;
+
+	/* <logicalNodes> ... </logicalNodes> */
+	public void startLogicalNodes(final BufferedWriter out) throws IOException;
+	public void endLogicalNodes(final BufferedWriter out) throws IOException;
+	
+	/* <node> ... </node> */
+	public void startLogicalNode(final BufferedWriter out) throws IOException;
+	public void endLogicalNode(final BufferedWriter out) throws IOException;
+	
+	/* <logicalEdges> ... </logicalEdges> */
+	public void startLogicalEdges(final BufferedWriter out) throws IOException;
+	public void endLogicalEdges(final BufferedWriter out) throws IOException;
+	
+	/* <edge> ... </edge> */
+	public void startLogicalEdge(final BufferedWriter out) throws IOException;
+	public void endLogicalEdge(final BufferedWriter out) throws IOException;
+	
+	
+	
+	/* <associations> ... </associations> */
+	public void startAssociations(final BufferedWriter out) throws IOException;
+	public void endAssociations(final BufferedWriter out) throws IOException;
+	
+	/* <association> ... </association> */
+	public void startAssociation(final BufferedWriter out) throws IOException;
+	public void endAssociation(final BufferedWriter out) throws IOException;
+	
+	
 	
 	/* <sets> ... </sets> */
 	public void startSets(final BufferedWriter out) throws IOException;
@@ -36,10 +97,6 @@ public interface MultilayerInstanceWriterHandler {
 	/* <path> ... </path> */
 	public void startPath(final BufferedWriter out) throws IOException;
 	public void endPath(final BufferedWriter out) throws IOException;
-	
-	/* <node> ... </node> */
-	public void startNode(final BufferedWriter out) throws IOException;
-	public void endNode(final BufferedWriter out) throws IOException;
 	
 	
 	public void writeSeparator(final BufferedWriter out) throws IOException;
