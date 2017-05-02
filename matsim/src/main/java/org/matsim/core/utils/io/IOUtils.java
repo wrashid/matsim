@@ -284,28 +284,13 @@ public class IOUtils {
 	}
 
 	/**
-	 * Method to create a directory.  Taken from OutputDirectoryHierarchy.  I am no expert on this so this may be wrong or incomplete.
-	 * 
-	 * @param dirName
-	 * 
-	 * @author kai nagel
-	 */
-	public static File createDirectory(final String dirName) {
-		try {
-			return Files.createDirectories(Paths.get(dirName)).toFile();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
 	 *
 	 * Deletes a directory tree recursively. Should behave like rm -rf, i.e. there should not be
 	 * any accidents like following symbolic links.
 	 *
 	 * @param path The directoy to be deleted
 	 */
-	public static void deleteDirectoryRecursively(Path path) {
+	public static void deleteDirectoryRecursively(Path path) throws UncheckedIOException {
 		try {
 			Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                 @Override
@@ -402,7 +387,7 @@ public class IOUtils {
 	 * 
 	 * @author mrieser
 	 */
-	public static OutputStream getOutputStream(final String filename)  {
+	public static OutputStream getOutputStream(final String filename) throws UncheckedIOException {
 		if (filename == null) {
 			throw new UncheckedIOException(new FileNotFoundException("No filename given (filename == null)"));
 		}
