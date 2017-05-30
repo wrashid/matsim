@@ -529,6 +529,7 @@ public class ERAfricaActivityLocationAdjuster {
 				double distanceFromHome = CoordUtils.calcEuclideanDistance(
 						oldHome, 
 						activity.getCoord());
+				// FIXME there should probably be an attractor direction brought in. 
 				ActivityFacility af = sampleActivityFacilityInRing(qtWork, home.getCoord(), distanceFromHome, "w");
 				activity.setCoord(af.getCoord());
 				activity.setFacilityId(af.getId());

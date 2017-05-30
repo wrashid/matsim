@@ -67,6 +67,9 @@ import playground.southafrica.utilities.Header;
  * 
  * TODO The post-R portion is covered in ...
  * 
+ * FIXME This is (possibly) still called Phase1PopulationBuilder in the R 
+ * documentation.
+ * 
  * @author jwjoubert
  */
 public class CapeTownPopulationBuilder {

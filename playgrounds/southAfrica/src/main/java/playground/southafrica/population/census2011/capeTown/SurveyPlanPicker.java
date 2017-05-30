@@ -297,6 +297,8 @@ public class SurveyPlanPicker {
 		/* Get each person's best-match plan. */
 		Counter counter = new Counter(" plans picked # ");
 		LOG.info("Picking plans for persons...");
+		CoordinateTransformation ctSurvey = TransformationFactory.getCoordinateTransformation(
+				TransformationFactory.WGS84, targetCRS);
 		for(Id<Person> personId : censusPopulation.getScenario().getPopulation().getPersons().keySet()){
 			Person person = censusPopulation.getScenario().getPopulation().getPersons().get(personId);
 
@@ -353,9 +355,13 @@ public class SurveyPlanPicker {
 						if(activity.getType().equalsIgnoreCase("h")){
 							activity.setCoord(home);
 						} else{
-							/* Transform the other activities' locations. */
+							/* Transform the other activities' locations. Note 
+							 * that these activities' locations are still, as
+							 * originally, in WGS84 coordinate systems as was
+							 * done in the survey itself. */
 							Coord oldActivityCoord = activity.getCoord();
-							activity.setCoord(ct.transform(oldActivityCoord));
+							Coord newActivityCoord = ctSurvey.transform(oldActivityCoord);
+							activity.setCoord(newActivityCoord);
 						}
 					}
 				}

@@ -88,18 +88,22 @@ public class CapeTownActivityTypeManipulator_2017 extends ActivityTypeManipulato
 		h.setTypicalDuration(Time.parseTime("24:00:00"));
 		h.setScoringThisActivityAtAll(false);
 		config.planCalcScore().addActivityParams(h);
+		/* Tertiary education. */
+		ActivityParams e2 = new ActivityParams("e2");
+		e2.setTypicalDuration(Time.parseTime("08:00:00"));
+		config.planCalcScore().addActivityParams(e2);
 		/* Dropping/collecting kids from school. */
 		ActivityParams e3 = new ActivityParams("e3");
 		e3.setTypicalDuration(Time.parseTime("00:05:00"));
 		config.planCalcScore().addActivityParams(e3);
 		/* Medical. */
-		ActivityParams m = new ActivityParams("m");
-		m.setTypicalDuration(Time.parseTime("00:15:00"));
-		config.planCalcScore().addActivityParams(m);
-		/* Other. */
-		ActivityParams o = new ActivityParams("o");
-		o.setTypicalDuration(Time.parseTime("00:10:00"));
-		config.planCalcScore().addActivityParams(o);
+//		ActivityParams m = new ActivityParams("m");
+//		m.setTypicalDuration(Time.parseTime("00:15:00"));
+//		config.planCalcScore().addActivityParams(m);
+//		/* Other. */
+//		ActivityParams o = new ActivityParams("o");
+//		o.setTypicalDuration(Time.parseTime("00:10:00"));
+//		config.planCalcScore().addActivityParams(o);
 		
 		/* Chopped chain starts. */
 		ActivityParams cs = new ActivityParams("chopStart");
@@ -142,11 +146,11 @@ public class CapeTownActivityTypeManipulator_2017 extends ActivityTypeManipulato
 					if(plan.getPerson().getId().toString().startsWith("coct")){
 						/* Using the median of activity durations analysed. */
 						String type = act.getType();
-						if(type.equalsIgnoreCase("minor")){
-							estimatedDuration = Time.parseTime("00:14:47");
-						} else if(type.equalsIgnoreCase("major")){
-							estimatedDuration = Time.parseTime("07:30:58");
-						} else if(type.equalsIgnoreCase("chopEnd")){
+						if(type.startsWith("minor")){
+							estimatedDuration = Time.parseTime("00:14:45");
+						} else if(type.startsWith("major")){
+							estimatedDuration = Time.parseTime("07:31:17");
+						} else if(type.startsWith("chopEnd")){
 							estimatedDuration = Time.parseTime("00:00:01");
 						} else{
 							LOG.error("Don't know what to do with last activity of type " + act.getType());
@@ -169,7 +173,12 @@ public class CapeTownActivityTypeManipulator_2017 extends ActivityTypeManipulato
 					 * freight works with maximum duration, and not start- and
 					 * end times. JWJ, June 2014*/
 					if(plan.getPerson().getId().toString().startsWith("coct")){
+//						estimatedDuration = act.getMaximumDuration();
+						/* It seems now (May 2017, JWJ) that there is no maximum
+						 * duration. So instead we now use typical duration. */
+//						estimatedDuration = Time.parseTime(act.getAttributes().getAttribute("typicalDuration").toString());
 						estimatedDuration = act.getMaximumDuration();
+						
 					} else{
 						/* We assume it is a person... */
 
@@ -210,11 +219,13 @@ public class CapeTownActivityTypeManipulator_2017 extends ActivityTypeManipulato
 		String s = activityType;
 		if(deciles.containsKey(s)){
 			/* It is one of the activity types that should be changed. */
+			String lastDecile = "";
 			for(String ss : deciles.get(s).keySet()){
 				if(activityDuration <= Time.parseTime(ss)){
 					s = deciles.get(s).get(ss).getFirst();
 					break;
 				}
+				lastDecile = ss;
 			}
 
 			/* It is possible that the actual activity's duration is still 
@@ -225,6 +236,10 @@ public class CapeTownActivityTypeManipulator_2017 extends ActivityTypeManipulato
 			 */
 			if(s.equalsIgnoreCase(activityType)){
 				LOG.warn("Could not change activity type for `" + s + "' - duration: " + activityDuration);
+				/* For now (May 2017, JWJ) I am using the highest value in the 
+				 * decile range. */
+				s = deciles.get(s).get(lastDecile).getFirst();
+				LOG.warn( " '-> Using the highest decile: " + s);
 			}
 		}
 		return s;

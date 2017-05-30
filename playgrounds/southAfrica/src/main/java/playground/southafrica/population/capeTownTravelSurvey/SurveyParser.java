@@ -122,6 +122,7 @@ public class SurveyParser {
 		sp.parseDerivedHouseholdAssets(args[4]);
 		sp.parseDiaryTrips(args[5]);
 		
+		sp.cleanUpScenario(sp.getScenario());
 		sp.writePopulation(args[6], sp.getScenario());
 		
 		Scenario surveySc = sp.filterScenarioToSurveyRespondents();
@@ -325,7 +326,6 @@ public class SurveyParser {
 					hha.putAttribute(id.toString(), "numberOfHouseholdMotorcyclesAccessTo", Integer.parseInt(sa[24]));
 					hha.putAttribute(id.toString(), "numberOfDomesticWorkers", Integer.parseInt(sa[25]));
 					hha.putAttribute(id.toString(), "numberOfGardenWorkers", Integer.parseInt(sa[28]));
-
 					
 					sc.getHouseholds().getHouseholds().put(id, hh);
 				} else{
@@ -790,7 +790,6 @@ public class SurveyParser {
 		LOG.info("Cleaning up scenario...");
 		/* TODO Still need to figure out what cleaning up must happen. */
 		
-		
 		/* Search for location-less activities, and sample its locations from 
 		 * the kernel density estimates. */
 		LOG.info("Sampling locations for those without known zones...");
@@ -852,8 +851,12 @@ public class SurveyParser {
 				String zoneId = (String)o;
 				Coord homeCoord = null;
 				if(zoneId != null && !zoneId.equalsIgnoreCase("")){
-					/* There is known home zone. */
-					Point p = this.zoneMap.get(zoneId).sampleRandomInteriorPoint();
+					/* There is a known home zone. */
+					MyZone homeZone = this.zoneMap.get(zoneId);
+					if(homeZone == null){
+						LOG.error("Cannot find home zone '"+ zoneId + "'");
+					}
+					Point p = homeZone.sampleRandomInteriorPoint();
 					/* Round to four decimal places. */
 					double x = Double.parseDouble(String.format("%.6f", p.getX()));
 					double y = Double.parseDouble(String.format("%.6f", p.getY()));
@@ -875,6 +878,8 @@ public class SurveyParser {
 								if(act.getType().equalsIgnoreCase("h")){
 									act.setCoord(homeCoord);
 									homeLocationsFixed++;
+								} else{
+									/* TODO What do we do if the activity is NOT home? */
 								}
 							}
 						}
