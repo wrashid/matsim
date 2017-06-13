@@ -58,11 +58,18 @@ public final class FacilityOpeningIntervalCalculator implements OpeningIntervalC
 		Iterator<String> facilityActTypeIterator = facility.getActivityOptions().keySet().iterator();
 		String facilityActType = null;
 		Set<OpeningTime> opentimes = null;
+		
+		String[] actTypeArr = act.getType().split("_");
+		String type = "";
+		if (actTypeArr.length == 2)
+			type = actTypeArr[0];
+		else
+			type = actTypeArr[0] + "_" + actTypeArr[1];
 
 		while (facilityActTypeIterator.hasNext() && !foundAct) {
 
 			facilityActType = facilityActTypeIterator.next();
-			if (act.getType().equals(facilityActType)) {
+			if (type.equals(facilityActType)) {
 				foundAct = true;
 
 				opentimes = facility.getActivityOptions().get(facilityActType).getOpeningTimes();
