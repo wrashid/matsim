@@ -14,12 +14,12 @@ public class ActivitiesAnalysis {
 
 	public static void main(String[] args) throws IOException {
 
-		final BufferedWriter outLink = IOUtils.getBufferedWriter("C:\\Users\\balacm\\Desktop\\TRB\\initial_bj_run1.txt");
+		final BufferedWriter outLink = IOUtils.getBufferedWriter("C:\\Users\\balacm\\Desktop\\TRB\\cn_run2.txt");
 		ObjectAttributes bla = new ObjectAttributes();
 		
 		new ObjectAttributesXmlReader(bla).readFile(args[0]);
 		
-		String inputFile = "C:\\Users\\balacm\\Desktop\\run.0.events_bj1.xml.gz";
+		String inputFile = "C:\\Users\\balacm\\Desktop\\run.1000.events_cn2.xml.gz";
 
 		//create an event object
 		EventsManager events = EventsUtils.createEventsManager();
