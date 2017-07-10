@@ -31,10 +31,10 @@ import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.core.utils.misc.Time;
 
 /**
- * This is an adaptation of CharyparNagel activity function using a piece-wise linear function
- * istead of the logarithmic.
+ * This is a re-implementation of the original CharyparNagel function, based on a
+ * modular approach.
  * @see <a href="http://www.matsim.org/node/263">http://www.matsim.org/node/263</a>
- * @author balac,janzen
+ * @author rashid_waraich
  */
 public final class BJActivityScoring implements org.matsim.core.scoring.SumScoringFunction.ActivityScoring {
 
@@ -58,8 +58,9 @@ public final class BJActivityScoring implements org.matsim.core.scoring.SumScori
 	
 	private static final Logger log = Logger.getLogger(BJActivityScoring.class);
 
-	public BJActivityScoring(final ScoringParameters params, Map<String, Double> slopesAfterTypical) {
-		this(params, new ActivityTypeOpeningIntervalCalculator(params));
+	public BJActivityScoring(final ScoringParameters params, Map<String, Double> slopesAfterTypical,
+			final OpeningIntervalCalculator openingIntervalCalculator) {
+		this(params, openingIntervalCalculator);
 		this.slopesAfterTypical = slopesAfterTypical;
 	}
 
@@ -165,29 +166,24 @@ public final class BJActivityScoring implements org.matsim.core.scoring.SumScori
 
 			// utility of performing an action, duration is >= 1, thus log is no problem
 			double typicalDuration = actParams.getTypicalDuration();
-			double umax = 10.0;
 			
-			if (act.getType().equals("shopping")) {
-				umax /= 1.0;
-			}
-			double zeroUtilityDUration = (typicalDuration - 1800.0) / 3600.0;
-
-			if (act.getType() == "shopping")
-				zeroUtilityDUration = (typicalDuration - 2700.0) / 3600.0;
-			
-			if (duration < zeroUtilityDUration * 3600.0) {
-				double utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * umax / (typicalDuration / 3600.0 - zeroUtilityDUration ) *
-				(duration / 3600.0 - zeroUtilityDUration);
+			if (duration < actParams.getZeroUtilityDuration_h() * 3600.0) {
+				double utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0 / (typicalDuration / 3600.0 - actParams.getZeroUtilityDuration_h() ) *
+				(duration / 3600.0 - actParams.getZeroUtilityDuration_h());
 				tmpScore += utilPerf;
 			}
 			else if (duration > typicalDuration) {
-				double utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * umax + this.slopesAfterTypical.get(act.getType()) * (duration - typicalDuration);
+				double utilPerf = 0.0;
+				if (act.getType().equals("home_1"))
+					utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0 + this.slopesAfterTypical.get(act.getType()) * (duration - typicalDuration);
+				else
+					utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0;
 				tmpScore += utilPerf;
 
 			}
 			else {
-				double utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * umax / (typicalDuration / 3600.0 - zeroUtilityDUration ) *
-						(duration / 3600.0 - zeroUtilityDUration);
+				double utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0 / (typicalDuration / 3600.0 - actParams.getZeroUtilityDuration_h() ) *
+						(duration / 3600.0 - actParams.getZeroUtilityDuration_h());
 				tmpScore += utilPerf;
 				
 			}			
