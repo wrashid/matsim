@@ -74,7 +74,7 @@ public class CharyparNagelLegScoring implements org.matsim.core.scoring.SumScori
 	
 	protected double calcLegScore(final double departureTime, final double arrivalTime, final Leg leg) {
 		double tmpScore = 0.0;
-		double travelTime = arrivalTime - departureTime; // travel time in seconds	
+		double travelTime = leg.getTravelTime(); // travel time in seconds	
 		ModeUtilityParameters modeParams = this.params.modeParams.get(leg.getMode());
 		if (modeParams == null) {
 			if (leg.getMode().equals(TransportMode.transit_walk) || leg.getMode().equals(TransportMode.access_walk) 
