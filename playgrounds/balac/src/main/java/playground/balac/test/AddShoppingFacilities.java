@@ -49,16 +49,27 @@ public class AddShoppingFacilities {
 			if (af.getActivityOptions().containsKey("home")) {
 				ActivityOptionImpl actOption = new ActivityOptionImpl("home_1");
 				
-				actOption.addOpeningTime(new OpeningTimeImpl(0.0 * 3600.0, 30.0 * 3600)); 
+				//actOption.addOpeningTime(new OpeningTimeImpl(0.0 * 3600.0, 30.0 * 3600)); 
 				af.addActivityOption(actOption);
 				
 				ActivityOptionImpl actOption2 = new ActivityOptionImpl("home_2");
 				
-				actOption2.addOpeningTime(new OpeningTimeImpl(0.0 * 3600.0, 30.0 * 3600)); 
+			//	actOption2.addOpeningTime(new OpeningTimeImpl(0.0 * 3600.0, 30.0 * 3600)); 
 				af.addActivityOption(actOption2);
 				
 			}
-			
+			else if (af.getActivityOptions().containsKey("work")) {
+				ActivityOptionImpl actOption = new ActivityOptionImpl("home_1");
+				
+			//	actOption.addOpeningTime(new OpeningTimeImpl(0.0 * 3600.0, 30.0 * 3600)); 
+				af.addActivityOption(actOption);
+				
+				ActivityOptionImpl actOption2 = new ActivityOptionImpl("home_2");
+				
+			//	actOption2.addOpeningTime(new OpeningTimeImpl(0.0 * 3600.0, 30.0 * 3600)); 
+				af.addActivityOption(actOption2);
+				
+			}
 		}
 		
 		new FacilitiesWriter(scenario.getActivityFacilities()).write("C:\\Users\\balacm\\Desktop\\facilities_shop_home12.xml.gz");
