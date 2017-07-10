@@ -87,7 +87,7 @@ public class ZurichScoringFunctionFactory implements ScoringFunctionFactory {
 		double slopeHome2 = ((BJActivityScoringConfigGroup)scenario.getConfig().getModule("BJactivityscoring")).getSlopeHome2();
 		
 		Map<String, Double> slopes = new HashMap<>();
-		slopes.put("home", slopeHome1);
+		slopes.put("home_1", slopeHome1);
 		//slopes.put("home_2", slopeHome2);
 		slopes.put("work", 0.0);
 		slopes.put("education", 0.0);		
@@ -104,7 +104,7 @@ public class ZurichScoringFunctionFactory implements ScoringFunctionFactory {
 		scoringFunctionAccumulator.addScoringFunction(
 				new BlackListedActivityScoringFunction(blackList,
 						new CharyparNagelActivityScoring(params, new FacilityOpeningIntervalCalculator(scenario.getActivityFacilities()))));
-		/*scoringFunctionAccumulator.addScoringFunction(
+						/*	scoringFunctionAccumulator.addScoringFunction(
 				new BlackListedActivityScoringFunction(blackList,
 						new BJActivityScoring(params, slopes, new FacilityOpeningIntervalCalculator(scenario.getActivityFacilities()))));*/
 		
