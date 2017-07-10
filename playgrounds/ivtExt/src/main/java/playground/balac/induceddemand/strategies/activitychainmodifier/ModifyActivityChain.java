@@ -20,27 +20,28 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.facilities.ActivityFacilities;
+import org.matsim.facilities.ActivityFacility;
 
 public class ModifyActivityChain extends AbstractMultithreadedModule{
 	
 	private Provider<TripRouter> tripRouterProvider;
 	private Scenario scenario;
-	private final QuadTree shopFacilityQuadTree;
-	private final QuadTree leisureFacilityQuadTree;
+	private final Map<String, QuadTree<ActivityFacility>> shopFacilityQuadTree;
+	private final Map<String, QuadTree<ActivityFacility>> leisureFacilityQuadTree;
 	private LeastCostPathCalculatorFactory pathCalculatorFactory;
 	private Map<String, TravelTime> travelTimes;
 	private Map<String, TravelDisutilityFactory> travelDisutilityFactories;
 	private ScoringFunctionFactory scoringFunctionFactory;
 	private HashMap scoreChange;
 	private ScoringParametersForPerson parametersForPerson;
-	private final TripRouter routingHandler;
+	//private final TripRouter routingHandler;
 	private final ActivityFacilities facilities;
 	public ModifyActivityChain(final Scenario scenario, Provider<TripRouter> tripRouterProvider,
-			 QuadTree shopFacilityQuadTree, QuadTree leisureFacilityQuadTree,
+			 Map shopFacilityQuadTree, Map leisureFacilityQuadTree,
 			 LeastCostPathCalculatorFactory pathCalculatorFactory, Map<String, TravelTime> travelTimes,
 			 Map<String, TravelDisutilityFactory> travelDisutilityFactories, ScoringFunctionFactory scoringFunctionFactory,
 			 HashMap scoreChange, ScoringParametersForPerson parametersForPerson,
-			 final TripRouter routingHandler, final ActivityFacilities facilities) {
+			 final ActivityFacilities facilities) {
 		
 		super(scenario.getConfig().global().getNumberOfThreads());
 		this.scenario = scenario;
@@ -53,7 +54,7 @@ public class ModifyActivityChain extends AbstractMultithreadedModule{
 		this.scoringFunctionFactory = scoringFunctionFactory;
 		this.scoreChange = scoreChange;
 		this.parametersForPerson = parametersForPerson;
-		this.routingHandler = routingHandler;
+		//this.routingHandler = routingHandler;
 		this.facilities = facilities;
 	}
 
@@ -67,7 +68,7 @@ public class ModifyActivityChain extends AbstractMultithreadedModule{
 		LeastCostPathCalculator pathCalculator = pathCalculatorFactory.createPathCalculator(scenario.getNetwork(), travelDisutility, travelTime ) ;
 		ModifyAndChooseChain algo = new ModifyAndChooseChain(MatsimRandom.getLocalInstance(), tripRouter.getStageActivityTypes(),
 				this.scenario, pathCalculator, this.shopFacilityQuadTree, this.leisureFacilityQuadTree, scoringFunctionFactory,
-				this.scoreChange, this.parametersForPerson, this.routingHandler, this.facilities);
+				this.scoreChange, this.parametersForPerson, tripRouter, this.facilities);
 
 		return algo;
 	}

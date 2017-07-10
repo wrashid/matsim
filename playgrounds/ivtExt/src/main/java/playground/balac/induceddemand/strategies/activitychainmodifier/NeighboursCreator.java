@@ -1,6 +1,5 @@
 package playground.balac.induceddemand.strategies.activitychainmodifier;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,11 +22,9 @@ import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.api.core.v01.population.Route;
 import org.matsim.contrib.locationchoice.utils.PlanUtils;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.population.routes.GenericRouteImpl;
-import org.matsim.core.population.routes.LinkNetworkRouteImpl;
-import org.matsim.core.population.routes.RouteFactories;
 import org.matsim.core.router.ActivityWrapperFacility;
 import org.matsim.core.router.StageActivityTypes;
 import org.matsim.core.router.TripRouter;
@@ -56,8 +53,8 @@ public class NeighboursCreator {
 	private final static Set<String> priamryActivities = new HashSet<String>(Arrays.asList("work", "work_sector3",
 			"home_1", "home_2", "education_primary", "education_secondary", "education_kindergarten", "education_higher", "secondary"));
 	private final StageActivityTypes stageActivityTypes;
-	private QuadTree<ActivityFacility> shopFacilityQuadTree;
-	private QuadTree<ActivityFacility> leisureFacilityQuadTree;
+	private Map<String, QuadTree<ActivityFacility>> shopFacilityQuadTree;
+	private Map<String, QuadTree<ActivityFacility>> leisureFacilityQuadTree;
 	private Scenario scenario;
 	private LeastCostPathCalculator pathCalculator;
 	private ScoringFunctionFactory scoringFunctionFactory;
@@ -73,7 +70,7 @@ public class NeighboursCreator {
 	private int level = 1;
 	
 	public NeighboursCreator(StageActivityTypes stageActivityTypes,
-			QuadTree<ActivityFacility> shopFacilityQuadTree, QuadTree<ActivityFacility> leisureFacilityQuadTree,
+			Map<String, QuadTree<ActivityFacility>> shopFacilityQuadTree, Map<String, QuadTree<ActivityFacility>> leisureFacilityQuadTree,
 			Scenario scenario, LeastCostPathCalculator pathCalculator, 
 			ScoringFunctionFactory scoringFunctionFactory, HashMap scoreChange, 
 			ScoringParametersForPerson parametersForPerson, final TripRouter routingHandler, final ActivityFacilities facilities){
@@ -96,8 +93,7 @@ public class NeighboursCreator {
 		//newPlans.addAll(getAllChainsWthSwapping(plan));
 		newPlans.addAll(getAllChainsWthInserting(plan));
 		
-		if (plan.getPerson().getId().toString().equals("10355_2"))
-			System.out.println("");
+	
 		//we need start and end times of all the activities in order to be able to score the plan
 		updateTimesForScoring(newPlans);		
 	
@@ -348,14 +344,42 @@ public class NeighboursCreator {
 	}
 	
 	private Set<String> findPossibleInsertActivities(Plan plan) {
-		//String actTypes = (String) this.scenario.getPopulation().getPersonAttributes().getAttribute(plan.getPerson().getId().toString(),
-		//		"activities");
-		String[] allActTypes = new String[1];			
-		allActTypes[0] = "shopping";
-		//allActTypes[1] = "secondary";
+		
+		//we need for each person a set of all possible activities
+		//then we remove all activities that the agent has in its plan
+			
+		//SiouxFalls:
+		Set<String> possibleActivities = new HashSet<>();
+		if (plan.getPlanElements().get(0) instanceof Activity) {
+			
+			String type = ((Activity)plan.getPlanElements().get(0)).getType();
+			if (type.equals("home_1")) {
+				possibleActivities.add("home_1");
+				possibleActivities.add("work");
+				possibleActivities.add("shopping");
 
+			}
+			else {
+				possibleActivities.add("home_2");
+				possibleActivities.add("secondary");
+				possibleActivities.add("shopping");
+				
+			}
+		}
+		for (PlanElement pe : plan.getPlanElements()) {
+			
+			if (pe instanceof Activity) {
+				possibleActivities.remove(((Activity) pe).getType());
+			}
+		}
+		
+		//Zurich:	
+		
+		
+		/*String[] allActTypes = ((String)scenario.getPopulation().getPersonAttributes().getAttribute(plan.getPerson().getId().toString(), "activities")).split(",");			
+		
 		Set<String> possibleActivities = new HashSet<>(Arrays.asList(allActTypes));
-		/*for (PlanElement pe : plan.getPlanElements()) {
+		for (PlanElement pe : plan.getPlanElements()) {
 			
 			if (pe instanceof Activity) {
 				possibleActivities.remove(((Activity) pe).getType());
@@ -382,7 +406,7 @@ public class NeighboursCreator {
 
 			int actIndex = plan.getPlanElements().indexOf(t.get(index));
 
-			for (String actType:allActTypes) {
+			for (String actType : allActTypes) {
 				
 				//===no point to insert a mandatory activity next to another mandatory activity===
 				
@@ -411,22 +435,31 @@ public class NeighboursCreator {
 					newActivityCoord = primaryActivity.getCoord();					
 					Id<ActivityFacility> facilityId = primaryActivity.getFacilityId();
 					Id<Link> startLinkId = primaryActivity.getLinkId();
-					durationNewActivity = getDurationOfNewActivity(null);
+					durationNewActivity = getDurationOfNewActivity(actType, person);
 					newActivity = createNewActivity(actType, newActivityCoord, facilityId, startLinkId, person, arrivalTime, durationNewActivity);
+					
+				}
+				else if (actType.startsWith("work")) {
+					Activity primaryActivity = getPersonWorkLocation(t);					
+					startLink = network.getLinks().get(primaryActivity.getLinkId());
+					newActivityCoord = primaryActivity.getCoord();					
+					Id<ActivityFacility> facilityId = primaryActivity.getFacilityId();
+					Id<Link> startLinkId = primaryActivity.getLinkId();
+					durationNewActivity = getDurationOfNewActivity(actType, person);
+					newActivity = createNewActivity(actType, newActivityCoord, facilityId, startLinkId, person, arrivalTime, durationNewActivity);
+				
 					
 				}
 				else {					
 					ActivityFacility actFacility = findActivityLocation(actType, 
 							t.get(index - 1).getCoord(), t.get(index).getCoord());					
-					
-					startLink = NetworkUtils.getNearestLinkExactly(network,actFacility.getCoord());
 					newActivityCoord = actFacility.getCoord();
 					Id<ActivityFacility> facilityId = actFacility.getId();
-					Id<Link> startLinkId =startLink.getId();
-					durationNewActivity = getDurationOfNewActivity(null);
+					Id<Link> startLinkId = NetworkUtils.getNearestLinkExactly(this.scenario.getNetwork(), newActivityCoord).getId();
+					durationNewActivity = getDurationOfNewActivity(actType, person);
 					newActivity = createNewActivity(actType, newActivityCoord, facilityId, startLinkId, person, arrivalTime, durationNewActivity);
 				}	
-				//place the new activity in the newPlan at the right position
+				//place the new activity in the newPlan at the correct position
 				newPlan.getPlanElements().add(actIndex, newActivity);
 				
 				Leg legBeforeInsertedActivity = ( (Leg) newPlan.getPlanElements().get(actIndex - 1) );
@@ -490,9 +523,13 @@ public class NeighboursCreator {
 		return newActivity;
 	}
 	
-	private double getDurationOfNewActivity(Activity activity) {
+	private double getDurationOfNewActivity(String actType, Person person) {
+		//siouxFalls:
+		double prefDuration = ((PlanCalcScoreConfigGroup)this.scenario.getConfig().getModules().get("planCalcScore")).getActivityParams(actType).getTypicalDuration();
+		//zurich:
+		//double prefDuration = (Double)scenario.getPopulation().getPersonAttributes().getAttribute(person.getId().toString(), "typicalDuration_" + actType);
 		
-		return MatsimRandom.getRandom().nextDouble() * 3600.0;		
+		return MatsimRandom.getRandom().nextDouble() * prefDuration;		
 	}
 
 	private List<Plan> getAllChainsWthRemoving(Plan plan) {
@@ -511,7 +548,9 @@ public class NeighboursCreator {
 			
 			newPlan.setPerson(plan.getPerson());
 			
-			if (NeighboursCreator.priamryActivities.contains(t.get(index).getType()))
+			if (t.get(index).getType().startsWith("remote") || t.get(index).getType().startsWith("home") ||
+					t.get(index).getType().startsWith("work") || t.get(index).getType().startsWith("escort") ||
+					t.get(index).getType().startsWith("education"))
 				//===don't remove primary activities
 				continue;
 			
@@ -768,12 +807,23 @@ public class NeighboursCreator {
 		
 		for(Activity a : allActivities) 
 			
-			if (a.getType().equals("home"))
+			if (a.getType().startsWith("home"))
 				
 				return a;
 		
 		throw new NullPointerException("The activity type home is not known to the agent!");
 	}	
+	
+	private Activity getPersonWorkLocation(List<Activity> allActivities) {
+		
+		for(Activity a : allActivities) 
+			
+			if (a.getType().startsWith("work"))
+				
+				return a;
+		
+		throw new NullPointerException("The activity type work is not known to the agent!");
+	}
 	/**
 	 * Approximate the location of the new activity by choosing the closest location
 	 * at the middle point between the neighbouring activities.
@@ -788,11 +838,11 @@ public class NeighboursCreator {
 		Coord coord = CoordUtils.createCoord(( coordStart.getX() + coordEnd.getX() ) / 2.0,
 				( coordStart.getY() + coordEnd.getY() ) / 2.0);
 		if (actType.startsWith("secondary"))
-			return (ActivityFacility)leisureFacilityQuadTree.getClosest(coord.getX(), coord.getY());		
+			return (ActivityFacility)leisureFacilityQuadTree.get(actType).getClosest(coord.getX(), coord.getY());		
 
 		else if (actType.startsWith("shop"))
 		
-			return (ActivityFacility)shopFacilityQuadTree.getClosest(coord.getX(), coord.getY());		
+			return (ActivityFacility)shopFacilityQuadTree.get(actType).getClosest(coord.getX(), coord.getY());		
 		else 
 			throw new NullPointerException("The activity type: " + actType + " ,is not known!");
 		

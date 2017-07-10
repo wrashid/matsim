@@ -15,6 +15,7 @@ import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.replanning.PlanStrategy;
 import org.matsim.core.replanning.PlanStrategyImpl;
 import org.matsim.core.replanning.ReplanningContext;
+import org.matsim.core.replanning.PlanStrategyImpl.Builder;
 import org.matsim.core.replanning.modules.ReRoute;
 import org.matsim.core.replanning.selectors.RandomPlanSelector;
 import org.matsim.core.router.TripRouter;
@@ -25,51 +26,54 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 import org.matsim.core.scoring.functions.ScoringParametersForPerson;
 import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.facilities.ActivityFacilities;
+import org.matsim.facilities.ActivityFacility;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 
-public class ActivityChainModifierStrategy implements PlanStrategy{
-	private final PlanStrategy planStrategyDelegate;
+public class ActivityChainModifierStrategy implements Provider<PlanStrategy>{
 	
-	
+	private Provider<TripRouter> tripRouterProvider;
+	private Scenario scenario;
+	private final Map<String, QuadTree<ActivityFacility>> shopFacilityQuadTree;
+	private final Map<String, QuadTree<ActivityFacility>> leisureFacilityQuadTree;
+	private LeastCostPathCalculatorFactory pathCalculatorFactory;
+	private Map<String, TravelTime> travelTimes;
+	private Map<String, TravelDisutilityFactory> travelDisutilityFactories;
+	private ScoringFunctionFactory scoringFunctionFactory;
+	private HashMap scoreChange;
+	private ScoringParametersForPerson parametersForPerson;
+	private final ActivityFacilities facilities;
 
 	@Inject
 	public ActivityChainModifierStrategy(final Scenario scenario, 
-			Provider<TripRouter> tripRouterProvider, @Named("shopQuadTree") QuadTree shopFacilityQuadTree,
-			   @Named("leisureQuadTree") QuadTree leisureFacilityQuadTree,
+			Provider<TripRouter> tripRouterProvider, @Named("shopQuadTree") HashMap shopFacilityQuadTree,
+			   @Named("leisureQuadTree") HashMap leisureFacilityQuadTree,
 			   LeastCostPathCalculatorFactory pathCalculatorFactory, Map<String,TravelTime> travelTimes,
 			   Map<String,TravelDisutilityFactory> travelDisutilityFactories, ScoringFunctionFactory scoringFunctionFactory,
-			   @Named("scoreChangeMap") HashMap scoreChange, ScoringParametersForPerson parametersForPerson,  final TripRouter routingHandler, final ActivityFacilities facilities) {
+			   @Named("scoreChangeMap") HashMap scoreChange, ScoringParametersForPerson parametersForPerson,  final ActivityFacilities facilities) {
 		
-		PlanStrategyImpl.Builder builder = new PlanStrategyImpl.Builder(new RandomPlanSelector<Plan, Person>() );
+		this.scenario = scenario;
+		this.tripRouterProvider = tripRouterProvider;
+		this.shopFacilityQuadTree = shopFacilityQuadTree;
+		this.leisureFacilityQuadTree = leisureFacilityQuadTree;
+		this.pathCalculatorFactory = pathCalculatorFactory;
+		this.travelTimes = travelTimes;
+		this.travelDisutilityFactories = travelDisutilityFactories;
+		this.scoringFunctionFactory = scoringFunctionFactory;
+		this.scoreChange = scoreChange;
+		this.parametersForPerson = parametersForPerson;
+		this.facilities = facilities;
 		
-		ModifyActivityChain mac = new ModifyActivityChain(scenario, tripRouterProvider,
+	}	
+	@Override
+	public PlanStrategy get() {
+		Builder builder = new PlanStrategyImpl.Builder(new RandomPlanSelector<Plan,Person>()) ;
+		builder.addStrategyModule(new ModifyActivityChain(scenario, tripRouterProvider,
 	    		shopFacilityQuadTree, leisureFacilityQuadTree, pathCalculatorFactory, travelTimes,
-	    		travelDisutilityFactories,scoringFunctionFactory, scoreChange, parametersForPerson,routingHandler, facilities);
-	    
-		builder.addStrategyModule(mac);
-		//builder.addStrategyModule(new ReRoute(scenario, tripRouterProvider));
-		
-		planStrategyDelegate = builder.build();	
-		
-	}
-	@Override
-	public void run(HasPlansAndId<Plan, Person> person) {
-		planStrategyDelegate.run(person);
-		
-	}
-
-	@Override
-	public void init(ReplanningContext replanningContext) {
-		planStrategyDelegate.init(replanningContext);
-	}
-
-	@Override
-	public void finish() {
-		planStrategyDelegate.finish();
-
+	    		travelDisutilityFactories,scoringFunctionFactory, scoreChange, parametersForPerson, facilities));
+		return builder.build() ;
 	}
 
 }
