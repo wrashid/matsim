@@ -1,46 +1,36 @@
 package playground.balac.induceddemand.controler;
 
-import com.google.inject.name.Names;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.locationchoice.DestinationChoiceConfigGroup;
 import org.matsim.contrib.locationchoice.bestresponse.DestinationChoiceBestResponseContext;
 import org.matsim.contrib.locationchoice.bestresponse.DestinationChoiceInitializer;
-import org.matsim.contrib.socnetsim.jointtrips.scoring.ElementalCharyparNagelLegScoringFunction;
-import org.matsim.contrib.socnetsim.jointtrips.scoring.ElementalCharyparNagelLegScoringFunction.LegScoringParameters;
 import org.matsim.contrib.socnetsim.utils.QuadTreeRebuilder;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.controler.*;
-import org.matsim.core.population.PersonUtils;
+import org.matsim.core.controler.AbstractModule;
+import org.matsim.core.controler.Controler;
+import org.matsim.core.controler.MatsimServices;
+import org.matsim.core.controler.OutputDirectoryLogging;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.core.scoring.ScoringFunction;
-import org.matsim.core.scoring.ScoringFunctionFactory;
-import org.matsim.core.scoring.SumScoringFunction;
-import org.matsim.core.scoring.functions.CharyparNagelActivityScoring;
-import org.matsim.core.scoring.functions.CharyparNagelAgentStuckScoring;
-import org.matsim.core.scoring.functions.CharyparNagelLegScoring;
-import org.matsim.core.scoring.functions.CharyparNagelMoneyScoring;
-import org.matsim.core.scoring.functions.ScoringParameters;
 import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.core.utils.io.UncheckedIOException;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.algorithms.WorldConnectLocations;
+
+import com.google.inject.name.Names;
+
 import playground.balac.induceddemand.config.ActivityStrategiesConfigGroup;
 import playground.balac.induceddemand.controler.listener.ActivitiesAnalysisListener;
 import playground.balac.induceddemand.strategies.activitychainmodifier.ActivityChainModifierStrategy;
 import playground.ivt.kticompatibility.KtiLikeScoringConfigGroup;
-import playground.ivt.scoring.LineChangeScoringFunction;
-
-import java.io.File;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 
@@ -71,7 +61,7 @@ public class ZurichScenarioControler {
 				// we use
 				new KtiLikeScoringConfigGroup(), new DestinationChoiceConfigGroup(),
 				new ActivityStrategiesConfigGroup(), 				new BJActivityScoringConfigGroup());
-		
+
 		// This is currently needed for location choice: initializing
 		// the location choice writes K-values files to the output directory, which:
 		// - fails if the directory does not exist
@@ -83,78 +73,19 @@ public class ZurichScenarioControler {
 		final Scenario scenario = ScenarioUtils.loadScenario( config );
 
 		final Controler controler = new Controler( scenario );
-		controler.getConfig().controler().setOverwriteFileSetting(
-						OutputDirectoryHierarchy.OverwriteFileSetting.overwriteExistingFiles  );
+		//connectFacilitiesWithNetwork(controler);
+		controler.addOverridingModule(new BlackListedTimeAllocationMutatorStrategyModule());
 
-		//connectFacilitiesWithNetwork( controler );
-
-		//initializeLocationChoice( controler );
 		initializeActivityStrategies(scenario, controler);
-		// We use a specific scoring function, that uses individual preferences
-		// for activity durations.
-		//controler.addOverridingModule( new MATSim2010ScoringModule() );
-
-		controler.setScoringFunctionFactory(new ScoringFunctionFactory() {
-
+	
+		controler.addOverridingModule(new AbstractModule() {
+			
 			@Override
-			public ScoringFunction createNewScoringFunction(Person person) {
-				SumScoringFunction sumScoringFunction = new SumScoringFunction();
-
-				
-				double slopeHome1 = ((BJActivityScoringConfigGroup)controler.getConfig().getModule("BJactivityscoring")).getSlopeHome1();
-				double slopeHome2 = ((BJActivityScoringConfigGroup)controler.getConfig().getModule("BJactivityscoring")).getSlopeHome2();
-				
-				Map<String, Double> slopes = new HashMap<>();
-				slopes.put("home_1", slopeHome1);
-				slopes.put("home_2", slopeHome2);
-				slopes.put("work", 0.0);
-				slopes.put("secondary", 0.0);
-				slopes.put("shopping", 0.0);
-				// Score activities, legs, payments and being stuck
-				// with the default MATSim scoring based on utility parameters in the config file.
-				final ScoringParameters params =
-						new ScoringParameters.Builder(controler.getScenario(), person.getId()).build();
-				sumScoringFunction.addScoringFunction(new CharyparNagelActivityScoring(params));
-
-				final Collection<String> travelCards = PersonUtils.getTravelcards(person);
-				
-						sumScoringFunction.addScoringFunction(
-						new ElementalCharyparNagelLegScoringFunction(
-							TransportMode.pt,
-							new LegScoringParameters(
-								params.modeParams.get(TransportMode.pt).constant,
-								params.modeParams.get(TransportMode.pt).marginalUtilityOfTraveling_s,
-								params.modeParams.get(TransportMode.pt).marginalUtilityOfDistance_m),
-							scenario.getNetwork()));
-						sumScoringFunction.addScoringFunction(
-						new ElementalCharyparNagelLegScoringFunction(
-							TransportMode.walk,
-							LegScoringParameters.createForWalk(
-								params ),
-							scenario.getNetwork()));
-						sumScoringFunction.addScoringFunction(
-						new ElementalCharyparNagelLegScoringFunction(
-							TransportMode.bike,
-							LegScoringParameters.createForBike(
-									params),
-							scenario.getNetwork()));
-						sumScoringFunction.addScoringFunction(
-						new ElementalCharyparNagelLegScoringFunction(
-							TransportMode.transit_walk,
-							LegScoringParameters.createForWalk(
-									params),
-							scenario.getNetwork()));
-						sumScoringFunction.addScoringFunction(
-								new LineChangeScoringFunction(
-										params ) );
-				
-				
-				sumScoringFunction.addScoringFunction(new CharyparNagelMoneyScoring(params));
-				sumScoringFunction.addScoringFunction(new CharyparNagelAgentStuckScoring(params));
-				return sumScoringFunction;
+			public void install() {
+				        
+				bindScoringFunctionFactory().to(ZurichScoringFunctionFactory.class);	
 			}
-
-		});
+		});		
 		
 		
 		controler.run();
@@ -162,36 +93,63 @@ public class ZurichScenarioControler {
 	
 	private static void initializeActivityStrategies(Scenario sc, Controler controler){
 		
-		final QuadTreeRebuilder<ActivityFacility> shopFacilitiesQuadTree = new QuadTreeRebuilder<ActivityFacility>();
 		
-		for(ActivityFacility af : sc.getActivityFacilities().getFacilitiesForActivityType("shopping").values()) {
+		//we need a map of quad trees
+		
+		Map<String, QuadTreeRebuilder<ActivityFacility>> shoppingFacilities = new HashMap <>();
+		Map<String, QuadTreeRebuilder<ActivityFacility>> leisureFacilities = new HashMap <>();
+
+		for (ActivityFacility af : sc.getActivityFacilities().getFacilities().values()) {
 			
-			shopFacilitiesQuadTree.put(af.getCoord(), af);
+			for (String activityType : af.getActivityOptions().keySet()) {
+				
+				if (activityType.startsWith("shopping")) {
+					if (shoppingFacilities.containsKey(activityType)) {
+						shoppingFacilities.get(activityType).put(af.getCoord(), af);
+					}
+					else {
+						final QuadTreeRebuilder<ActivityFacility> shopFacilitiesQuadTree = new QuadTreeRebuilder<ActivityFacility>();
+						shopFacilitiesQuadTree.put(af.getCoord(), af);
+						shoppingFacilities.put(activityType, shopFacilitiesQuadTree);
+					}
+				}
+				else if (activityType.startsWith("secondary"))  {
+					if (leisureFacilities.containsKey(activityType)) {
+						leisureFacilities.get(activityType).put(af.getCoord(), af);
+					}
+					else {
+						final QuadTreeRebuilder<ActivityFacility> leisureFacilitiesQuadTree = new QuadTreeRebuilder<ActivityFacility>();
+						leisureFacilitiesQuadTree.put(af.getCoord(), af);
+						leisureFacilities.put(activityType, leisureFacilitiesQuadTree);
+					}
+				}
+			}
 		}
 		
-		final QuadTreeRebuilder<ActivityFacility> leisureFacilitiesQuadTree = new QuadTreeRebuilder<ActivityFacility>();
+		HashMap<String, QuadTree<ActivityFacility>> shoppingFacilitiesQuadTree = new HashMap <String, QuadTree<ActivityFacility>>();
+		HashMap<String, QuadTree<ActivityFacility>> leisureFacilitiesQuadTree = new HashMap <String, QuadTree<ActivityFacility>>();
 		
-		for(ActivityFacility af : sc.getActivityFacilities().getFacilitiesForActivityType("secondary").values()) {
-			
-			leisureFacilitiesQuadTree.put(af.getCoord(), af);
+		for (String type : shoppingFacilities.keySet()) {
+			shoppingFacilitiesQuadTree.put(type, shoppingFacilities.get(type).getQuadTree());
 		}
 		
-		final QuadTree<ActivityFacility> shoping = shopFacilitiesQuadTree.getQuadTree();		
-		
-		final QuadTree<ActivityFacility> leisure = leisureFacilitiesQuadTree.getQuadTree();		
+		for (String type : leisureFacilities.keySet()) {
+			leisureFacilitiesQuadTree.put(type, leisureFacilities.get(type).getQuadTree());
+		}
+			
 		HashMap<String, Double> scoreChange = new HashMap<String, Double>();
 		
 		controler.addOverridingModule(new AbstractModule() {
 
 			@Override
 			public void install() {
-				bind(QuadTree.class)
+				bind(HashMap.class)
 				.annotatedWith(Names.named("shopQuadTree"))
-				.toInstance(shoping);
+				.toInstance(shoppingFacilitiesQuadTree);
 				
-				bind(QuadTree.class)
+				bind(HashMap.class)
 				.annotatedWith(Names.named("leisureQuadTree"))
-				.toInstance(leisure);
+				.toInstance(leisureFacilitiesQuadTree);
 				bind(HashMap.class)
 				.annotatedWith(Names.named("scoreChangeMap"))
 				.toInstance(scoreChange);
@@ -208,7 +166,8 @@ public class ZurichScenarioControler {
 			//	this.addPlanStrategyBinding("RandomActivitiesSwaperStrategy").to( RandomActivitiesSwaperStrategy.class ) ;
 				
 			//	this.addPlanStrategyBinding("RemoveRandomActivityStrategy").to( RemoveRandomActivityStrategy.class ) ;
-				this.addPlanStrategyBinding("ActivityChainModifierStrategy").to(ActivityChainModifierStrategy.class);
+				addPlanStrategyBinding("ActivityChainModifierStrategy").toProvider(ActivityChainModifierStrategy.class);
+
 
 			}
 		});	
