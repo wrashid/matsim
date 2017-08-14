@@ -166,24 +166,31 @@ public final class BJActivityScoring implements org.matsim.core.scoring.SumScori
 
 			// utility of performing an action, duration is >= 1, thus log is no problem
 			double typicalDuration = actParams.getTypicalDuration();
+			double scale = 1;
 			
-			if (duration < actParams.getZeroUtilityDuration_h() * 3600.0) {
-				double utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0 / (typicalDuration / 3600.0 - actParams.getZeroUtilityDuration_h() ) *
-				(duration / 3600.0 - actParams.getZeroUtilityDuration_h());
+			double zeroUtilityDuration_h = actParams.getZeroUtilityDuration_h();
+			
+			if (act.getType().equals("shopping")) {
+				scale = 0.1;
+				zeroUtilityDuration_h = typicalDuration / 3600.0 * 0.9;
+			}
+			if (duration < zeroUtilityDuration_h * 3600.0) {
+				double utilPerf = scale * this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0 / (typicalDuration / 3600.0 - zeroUtilityDuration_h ) *
+				(duration / 3600.0 - zeroUtilityDuration_h);
 				tmpScore += utilPerf;
 			}
 			else if (duration > typicalDuration) {
 				double utilPerf = 0.0;
-				if (act.getType().equals("home_1"))
+				if (act.getType().startsWith("home"))
 					utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0 + this.slopesAfterTypical.get(act.getType()) * (duration - typicalDuration);
 				else
-					utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0;
+					utilPerf = scale * this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0;
 				tmpScore += utilPerf;
 
 			}
 			else {
-				double utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0 / (typicalDuration / 3600.0 - actParams.getZeroUtilityDuration_h() ) *
-						(duration / 3600.0 - actParams.getZeroUtilityDuration_h());
+				double utilPerf = scale * this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0 / (typicalDuration / 3600.0 - zeroUtilityDuration_h ) *
+						(duration / 3600.0 - zeroUtilityDuration_h);
 				tmpScore += utilPerf;
 				
 			}			

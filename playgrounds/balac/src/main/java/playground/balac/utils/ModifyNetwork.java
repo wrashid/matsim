@@ -14,17 +14,16 @@ public class ModifyNetwork {
 
 	MutableScenario scenario = (MutableScenario) ScenarioUtils.createScenario(ConfigUtils.createConfig());
 	MatsimNetworkReader networkReader = new MatsimNetworkReader(scenario.getNetwork());
-	double freeSpeedFactor = 1.3;
+	double freeSpeedFactor = 0.7;
 	String outputFilePath = null;
 	String networkFilePath = null;
 	public ModifyNetwork(String networkFilePath, String outputFilePath) {
 		
-		this.outputFilePath = outputFilePath;
 		this.networkFilePath = networkFilePath;
+		this.outputFilePath = outputFilePath;
+
 	}
-	
-	
-	
+		
 	public void changeFreeSpeed() {
 		networkReader.readFile(networkFilePath);
 		
@@ -41,7 +40,7 @@ public class ModifyNetwork {
 			
 		}
 		
-		new NetworkWriter(scenario.getNetwork()).write(outputFilePath + "/network" + "_increased_30perc.xml.gz");
+		new NetworkWriter(scenario.getNetwork()).write(outputFilePath + "/network_decreased_30perc.xml.gz");
 	}
 	
 	

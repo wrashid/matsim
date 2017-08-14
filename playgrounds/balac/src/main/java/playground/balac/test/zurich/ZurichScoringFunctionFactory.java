@@ -88,7 +88,7 @@ public class ZurichScoringFunctionFactory implements ScoringFunctionFactory {
 		
 		Map<String, Double> slopes = new HashMap<>();
 		slopes.put("home_1", slopeHome1);
-		//slopes.put("home_2", slopeHome2);
+		slopes.put("home_2", slopeHome2);
 		slopes.put("work", 0.0);
 		slopes.put("education", 0.0);		
 
@@ -101,12 +101,12 @@ public class ZurichScoringFunctionFactory implements ScoringFunctionFactory {
 
 		
 		// activities
-		scoringFunctionAccumulator.addScoringFunction(
+		/*scoringFunctionAccumulator.addScoringFunction(
 				new BlackListedActivityScoringFunction(blackList,
-						new CharyparNagelActivityScoring(params, new FacilityOpeningIntervalCalculator(scenario.getActivityFacilities()))));
-						/*	scoringFunctionAccumulator.addScoringFunction(
+						new CharyparNagelActivityScoring(params)));*/
+							scoringFunctionAccumulator.addScoringFunction(
 				new BlackListedActivityScoringFunction(blackList,
-						new BJActivityScoring(params, slopes, new FacilityOpeningIntervalCalculator(scenario.getActivityFacilities()))));*/
+						new BJActivityScoring(params, slopes, new ActivityTypeOpeningIntervalCalculator(params))));
 		
 		
 		//		CharyparNagelActivityScoring warns if first activity of the day and last activity of the day are not equal.

@@ -174,7 +174,7 @@ public final class BJActivityScoring implements org.matsim.core.scoring.SumScori
 			}
 			else if (duration > typicalDuration) {
 				double utilPerf = 0.0;
-				if (act.getType().equals("home_1"))
+				if (act.getType().startsWith("home"))
 					utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0 + this.slopesAfterTypical.get(act.getType()) * (duration - typicalDuration);
 				else
 					utilPerf = this.params.marginalUtilityOfPerforming_s * 3600.0 * 10.0;

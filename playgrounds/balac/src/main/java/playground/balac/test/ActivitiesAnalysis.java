@@ -14,12 +14,14 @@ public class ActivitiesAnalysis {
 
 	public static void main(String[] args) throws IOException {
 
-		final BufferedWriter outLink = IOUtils.getBufferedWriter("C:\\Users\\balacm\\Desktop\\TRB\\cn_run2.txt");
+		final BufferedWriter outLink = IOUtils.getBufferedWriter("C:\\Users\\balacm\\Desktop\\bj_res4_act.txt");
+		final BufferedWriter outLinkT = IOUtils.getBufferedWriter("C:\\Users\\balacm\\Desktop\\bj_res4_trips.txt");
+
 		ObjectAttributes bla = new ObjectAttributes();
 		
 		new ObjectAttributesXmlReader(bla).readFile(args[0]);
 		
-		String inputFile = "C:\\Users\\balacm\\Desktop\\run.1000.events_cn2.xml.gz";
+		String inputFile = "C:\\Users\\balacm\\Desktop\\output_events.xml.gz";
 
 		//create an event object
 		EventsManager events = EventsUtils.createEventsManager();
@@ -38,8 +40,18 @@ public class ActivitiesAnalysis {
 		outLink.newLine();
 		for (ActivityData ad : handler1.allActivities) {
 			if (!(ad.type.equals("pt interaction") || ad.type.startsWith("cb"))) {
+				if (bla.getAttribute(ad.id, "subpopulation") == null || !(bla.getAttribute(ad.id, "subpopulation").equals("outAct") || bla.getAttribute(ad.id, "subpopulation").equals("diff_first_last"))) {
 				outLink.write(ad.toString() + ";" + bla.getAttribute(ad.id, "typicalDuration_" + ad.type));
 				outLink.newLine();
+				}
+			}
+		}
+		outLinkT.write("id;start;end;mode");
+		outLinkT.newLine();
+		for (TravelData td : handler1.allTrips) {
+			if (bla.getAttribute(td.id, "subpopulation") == null || !(bla.getAttribute(td.id, "subpopulation").equals("outAct") || bla.getAttribute(td.id, "subpopulation").equals("diff_first_last"))) {
+				outLinkT.write(td.toString());
+				outLinkT.newLine();
 			}
 		}
 		
