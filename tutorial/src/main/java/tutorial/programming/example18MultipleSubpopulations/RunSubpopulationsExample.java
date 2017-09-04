@@ -64,7 +64,7 @@ import java.io.File;
  *  @author nagel, jwjoubert
  */
 public class RunSubpopulationsExample {
-	final static String EQUIL_NETWORK = new File("../examples/scenarios/equil/network.xml").getAbsolutePath();
+	final static String EQUIL_NETWORK = new File("./examples/scenarios/equil/network.xml").getAbsolutePath();
 	final static String PLANS = new File("./examples/tutorial/programming/multipleSubpopulations/plans.xml").getAbsolutePath();
 	final static String OBJECT_ATTRIBUTES = new File("./examples/tutorial/programming/multipleSubpopulations/personAtrributes.xml").getAbsolutePath();
 	final static String CONFIG = "./examples/tutorial/programming/multipleSubpopulations/config.xml";
@@ -87,7 +87,6 @@ public class RunSubpopulationsExample {
 			createPopulation(sc, SUBPOP1_NAME, 100);
 			createPopulation(sc, SUBPOP2_NAME, 100);
 			new PopulationWriter(sc.getPopulation(), sc.getNetwork()).write(PLANS);
-			new ObjectAttributesXmlWriter(sc.getPopulation().getPersonAttributes()).writeFile(OBJECT_ATTRIBUTES);
 		}
 		
 		// building and running the simulation based on the example scenario:
@@ -178,7 +177,7 @@ public class RunSubpopulationsExample {
 			scenario.getPopulation().addPerson(person);
 
 			/* Set the subpopulation attribute. */
-			scenario.getPopulation().getPersonAttributes().putAttribute(person.getId().toString(), SUBPOP_ATTRIB_NAME, prefix);
+			person.getAttributes().putAttribute(SUBPOP_ATTRIB_NAME, prefix);
 		}
 	}
 
