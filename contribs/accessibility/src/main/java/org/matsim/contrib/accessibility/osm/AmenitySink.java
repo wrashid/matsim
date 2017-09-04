@@ -35,7 +35,7 @@ import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.ActivityFacilityImpl;
 import org.matsim.facilities.ActivityOption;
 import org.matsim.facilities.FacilitiesUtils;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.openstreetmap.osmosis.core.container.v0_6.BoundContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityProcessor;
@@ -54,7 +54,7 @@ public class AmenitySink implements Sink {
 	private Map<Long, WayContainer> wayMap;
 	private Map<Long, RelationContainer> relationMap;
 	private ActivityFacilities facilities;
-	private ObjectAttributes facilityAttributes;
+	private ObjectAttributesImpl facilityAttributes;
 	private Map<String,Integer> educationLevelMap;
 	private Map<String, String> typeMap = new HashMap<>();
 	private Map<String, Integer> typeCount = new HashMap<>();
@@ -76,7 +76,7 @@ public class AmenitySink implements Sink {
 		this.relationMap = new HashMap<Long, RelationContainer>();
 		
 		facilities = FacilitiesUtils.createActivityFacilities("Amenities");
-		facilityAttributes = new ObjectAttributes();
+		facilityAttributes = new ObjectAttributesImpl();
 		
 		/* Keep track of the different education level facilities. */
 		educationLevelMap = new HashMap<>();
@@ -207,7 +207,7 @@ public class AmenitySink implements Sink {
 	 * Return the facility attributes.
 	 * @return
 	 */
-	public ObjectAttributes getFacilityAttributes(){
+	public ObjectAttributesImpl getFacilityAttributes(){
 		return this.facilityAttributes;
 	}
 	

@@ -31,6 +31,7 @@ import org.matsim.contrib.locationchoice.bestresponse.scoring.ScaleEpsilon;
 import org.matsim.core.config.Config;
 import org.matsim.core.utils.io.UncheckedIOException;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlReader;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 
@@ -44,7 +45,7 @@ public class ReadOrComputeMaxDCScore {
 	private Scenario scenario; 
 	private DestinationChoiceConfigGroup dccg;
 	private DestinationChoiceBestResponseContext lcContext;
-	private ObjectAttributes personsMaxDCScoreUnscaled = new ObjectAttributes();	
+	private ObjectAttributesImpl personsMaxDCScoreUnscaled = new ObjectAttributesImpl();
 	private ScaleEpsilon scaleEpsilon;	
 	private HashSet<String> flexibleTypes;
 	

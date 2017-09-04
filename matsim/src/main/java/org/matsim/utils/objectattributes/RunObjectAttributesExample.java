@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Shows an example usage of {@link ObjectAttributes}.
+ * Shows an example usage of {@link ObjectAttributesImpl}.
  *
  * @author mrieser
  */
@@ -38,7 +38,7 @@ public class RunObjectAttributesExample {
 		linkIds.add("4");
 
 		// define some attributes
-		ObjectAttributes linkAttributes = new ObjectAttributes();
+		ObjectAttributes linkAttributes = new ObjectAttributesImpl();
 		// read from file or create somehow else
 		linkAttributes.putAttribute("1", "roadtype", "motorway");
 		linkAttributes.putAttribute("1", "hasSpeedBumps", Boolean.TRUE);

@@ -26,6 +26,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.multimodal.config.MultiModalConfigGroup;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlReader;
 
 import java.util.HashMap;
@@ -69,7 +70,7 @@ public class LinkSlopesReader {
 		
 		String slopeInformationFile = configGroup.getSlopeInformationFile();
 		if (slopeInformationFile != null) {
-			ObjectAttributes objectAttributes = new ObjectAttributes();
+			ObjectAttributes objectAttributes = new ObjectAttributesImpl();
 			log.info("Loading slope information from " + slopeInformationFile);
 			new ObjectAttributesXmlReader(objectAttributes).readFile(slopeInformationFile);
 			return objectAttributes;

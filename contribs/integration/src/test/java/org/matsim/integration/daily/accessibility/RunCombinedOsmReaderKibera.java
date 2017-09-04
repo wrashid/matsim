@@ -21,9 +21,6 @@ package org.matsim.integration.daily.accessibility;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.URL;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -33,7 +30,7 @@ import org.matsim.contrib.accessibility.osm.CombinedOsmReader;
 import org.matsim.contrib.accessibility.utils.AccessibilityFacilityUtils;
 import org.matsim.facilities.ActivityFacilities;
 import org.matsim.facilities.Facility;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 
 /**
  * @author dziemke
@@ -47,7 +44,7 @@ public class RunCombinedOsmReaderKibera {
 	 * <ol>
 	 * 	<li> the OpenStreetMap file, *.osm;
 	 * 	<li> the output MATSim {@link Facility} file;
-	 * 	<li> the output {@link ObjectAttributes} file containing the facility 
+	 * 	<li> the output {@link ObjectAttributesImpl} file containing the facility
 	 * 		 attributes.
 	 * </ol>
 	 * 

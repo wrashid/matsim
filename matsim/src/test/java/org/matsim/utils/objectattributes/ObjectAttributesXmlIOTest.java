@@ -38,14 +38,14 @@ public class ObjectAttributesXmlIOTest {
 
 	@Test
 	public void testReadWrite() throws IOException, SAXException, ParserConfigurationException {
-		ObjectAttributes oa1 = new ObjectAttributes();
+		ObjectAttributesImpl oa1 = new ObjectAttributesImpl();
 		oa1.putAttribute("one", "a", "A");
 		oa1.putAttribute("one", "b", Integer.valueOf(1));
 		oa1.putAttribute("two", "c", Double.valueOf(1.5));
 		oa1.putAttribute("two", "d", Boolean.TRUE);
 		new ObjectAttributesXmlWriter(oa1).writeFile(this.utils.getOutputDirectory() + "oa.xml");
 
-		ObjectAttributes oa2 = new ObjectAttributes();
+		ObjectAttributes oa2 = new ObjectAttributesImpl();
 		new ObjectAttributesXmlReader(oa2).readFile(this.utils.getOutputDirectory() + "oa.xml");
 		Assert.assertEquals("A", oa2.getAttribute("one", "a"));
 		Assert.assertEquals(Integer.valueOf(1), oa2.getAttribute("one", "b"));
@@ -55,7 +55,7 @@ public class ObjectAttributesXmlIOTest {
 	
 	@Test
 	public void testReadWrite_CustomAttribute() {
-		ObjectAttributes oa1 = new ObjectAttributes();
+		ObjectAttributesImpl oa1 = new ObjectAttributesImpl();
 		MyTuple t = new MyTuple(3, 4);
 		oa1.putAttribute("1", "A", t);
 		ObjectAttributesXmlWriter writer = new ObjectAttributesXmlWriter(oa1);
@@ -65,7 +65,7 @@ public class ObjectAttributesXmlIOTest {
 		
 		Assert.assertFalse("toString() should return something different from converter to test functionality.", t.toString().equals(converter.convertToString(t)));
 
-		ObjectAttributes oa2 = new ObjectAttributes();
+		ObjectAttributes oa2 = new ObjectAttributesImpl();
 		ObjectAttributesXmlReader reader = new ObjectAttributesXmlReader(oa2);
 		reader.putAttributeConverter(MyTuple.class, new MyTupleConverter());
 		reader.readFile(this.utils.getOutputDirectory() + "oa.xml");

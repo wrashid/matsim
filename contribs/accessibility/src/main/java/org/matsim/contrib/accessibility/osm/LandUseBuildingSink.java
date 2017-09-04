@@ -40,7 +40,7 @@ import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.ActivityFacilityImpl;
 import org.matsim.facilities.ActivityOption;
 import org.matsim.facilities.FacilitiesUtils;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.opengis.feature.simple.SimpleFeature;
 import org.openstreetmap.osmosis.core.container.v0_6.BoundContainer;
 import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
@@ -68,7 +68,7 @@ public class LandUseBuildingSink implements Sink {
 	private Map<Long, WayContainer> wayMap;
 	private Map<Long, RelationContainer> relationMap;
 	private ActivityFacilities facilities;
-	private ObjectAttributes facilityAttributes;
+	private ObjectAttributesImpl facilityAttributes;
 	private Map<String, String> landUseTypeMap = new HashMap<>();
 	private Map<String, String> buildingTypeMap = new HashMap<>();
 	private Map<String, Integer> typeCount = new HashMap<>();
@@ -98,7 +98,7 @@ public class LandUseBuildingSink implements Sink {
 		this.tagsToIgnoreBuildings = tagsToIgnoreBuildings;
 		
 		facilities = FacilitiesUtils.createActivityFacilities("Land Use");
-		facilityAttributes = new ObjectAttributes();
+		facilityAttributes = new ObjectAttributesImpl();
 	}
 
 	
@@ -380,7 +380,7 @@ public class LandUseBuildingSink implements Sink {
 	 * Return the facility attributes.
 	 * @return
 	 */
-	public ObjectAttributes getFacilityAttributes(){
+	public ObjectAttributesImpl getFacilityAttributes(){
 		return this.facilityAttributes;
 	}
 	

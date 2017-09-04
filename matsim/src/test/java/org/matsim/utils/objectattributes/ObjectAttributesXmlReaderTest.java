@@ -49,7 +49,7 @@ public class ObjectAttributesXmlReaderTest {
 		"  <attribute name=\"b\" class=\"" + tupleClass + "\">3,4</attribute>\n" +
 		" </object>\n" +
 		"</objectAttributes>";
-		ObjectAttributes attributes = new ObjectAttributes();
+		ObjectAttributes attributes = new ObjectAttributesImpl();
 		ObjectAttributesXmlReader reader = new ObjectAttributesXmlReader(attributes);
 		reader.putAttributeConverter(MyTuple.class, new MyTupleConverter());
 		reader.parse(new ByteArrayInputStream(str.getBytes()));
@@ -79,7 +79,7 @@ public class ObjectAttributesXmlReaderTest {
 		"  <attribute name=\"b2\" class=\"java.lang.Integer\">1980</attribute>\n" +
 		" </object>\n" +
 		"</objectAttributes>";
-		ObjectAttributes attributes = new ObjectAttributes();
+		ObjectAttributes attributes = new ObjectAttributesImpl();
 		ObjectAttributesXmlReader reader = new ObjectAttributesXmlReader(attributes);
 		reader.parse(new ByteArrayInputStream(str.getBytes()));
 
@@ -99,7 +99,7 @@ public class ObjectAttributesXmlReaderTest {
 	@Test
 	public void testParse_withDtd() throws SAXException, ParserConfigurationException, IOException {
 		String filename = this.utils.getPackageInputDirectory() + "objectattributes_withDtd_v1.xml";
-		ObjectAttributes oa = new ObjectAttributes();
+		ObjectAttributes oa = new ObjectAttributesImpl();
 		new ObjectAttributesXmlReader(oa).readFile(filename);
 
 		Object o = oa.getAttribute("one", "a");
@@ -118,7 +118,7 @@ public class ObjectAttributesXmlReaderTest {
 	@Test
 	public void testParse_withoutDtd() throws SAXException, ParserConfigurationException, IOException {
 		String filename = this.utils.getPackageInputDirectory() + "objectattributes_withoutDtd_v1.xml";
-		ObjectAttributes oa = new ObjectAttributes();
+		ObjectAttributes oa = new ObjectAttributesImpl();
 		new ObjectAttributesXmlReader(oa).readFile(filename);
 
 		Object o = oa.getAttribute("one", "a");

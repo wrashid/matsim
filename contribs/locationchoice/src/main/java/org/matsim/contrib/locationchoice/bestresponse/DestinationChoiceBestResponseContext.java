@@ -53,6 +53,7 @@ import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.ActivityFacilityImpl;
 import org.matsim.facilities.ActivityOption;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlReader;
 
 /**
@@ -72,9 +73,9 @@ public class DestinationChoiceBestResponseContext implements MatsimToplevelConta
 	private ScoringParameters params;
 	private DestinationChoiceConfigGroup dccg;
 	private int arekValsRead = 1;
-	private ObjectAttributes personsBetas = new ObjectAttributes();
-	private ObjectAttributes facilitiesAttributes = new ObjectAttributes();
-	private ObjectAttributes prefsAttributes = new ObjectAttributes();
+	private ObjectAttributesImpl personsBetas = new ObjectAttributesImpl();
+	private ObjectAttributes facilitiesAttributes = new ObjectAttributesImpl();
+	private ObjectAttributes prefsAttributes = new ObjectAttributesImpl();
 	private TreeMap<Id, FacilityPenalty> facilityPenalties = new TreeMap<Id, FacilityPenalty>();
 
 	private double[] facilitiesKValuesArray;
@@ -300,7 +301,7 @@ public class DestinationChoiceBestResponseContext implements MatsimToplevelConta
 		return this.facilityIndices.get(id);
 	}
 	
-	public ObjectAttributes getPersonsBetas() {
+	public ObjectAttributesImpl getPersonsBetas() {
 		return personsBetas;
 	}
 

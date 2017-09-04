@@ -60,11 +60,11 @@ public class ObjectAttributesXmlWriter extends MatsimXmlWriter {
 	private static final BooleanConverter BOOLEAN_Converter = new BooleanConverter();
 	private static final LongConverter LONG_Converter = new LongConverter();
 
-	private final ObjectAttributes attributes;
+	private final ObjectAttributesImpl attributes;
 	private final Map<String, AttributeConverter<?>> converters = new HashMap<String, AttributeConverter<?>>();
 	private final Set<Class<?>> missingConverters = new HashSet<Class<?>>();
 
-	public ObjectAttributesXmlWriter(final ObjectAttributes attributes) {
+	public ObjectAttributesXmlWriter(final ObjectAttributesImpl attributes) {
 		this.attributes = attributes;
 		this.converters.put(String.class.getCanonicalName(), STRING_Converter);
 		this.converters.put(Integer.class.getCanonicalName(), INTEGER_Converter);

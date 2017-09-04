@@ -30,6 +30,7 @@ import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitScheduleFactory;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 
 
 /**
@@ -44,8 +45,8 @@ public class TransitScheduleImpl implements TransitSchedule {
 	private final Map<Id<TransitLine>, TransitLine> transitLines = new TreeMap<Id<TransitLine>, TransitLine>();
 	private final Map<Id<TransitStopFacility>, TransitStopFacility> stopFacilities = new TreeMap<Id<TransitStopFacility>, TransitStopFacility>();
 	private final TransitScheduleFactory factory;
-	private final ObjectAttributes transitLinesAttributes = new ObjectAttributes();
-	private final ObjectAttributes transitStopsAttributes = new ObjectAttributes();
+	private final ObjectAttributes transitLinesAttributes = new ObjectAttributesImpl();
+	private final ObjectAttributes transitStopsAttributes = new ObjectAttributesImpl();
 	
 	protected TransitScheduleImpl(final TransitScheduleFactory builder) {
 		this.factory = builder;

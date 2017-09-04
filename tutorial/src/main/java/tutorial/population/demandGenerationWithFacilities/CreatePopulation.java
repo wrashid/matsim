@@ -20,6 +20,7 @@ import org.matsim.core.population.PersonUtils;
 import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 
 
 class CreatePopulation {
@@ -36,7 +37,7 @@ class CreatePopulation {
 	private TreeMap<String, Coord> municipalityCentroids = new TreeMap<>();
 	private Random random = new Random(3838494); 
 	
-	private ObjectAttributes personHomeAndWorkLocations = new ObjectAttributes();
+	private ObjectAttributes personHomeAndWorkLocations = new ObjectAttributesImpl();
 	private final static Logger log = Logger.getLogger(CreatePopulation.class);
 
 	// --------------------------------------------------------------------------

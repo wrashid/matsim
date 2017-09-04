@@ -31,7 +31,7 @@ import org.matsim.contrib.wagonSim.network.NEMOInfraToMATSimNetworkConverter;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.io.NetworkWriter;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 
 /**
@@ -47,8 +47,8 @@ public class NEMOInfraToMATSimNetworkConverterMain {
 	private static final Logger log = Logger.getLogger(NEMOInfraToMATSimNetworkConverterMain.class);
 	
 	private final Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
-	private final ObjectAttributes nodeAttributes = new ObjectAttributes();
-	private final ObjectAttributes linkAttributes = new ObjectAttributes();
+	private final ObjectAttributesImpl nodeAttributes = new ObjectAttributesImpl();
+	private final ObjectAttributesImpl linkAttributes = new ObjectAttributesImpl();
 	
 	//////////////////////////////////////////////////////////////////////
 	// constructors
@@ -80,13 +80,13 @@ public class NEMOInfraToMATSimNetworkConverterMain {
 	
 	//////////////////////////////////////////////////////////////////////
 	
-	public final ObjectAttributes getNodeAttributes() {
+	public final ObjectAttributesImpl getNodeAttributes() {
 		return this.nodeAttributes;
 	}
 	
 	//////////////////////////////////////////////////////////////////////
 	
-	public final ObjectAttributes getLinkAttributes() {
+	public final ObjectAttributesImpl getLinkAttributes() {
 		return this.linkAttributes;
 	}
 	

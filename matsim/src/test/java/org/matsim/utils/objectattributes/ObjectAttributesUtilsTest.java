@@ -32,7 +32,7 @@ public class ObjectAttributesUtilsTest {
 
 	@Test
 	public void testGetAllAttributes() {
-		ObjectAttributes oa = new ObjectAttributes();
+		ObjectAttributesImpl oa = new ObjectAttributesImpl();
 		oa.putAttribute("1", "a", "A");
 		oa.putAttribute("1", "b", "B");
 		oa.putAttribute("1", "c", "C");
@@ -47,7 +47,7 @@ public class ObjectAttributesUtilsTest {
 	
 	@Test
 	public void testGetAllAttributes_isImmutable() {
-		ObjectAttributes oa = new ObjectAttributes();
+		ObjectAttributesImpl oa = new ObjectAttributesImpl();
 		oa.putAttribute("1", "a", "A");
 		oa.putAttribute("1", "b", "B");
 		oa.putAttribute("1", "c", "C");

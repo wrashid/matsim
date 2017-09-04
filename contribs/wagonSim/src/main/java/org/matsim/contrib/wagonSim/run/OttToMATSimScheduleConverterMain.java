@@ -40,6 +40,7 @@ import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.api.TransitScheduleWriter;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 import org.matsim.vehicles.VehicleWriterV1;
 
@@ -56,7 +57,7 @@ public class OttToMATSimScheduleConverterMain {
 	private static final Logger log = Logger.getLogger(OttToMATSimScheduleConverterMain.class);
 	
 	private final Scenario scenario;
-	private final ObjectAttributes vehicleAttributes = new ObjectAttributes();
+	private final ObjectAttributesImpl vehicleAttributes = new ObjectAttributesImpl();
 	
 	//////////////////////////////////////////////////////////////////////
 	// constructors
@@ -90,7 +91,7 @@ public class OttToMATSimScheduleConverterMain {
 	
 	//////////////////////////////////////////////////////////////////////
 	
-	public final ObjectAttributes getVehicleAttributes() {
+	public final ObjectAttributesImpl getVehicleAttributes() {
 		return this.vehicleAttributes;
 	}
 	

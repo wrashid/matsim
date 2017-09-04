@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.core.api.internal.MatsimToplevelContainer;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.attributable.Attributable;
 
 /**
@@ -45,6 +45,6 @@ public interface Population extends MatsimToplevelContainer, Attributable {
 	
 	public Person removePerson( final Id<Person> personId ) ;
 	
-	public ObjectAttributes getPersonAttributes();
+	public ObjectAttributesImpl getPersonAttributes();
 
 }

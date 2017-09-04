@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 
 /**
  * Basic implementation of the Households container, a pure data class
@@ -38,7 +39,7 @@ public class HouseholdsImpl implements Households {
 
 	private Map<Id<Household>, Household> households;
 	
-	private final ObjectAttributes householdAttributes = new ObjectAttributes();
+	private final ObjectAttributes householdAttributes = new ObjectAttributesImpl();
 	
 	public HouseholdsImpl(){
 		this.households = new LinkedHashMap<Id<Household>, Household>();

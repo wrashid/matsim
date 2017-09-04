@@ -34,6 +34,7 @@ import org.matsim.core.replanning.strategies.DefaultPlanStrategiesModule;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -100,7 +101,7 @@ public class Utils {
 	//////////////////////////////////////////////////////////////////////
 	
 	public static final ObjectAttributes parseTrainTypesFile(String trainTypesFile) throws IOException {
-		ObjectAttributes trainTypes = new ObjectAttributes();
+		ObjectAttributes trainTypes = new ObjectAttributesImpl();
 
 		BufferedReader br = IOUtils.getBufferedReader(trainTypesFile);
 		String curr_line;

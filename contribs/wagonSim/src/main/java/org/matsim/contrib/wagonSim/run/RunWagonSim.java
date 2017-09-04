@@ -41,6 +41,7 @@ import org.matsim.pt.router.TransitRouter;
 import org.matsim.pt.router.TransitRouterConfig;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlReader;
 
 import javax.inject.Provider;
@@ -141,7 +142,7 @@ public final class RunWagonSim {
 		config.controler().setRunId(runId);
 		
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		ObjectAttributes vehicleLinkSpeedAttributes = new ObjectAttributes();
+		ObjectAttributes vehicleLinkSpeedAttributes = new ObjectAttributesImpl();
 		new ObjectAttributesXmlReader(vehicleLinkSpeedAttributes).readFile(vehicleAttributeFile);
 		Map<Id<TransitStopFacility>, Double> minShuntingTimes;
 		try { minShuntingTimes = Utils.parseShuntingTimes(shuntingTimesFile); }

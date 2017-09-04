@@ -43,13 +43,11 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.QSimConfigGroup;
 import org.matsim.core.population.routes.NetworkRoute;
-import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.router.FakeFacility;
 import org.matsim.pt.router.PreparedTransitSchedule;
-import org.matsim.pt.router.TransitRouter;
 import org.matsim.pt.router.TransitRouterConfig;
 import org.matsim.pt.router.TransitRouterImpl;
 import org.matsim.pt.router.TransitRouterNetwork;
@@ -62,6 +60,7 @@ import org.matsim.pt.transitSchedule.api.TransitScheduleFactory;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.testcases.MatsimTestCase;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleCapacity;
 import org.matsim.vehicles.VehicleType;
@@ -358,7 +357,7 @@ public class WagonSimRouterNetworkTravelDistutilityAndTravelTimeTest extends Mat
 	 * @return
 	 */
 	private ObjectAttributes createVehicleLinkSpeedAttributes(Scenario sc) {
-		ObjectAttributes oa = new ObjectAttributes();
+		ObjectAttributes oa = new ObjectAttributesImpl();
 		for(Id<Vehicle> v: ((MutableScenario)sc).getTransitVehicles().getVehicles().keySet()){
 			for(Id<Link> l: sc.getNetwork().getLinks().keySet()){
 				oa.putAttribute(v.toString(), l.toString(), 10000.);

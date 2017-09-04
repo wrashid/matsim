@@ -40,7 +40,7 @@ import org.matsim.pt.transitSchedule.api.TransitLine;
 import org.matsim.pt.transitSchedule.api.TransitScheduleReader;
 import org.matsim.pt.transitSchedule.api.TransitScheduleWriter;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlReader;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 import org.matsim.vehicles.VehicleReaderV1;
@@ -59,7 +59,7 @@ public class MATSimScheduleEnricherMain {
 	private static final Logger log = Logger.getLogger(MATSimScheduleEnricherMain.class);
 	
 	private final Scenario scenario;
-	private final ObjectAttributes vehicleAttributes;
+	private final ObjectAttributesImpl vehicleAttributes;
 	
 	//////////////////////////////////////////////////////////////////////
 	// constructors
@@ -71,7 +71,7 @@ public class MATSimScheduleEnricherMain {
 		new NetworkReaderMatsimV1(scenario.getNetwork()).readFile(networkFile);
 		new TransitScheduleReader(scenario).readFile(transitScheduleFile);
 		new VehicleReaderV1(((MutableScenario)scenario).getTransitVehicles()).readFile(transitVehiclesFile);
-		vehicleAttributes = new ObjectAttributes();
+		vehicleAttributes = new ObjectAttributesImpl();
 		new ObjectAttributesXmlReader(vehicleAttributes).readFile(transitVehicleAttributesFile);
 	}
 
@@ -92,7 +92,7 @@ public class MATSimScheduleEnricherMain {
 	
 	//////////////////////////////////////////////////////////////////////
 	
-	public final ObjectAttributes getVehicleAttributes() {
+	public final ObjectAttributesImpl getVehicleAttributes() {
 		return this.vehicleAttributes;
 	}
 	

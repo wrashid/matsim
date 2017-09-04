@@ -48,6 +48,7 @@ import org.matsim.roadpricing.RoadPricingConfigGroup;
 import org.matsim.roadpricing.RoadPricingReaderXMLv1;
 import org.matsim.roadpricing.RoadPricingSchemeImpl;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 import org.matsim.vehicles.Vehicle;
 
@@ -520,7 +521,7 @@ VehicleEntersTrafficEventHandler, VehicleLeavesTrafficEventHandler {
 
 	}
 
-	private ObjectAttributes linkAttribs = new ObjectAttributes() ;
+	private ObjectAttributesImpl linkAttribs = new ObjectAttributesImpl() ;
 	public static final String CNT = "cnt" ;
 	public static final String TTIME_SUM = "ttimeSum" ;
 

@@ -26,6 +26,7 @@ import java.util.Map;
 import org.matsim.api.core.v01.Id;
 import org.matsim.core.utils.misc.Counter;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 
 
 /**
@@ -36,7 +37,7 @@ class VehiclesImpl implements Vehicles {
 	private final Map<Id<VehicleType>, VehicleType> vehicleTypes;
 	private final LinkedHashMap<Id<Vehicle>, Vehicle> vehicles;
 	private final VehiclesFactoryImpl builder;
-	private final ObjectAttributes vehicleAttributes = new ObjectAttributes();
+	private final ObjectAttributes vehicleAttributes = new ObjectAttributesImpl();
 
 	private final Counter counter = new Counter(" vehicles # ");
 

@@ -44,6 +44,7 @@ import org.matsim.core.network.io.NetworkReaderMatsimV1;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.api.TransitScheduleReader;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlReader;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 
@@ -59,7 +60,7 @@ public class WagonToDemandConverterMain {
 	
 	private static final Logger log = Logger.getLogger(WagonToDemandConverterMain.class);
 	
-	private final ObjectAttributes wagonAttributes = new ObjectAttributes();
+	private final ObjectAttributesImpl wagonAttributes = new ObjectAttributesImpl();
 	private final Date demandDateTime;
 	
 	//////////////////////////////////////////////////////////////////////
@@ -100,7 +101,7 @@ public class WagonToDemandConverterMain {
 	
 	//////////////////////////////////////////////////////////////////////
 
-	public final ObjectAttributes getWagonAttributes() {
+	public final ObjectAttributesImpl getWagonAttributes() {
 		return this.wagonAttributes;
 	}
 	
@@ -157,7 +158,7 @@ public class WagonToDemandConverterMain {
 		Scenario scenario = ScenarioUtils.createScenario(config);
 		new NetworkReaderMatsimV1(scenario.getNetwork()).readFile(scheduleNetworkFile);
 		new TransitScheduleReader(scenario).readFile(scheduleFile);
-		ObjectAttributes transitVehicleAttributes = new ObjectAttributes();
+		ObjectAttributes transitVehicleAttributes = new ObjectAttributesImpl();
 		new ObjectAttributesXmlReader(transitVehicleAttributes).readFile(transitVehicleAttributesFile);
 		
 		Date demandDateTime = WagonSimConstants.DATE_FORMAT_YYYYMMDDHHMMSS.parse(date+"-"+time);

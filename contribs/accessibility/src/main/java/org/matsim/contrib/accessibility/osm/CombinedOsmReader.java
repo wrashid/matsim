@@ -26,16 +26,10 @@ package org.matsim.contrib.accessibility.osm;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -46,17 +40,10 @@ import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.FacilitiesWriter;
 import org.matsim.facilities.Facility;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
-import org.openstreetmap.osmosis.core.OsmosisRuntimeException;
 import org.openstreetmap.osmosis.xml.common.CompressionMethod;
 import org.openstreetmap.osmosis.xml.v0_6.XmlReader;
-import org.openstreetmap.osmosis.xml.v0_6.impl.OsmHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-
-import org.openstreetmap.osmosis.xml.common.CompressionActivator;
-import org.openstreetmap.osmosis.xml.common.CompressionMethod;
 
 
 /**
@@ -69,7 +56,7 @@ public class CombinedOsmReader {
 	private final static Logger log = Logger.getLogger(CombinedOsmReader.class);
 	private QuadTree<Id<ActivityFacility>> linkQT;
 	private ActivityFacilities facilities;
-	private ObjectAttributes facilityAttributes;
+	private ObjectAttributesImpl facilityAttributes;
 	private String idPrefix = "";
 	
 	private final String outputCRS;

@@ -30,7 +30,7 @@ import org.matsim.core.events.EventsUtils;
 import org.matsim.core.mobsim.framework.Mobsim;
 import org.matsim.core.mobsim.qsim.QSim;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 
 /**
  * @author droeder
@@ -49,7 +49,7 @@ public class WagonSimQSimFactoryTest {
 		sc.getConfig().transit().setUseTransit(true);
 		EventsManager manager = EventsUtils.createEventsManager(sc.getConfig());
 		
-		WagonSimQSimFactory factory = new WagonSimQSimFactory(new ObjectAttributes(), null);
+		WagonSimQSimFactory factory = new WagonSimQSimFactory(new ObjectAttributesImpl(), null);
 		Mobsim sim = factory.createMobsim(sc, manager);
 		Assert.assertNotNull(sim);
 		Assert.assertTrue(sim instanceof QSim);

@@ -39,7 +39,7 @@ import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.FacilitiesWriter;
 import org.matsim.facilities.Facility;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 import org.openstreetmap.osmosis.xml.common.CompressionMethod;
 import org.openstreetmap.osmosis.xml.v0_6.XmlReader;
@@ -55,7 +55,7 @@ public class LandUseBuildingReader {
 	private final static Logger log = Logger.getLogger(LandUseBuildingReader.class);
 	private QuadTree<Id<ActivityFacility>> linkQT;
 	private ActivityFacilities landuse;
-	private ObjectAttributes amenityAttributes;
+	private ObjectAttributesImpl amenityAttributes;
 	private final CoordinateTransformation ct;
 	private Map<String, String> osmLandUseToMatsimTypeMap;
 	private Map<String, String> osmBuildingToMatsimTypeMap;

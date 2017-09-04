@@ -29,6 +29,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.utils.io.UncheckedIOException;
 import org.matsim.facilities.ActivityFacility;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlReader;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 
@@ -40,8 +41,8 @@ public class ReadOrCreateKVals {
 	public static String pkValuesFile = "personsKValues.xml";
 	
 	private Scenario scenario;	
-	private ObjectAttributes facilitiesKValues = new ObjectAttributes();
-	private ObjectAttributes personsKValues = new ObjectAttributes();
+	private ObjectAttributesImpl facilitiesKValues = new ObjectAttributesImpl();
+	private ObjectAttributesImpl personsKValues = new ObjectAttributesImpl();
 	private Config config;	
 	private RandomFromVarDistr rnd;
 	

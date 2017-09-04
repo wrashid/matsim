@@ -33,7 +33,7 @@ public final class ObjectAttributesUtils {
 		// abstract helper class
 	}
 	
-	public static void copyAllAttributes(ObjectAttributes source, ObjectAttributes destination, String objectId) {
+	public static void copyAllAttributes(ObjectAttributesImpl source, ObjectAttributesImpl destination, String objectId) {
 		Map<String, Object> sAttrs = source.attributes.get(objectId);
 		if (sAttrs != null) {
 			Map<String, Object> dAttrs = destination.attributes.get(objectId);
@@ -45,7 +45,7 @@ public final class ObjectAttributesUtils {
 		}
 	}
 	
-	public static Collection<String> getAllAttributeNames(ObjectAttributes attributes, final String objectId) {
+	public static Collection<String> getAllAttributeNames(ObjectAttributesImpl attributes, final String objectId) {
 		Map<String, Object> map = attributes.attributes.get(objectId);
 		if (map == null) {
 			return Collections.emptyList();

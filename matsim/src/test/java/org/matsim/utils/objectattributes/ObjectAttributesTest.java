@@ -29,7 +29,7 @@ public class ObjectAttributesTest {
 
 	@Test
 	public void testPutGet() {
-		ObjectAttributes linkAttributes = new ObjectAttributes();
+		ObjectAttributes linkAttributes = new ObjectAttributesImpl();
 		Assert.assertNull(linkAttributes.getAttribute("1", "osm:roadtype"));
 		Assert.assertNull(linkAttributes.putAttribute("1", "osm:roadtype", "trunk"));
 		Assert.assertEquals("trunk", linkAttributes.getAttribute("1", "osm:roadtype"));

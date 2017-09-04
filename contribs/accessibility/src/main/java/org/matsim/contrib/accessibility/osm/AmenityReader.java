@@ -39,7 +39,7 @@ import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.FacilitiesUtils;
 import org.matsim.facilities.FacilitiesWriter;
 import org.matsim.facilities.Facility;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 import org.openstreetmap.osmosis.xml.common.CompressionMethod;
 import org.openstreetmap.osmosis.xml.v0_6.XmlReader;
@@ -55,7 +55,7 @@ public class AmenityReader {
 	private final static Logger log = Logger.getLogger(AmenityReader.class);
 	private QuadTree<Id<ActivityFacility>> linkQT;
 	private ActivityFacilities amenities;
-	private ObjectAttributes amenityAttributes;
+	private ObjectAttributesImpl amenityAttributes;
 	private final CoordinateTransformation ct;
 	private Map<String, String> osmToMatsimTypeMap;
 	
@@ -77,7 +77,7 @@ public class AmenityReader {
 		this.ct = ct;
 		this.osmToMatsimTypeMap = osmToMatsimTypeMap;
 		this.amenities = FacilitiesUtils.createActivityFacilities("OpenStreetMap amenities");
-		this.amenityAttributes = new ObjectAttributes();
+		this.amenityAttributes = new ObjectAttributesImpl();
 	}
 	
 	

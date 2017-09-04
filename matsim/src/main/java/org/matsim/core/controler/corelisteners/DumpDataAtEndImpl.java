@@ -53,7 +53,7 @@ import org.matsim.pt.transitSchedule.api.Transit;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitScheduleWriter;
 import org.matsim.utils.objectattributes.AttributeConverter;
-import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 import org.matsim.vehicles.VehicleWriterV1;
 import org.matsim.vehicles.Vehicles;
@@ -296,7 +296,7 @@ final class DumpDataAtEndImpl implements DumpDataAtEnd, ShutdownListener {
 
 		}
 
-		final ObjectAttributes personAttributes = population.getPersonAttributes();
+		final ObjectAttributesImpl personAttributes = population.getPersonAttributes();
 		if ( personAttributes!=null ) {
 			ObjectAttributesXmlWriter writer = new ObjectAttributesXmlWriter(personAttributes) ;
 			writer.setPrettyPrint(true);

@@ -29,6 +29,7 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlReader;
 import org.matsim.vehicles.Vehicle;
 
@@ -58,7 +59,7 @@ public class BicycleTravelDisutility implements TravelDisutility {
 	
 	BicycleTravelDisutility(BicycleConfigGroup bicycleConfigGroup, PlanCalcScoreConfigGroup cnScoringGroup, PlansCalcRouteConfigGroup plansCalcRouteConfigGroup, TravelTime timeCalculator) {
 		// Get infos from ObjectAttributes
-		bicycleAttributes = new ObjectAttributes();
+		bicycleAttributes = new ObjectAttributesImpl();
 		new ObjectAttributesXmlReader(bicycleAttributes).readFile(bicycleConfigGroup.getNetworkAttFile());
 
 		this.marginalUtilityOfDistance_m = cnScoringGroup.getModes().get("bicycle").getMonetaryDistanceRate() * cnScoringGroup.getMarginalUtilityOfMoney()

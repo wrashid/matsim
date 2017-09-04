@@ -31,9 +31,9 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.utils.objectattributes.ObjectAttributes;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 
 /**
  * Maintainer: mrieser / Senozon AG
@@ -54,7 +54,7 @@ public class ActivityFacilitiesImpl implements ActivityFacilities, SearchableAct
 
 	private String name;
 
-	private final ObjectAttributes facilityAttributes = new ObjectAttributes();
+	private final ObjectAttributes facilityAttributes = new ObjectAttributesImpl();
 
 	private QuadTree<ActivityFacility> facilitiesQuadTree;
 
