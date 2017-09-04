@@ -15,6 +15,7 @@ import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Injector;
 import org.matsim.testcases.MatsimTestUtils;
 import org.matsim.utils.objectattributes.AttributeConverter;
+import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 
 /**
@@ -145,7 +146,6 @@ public class ScenarioByConfigInjectionTest {
 		final Scenario sc = ScenarioUtils.createScenario( config );
 		final Person person = sc.getPopulation().getFactory().createPerson(Id.createPersonId( 1 ));
 		sc.getPopulation().addPerson( person );
-		sc.getPopulation().getPersonAttributes().putAttribute( "1" , "stupidAttribute" , new StupidClass() );
 
 		person.getAttributes().putAttribute( "otherAttribute" , new StupidClass() );
 
@@ -167,7 +167,9 @@ public class ScenarioByConfigInjectionTest {
 		final PopulationWriter popWriter = new PopulationWriter( sc.getPopulation() , sc.getNetwork() );
 		popWriter.putAttributeConverter( StupidClass.class , new StupidClassConverter() );
 		popWriter.writeV6( plansFile );
-		final ObjectAttributesXmlWriter writer = new ObjectAttributesXmlWriter(sc.getPopulation().getPersonAttributes());
+		final ObjectAttributesImpl attrs = new ObjectAttributesImpl();
+		attrs.putAttribute( "1" , "stupidAttribute" , new StupidClass() );
+		final ObjectAttributesXmlWriter writer = new ObjectAttributesXmlWriter( attrs );
 		writer.putAttributeConverter( StupidClass.class , new StupidClassConverter() );
 		writer.writeFile( attributeFile );
 
