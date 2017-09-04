@@ -26,6 +26,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.utils.objectattributes.AttributableObjectAttributesView;
 import org.matsim.utils.objectattributes.ObjectAttributes;
 import org.matsim.utils.objectattributes.ObjectAttributesImpl;
+import org.matsim.utils.objectattributes.attributable.Attributable;
 
 /**
  * Basic implementation of the Households container, a pure data class
@@ -40,7 +41,18 @@ public class HouseholdsImpl implements Households {
 
 	private Map<Id<Household>, Household> households;
 	
-	private final ObjectAttributes householdAttributes = new AttributableObjectAttributesView( households );
+	private final ObjectAttributes householdAttributes =
+			new AttributableObjectAttributesView() {
+				@Override
+				protected Iterable<? extends Attributable> getAll() {
+					return households.values();
+				}
+
+				@Override
+				protected Attributable get(String objectId) {
+					return households.get( Id.create( objectId , Household.class ) );
+				}
+			};
 	
 	public HouseholdsImpl(){
 		this.households = new LinkedHashMap<Id<Household>, Household>();

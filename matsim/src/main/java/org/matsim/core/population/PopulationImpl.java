@@ -30,6 +30,7 @@ import org.matsim.core.scenario.Lockable;
 import org.matsim.utils.objectattributes.AttributableObjectAttributesView;
 import org.matsim.utils.objectattributes.ObjectAttributes;
 import org.matsim.utils.objectattributes.ObjectAttributesImpl;
+import org.matsim.utils.objectattributes.attributable.Attributable;
 import org.matsim.utils.objectattributes.attributable.Attributes;
 
 /**
@@ -43,7 +44,18 @@ import org.matsim.utils.objectattributes.attributable.Attributes;
 	private String name;
 	private final Map<Id<Person>, Person> persons = new LinkedHashMap<>();
 	private final PopulationFactory populationFactory;
-	private final ObjectAttributes personAttributes = new AttributableObjectAttributesView( persons );
+	private final ObjectAttributes personAttributes =
+			new AttributableObjectAttributesView() {
+				@Override
+				protected Iterable<? extends Attributable> getAll() {
+					return persons.values();
+				}
+
+				@Override
+				protected Attributable get(String objectId) {
+					return persons.get( Id.createPersonId( objectId ) );
+				}
+			};
 	private long counter = 0;
 	private long nextMsg = 1;
 
