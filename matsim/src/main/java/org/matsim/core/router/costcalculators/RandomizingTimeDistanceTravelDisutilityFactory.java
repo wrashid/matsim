@@ -48,31 +48,12 @@ public class RandomizingTimeDistanceTravelDisutilityFactory implements TravelDis
 			final TravelTime travelTime) {
 		logWarningsIfNecessary( cnScoringGroup );
 
-		final PlanCalcScoreConfigGroup.ModeParams params = cnScoringGroup.getModes().get( mode ) ;
-		if ( params == null ) {
-			throw new NullPointerException( mode+" is not part of the valid mode parameters "+cnScoringGroup.getModes().keySet() );
-		}
-
-		/* Usually, the travel-utility should be negative (it's a disutility) but the cost should be positive. Thus negate the utility.*/
-		final double marginalCostOfTime_s = (-params.getMarginalUtilityOfTraveling() / 3600.0) + (cnScoringGroup.getPerforming_utils_hr() / 3600.0);
-		final double marginalCostOfDistance_m = - params.getMonetaryDistanceRate() * cnScoringGroup.getMarginalUtilityOfMoney() 
-				- params.getMarginalUtilityOfDistance() ;
-
-		double normalization = 1;
-		if ( sigma != 0. ) {
-			normalization = 1. / Math.exp(this.sigma * this.sigma / 2);
-			if (normalisationWrnCnt < 10) {
-				normalisationWrnCnt++;
-				log.info(" sigma: " + this.sigma + "; resulting normalization: " + normalization);
-			}
-		}
-
-		return new RandomizingTimeDistanceTravelDisutility(
-				travelTime,
-				marginalCostOfTime_s,
-				marginalCostOfDistance_m,
-				normalization,
-				sigma);
+		RandomizingTimeDistanceTravelDisutilityConfig config =
+				new RandomizingTimeDistanceTravelDisutilityConfig(
+						cnScoringGroup,
+						mode,
+						sigma );
+		return new RandomizingTimeDistanceTravelDisutility( travelTime , config );
 	}
 
 	private void logWarningsIfNecessary(final PlanCalcScoreConfigGroup cnScoringGroup) {
