@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.utils.objectattributes.AttributableObjectAttributesView;
 import org.matsim.utils.objectattributes.ObjectAttributes;
 import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 
@@ -39,7 +40,7 @@ public class HouseholdsImpl implements Households {
 
 	private Map<Id<Household>, Household> households;
 	
-	private final ObjectAttributes householdAttributes = new ObjectAttributesImpl();
+	private final ObjectAttributes householdAttributes = new AttributableObjectAttributesView( households );
 	
 	public HouseholdsImpl(){
 		this.households = new LinkedHashMap<Id<Household>, Household>();

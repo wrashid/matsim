@@ -27,6 +27,8 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.api.core.v01.population.PopulationFactory;
 import org.matsim.core.scenario.Lockable;
+import org.matsim.utils.objectattributes.AttributableObjectAttributesView;
+import org.matsim.utils.objectattributes.ObjectAttributes;
 import org.matsim.utils.objectattributes.ObjectAttributesImpl;
 import org.matsim.utils.objectattributes.attributable.Attributes;
 
@@ -39,9 +41,9 @@ import org.matsim.utils.objectattributes.attributable.Attributes;
 
 	private final Attributes attributes = new Attributes();
 	private String name;
-	private Map<Id<Person>, Person> persons = new LinkedHashMap<>();
+	private final Map<Id<Person>, Person> persons = new LinkedHashMap<>();
 	private final PopulationFactory populationFactory;
-	private final ObjectAttributesImpl personAttributes = new ObjectAttributesImpl();
+	private final ObjectAttributes personAttributes = new AttributableObjectAttributesView( persons );
 	private long counter = 0;
 	private long nextMsg = 1;
 
@@ -80,7 +82,7 @@ import org.matsim.utils.objectattributes.attributable.Attributes;
 	}
 
 	@Override
-	public ObjectAttributesImpl getPersonAttributes() {
+	public ObjectAttributes getPersonAttributes() {
 		return this.personAttributes;
 	}
 

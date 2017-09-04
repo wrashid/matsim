@@ -38,7 +38,7 @@ import org.matsim.core.population.algorithms.PersonAlgorithm;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.transformations.IdentityTransformation;
-import org.matsim.utils.objectattributes.ObjectAttributesImpl;
+import org.matsim.utils.objectattributes.ObjectAttributes;
 import org.matsim.utils.objectattributes.attributable.Attributes;
 
 public final class StreamingPopulationReader implements MatsimReader {
@@ -167,7 +167,7 @@ public final class StreamingPopulationReader implements MatsimReader {
 		@Override public Person removePerson(Id<Person> personId) {
 			return delegate.removePerson(personId);
 		}
-		@Override public ObjectAttributesImpl getPersonAttributes() {
+		@Override public ObjectAttributes getPersonAttributes() {
 			return delegate.getPersonAttributes();
 		}
 
