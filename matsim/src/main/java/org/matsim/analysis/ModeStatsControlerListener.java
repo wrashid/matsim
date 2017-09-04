@@ -22,12 +22,8 @@ package org.matsim.analysis;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -96,7 +92,7 @@ ShutdownListener {
 		this.modeOut = IOUtils.getBufferedWriter(this.modeFileName + ".txt");
 		try {
 			this.modeOut.write("Iteration");
-			this.modes = scoreConfig.getModes().keySet();
+			this.modes = extractModes( scoreConfig );
 			for ( String mode : modes ) {
 				this.modeOut.write("\t" + mode);
 			}
@@ -105,6 +101,16 @@ ShutdownListener {
 			throw new UncheckedIOException(e);
 		}
 		this.tripRouterFactory = tripRouterFactory;
+	}
+
+	private Set<String> extractModes(PlanCalcScoreConfigGroup scoreConfig) {
+		final HashSet<String> modes = new HashSet<>();
+
+		for (PlanCalcScoreConfigGroup.ScoringParameterSet pars : scoreConfig.getScoringParametersPerSubpopulation().values() ) {
+			modes.addAll( pars.getModes().keySet() );
+		}
+
+		return modes;
 	}
 
 	@Override
