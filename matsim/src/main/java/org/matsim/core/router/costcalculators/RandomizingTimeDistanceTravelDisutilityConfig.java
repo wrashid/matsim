@@ -88,6 +88,11 @@ class RandomizingTimeDistanceTravelDisutilityConfig {
 
 		this.minCostOfDistance_m = currMinDist;
 		this.minCostOfTime_s = currMinTime;
+
+		// set for default subpopulation
+		this.prevCostOfDistance_m = costsOfDistance_m.get( null );
+		this.prevCostOfTime_s = costsOfTime_s.get( null );
+		this.prevLognormalRnd = 1;
 	}
 
 	public double getLognormalRandom( Person person ) {
@@ -115,9 +120,10 @@ class RandomizingTimeDistanceTravelDisutilityConfig {
 	}
 
 	private void switchPerson(Person person ) {
+		if ( !doRandomize ) return;
 		if ( person==null ) {
 			throw new RuntimeException("you cannot use the randomzing travel disutility without person.  If you need this without a person, set"
-					+ "sigma to zero.") ;
+					+ " sigma to zero. Here, Sigma="+sigma ) ;
 		}
 		if ( person == prevPerson ) return;
 
