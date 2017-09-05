@@ -47,7 +47,11 @@ public final class ControlerDefaults {
 	}
 
 	public static TravelDisutilityFactory createDefaultTravelDisutilityFactory(Scenario scenario) {
-		final RandomizingTimeDistanceTravelDisutilityFactory builder = new RandomizingTimeDistanceTravelDisutilityFactory( TransportMode.car, scenario.getConfig().planCalcScore() );
+		final RandomizingTimeDistanceTravelDisutilityFactory builder =
+				new RandomizingTimeDistanceTravelDisutilityFactory(
+						scenario.getPopulation().getPersonAttributes(),
+						TransportMode.car,
+						scenario.getConfig() );
 		builder.setSigma(0.); // tendency to set this to 3. right away (i.e. through PlansCalcRouteConfigGroup default). kai/bk, mar'15
 		return builder;
 	}

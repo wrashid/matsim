@@ -1,9 +1,13 @@
 package org.matsim.roadpricing;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.router.costcalculators.RandomizingTimeDistanceTravelDisutilityFactory;
+import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.roadpricing.ControlerDefaultsWithRoadPricingModule.RoadPricingInitializer;
 import org.matsim.roadpricing.ControlerDefaultsWithRoadPricingModule.RoadPricingSchemeProvider;
 import org.matsim.roadpricing.ControlerDefaultsWithRoadPricingModule.TravelDisutilityIncludingTollFactoryProvider;
@@ -46,7 +50,9 @@ public final class RoadPricingModule extends AbstractModule {
 		// yyyy TODO could probably combine them somewhat
 		bind(PlansCalcRouteWithTollOrNot.class);
 		addPlanStrategyBinding("ReRouteAreaToll").toProvider(ReRouteAreaToll.class);
-		addTravelDisutilityFactoryBinding("car_with_payed_area_toll").toInstance(new RandomizingTimeDistanceTravelDisutilityFactory(TransportMode.car, getConfig().planCalcScore()));
+		addTravelDisutilityFactoryBinding("car_with_payed_area_toll")
+				.toProvider( new DisutilityProvider( TransportMode.car ) )
+				.asEagerSingleton();
 		addRoutingModuleBinding("car_with_payed_area_toll").toProvider(new RoadPricingNetworkRouting());
 		
 		// yyyy TODO It might be possible that the area stuff is adequatly resolved by the randomizing approach.  Would need to try 
@@ -60,4 +66,22 @@ public final class RoadPricingModule extends AbstractModule {
 		// this is for analysis only:
 		bind(CalcAverageTolledTripLength.class).in(Singleton.class);
 	}
+
+	private static class DisutilityProvider implements Provider<TravelDisutilityFactory> {
+    	private final String mode;
+    	@Inject
+        public Scenario scenario;
+
+        private DisutilityProvider(String mode) {
+            this.mode = mode;
+        }
+
+        @Override
+        public TravelDisutilityFactory get() {
+            return new RandomizingTimeDistanceTravelDisutilityFactory(
+            		scenario.getPopulation().getPersonAttributes(),
+                    mode,
+                    scenario.getConfig());
+        }
+    }
 }

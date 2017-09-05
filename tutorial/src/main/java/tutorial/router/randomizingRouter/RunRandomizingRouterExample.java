@@ -48,7 +48,10 @@ public class RunRandomizingRouterExample {
 		Controler controler = new Controler( scenario ) ;
 
 		final RandomizingTimeDistanceTravelDisutilityFactory factory =
-				new RandomizingTimeDistanceTravelDisutilityFactory( TransportMode.car, config.planCalcScore() );
+				new RandomizingTimeDistanceTravelDisutilityFactory(
+						scenario.getPopulation().getPersonAttributes(),
+						TransportMode.car,
+						config );
 		factory.setSigma(3.) ; 	// this sets the routing randomness (currently between time and money only, so be careful
 								// that you have a monetary term in the standard disutility, e.g. a distance cost)
 		

@@ -19,12 +19,16 @@
 
 package org.matsim.contrib.noise;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.contrib.noise.routing.NoiseTollTimeDistanceTravelDisutilityFactory;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.router.costcalculators.RandomizingTimeDistanceTravelDisutilityFactory;
+import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 
 /**
 * @author ikaddoura
@@ -48,13 +52,30 @@ public class NoiseDefaultCarTravelDisutilityModule extends AbstractModule {
 				noiseParameters.setComputeAvgNoiseCostPerLinkAndTime(true);
 			}
 			
-			final NoiseTollTimeDistanceTravelDisutilityFactory tollDisutilityCalculatorFactory = new NoiseTollTimeDistanceTravelDisutilityFactory(
-					new RandomizingTimeDistanceTravelDisutilityFactory(TransportMode.car, this.getConfig().planCalcScore()),
-					this.getConfig().planCalcScore()
-					);
-			bindCarTravelDisutilityFactory().toInstance(tollDisutilityCalculatorFactory);
+			bindCarTravelDisutilityFactory()
+					.toProvider( new DisutilityProvider( TransportMode.car ) )
+					.asEagerSingleton();
 		}		
 	}
 
+    private static class DisutilityProvider implements Provider<TravelDisutilityFactory> {
+    	private final String mode;
+    	@Inject
+        public Scenario scenario;
+
+        private DisutilityProvider(String mode) {
+            this.mode = mode;
+        }
+
+        @Override
+		public TravelDisutilityFactory get() {
+			return new NoiseTollTimeDistanceTravelDisutilityFactory(
+					new RandomizingTimeDistanceTravelDisutilityFactory(
+							scenario.getPopulation().getPersonAttributes(),
+							mode,
+							scenario.getConfig()),
+					scenario.getConfig().planCalcScore() );
+		}
+    }
 }
 

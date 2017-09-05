@@ -224,7 +224,10 @@ public class RunPSim {
         } else {
             //randomized routing for car and transit
             final RandomizingTimeDistanceTravelDisutilityFactory disutilityFactory =
-                    new RandomizingTimeDistanceTravelDisutilityFactory(TransportMode.car, config.planCalcScore());
+                    new RandomizingTimeDistanceTravelDisutilityFactory(
+                            scenario.getPopulation().getPersonAttributes(),
+                            TransportMode.car,
+                            config);
             matsimControler.addOverridingModule(new AbstractModule() {
                 @Override
                 public void install() {

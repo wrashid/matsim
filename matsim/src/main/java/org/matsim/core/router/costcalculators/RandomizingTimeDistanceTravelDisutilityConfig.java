@@ -6,8 +6,8 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.utils.objectattributes.ObjectAttributes;
 
-import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -16,6 +16,10 @@ import java.util.Random;
  */
 class RandomizingTimeDistanceTravelDisutilityConfig {
 	private static final Logger log = Logger.getLogger( RandomizingTimeDistanceTravelDisutilityConfig.class );
+
+	private final String subpopulationAttributeName;
+	private final ObjectAttributes personAttributes;
+
 	private static int normalisationWrnCnt = 0;
 	private final double sigma;
 
@@ -37,9 +41,12 @@ class RandomizingTimeDistanceTravelDisutilityConfig {
 	private double prevCostOfDistance_m = Double.NaN;
 
 	public RandomizingTimeDistanceTravelDisutilityConfig(
+			String subpopulationAttributeName, ObjectAttributes personAttributes,
 			PlanCalcScoreConfigGroup cnScoringGroup,
 			String mode,
-			double sigma ) {
+			double sigma) {
+		this.subpopulationAttributeName = subpopulationAttributeName;
+		this.personAttributes = personAttributes;
 		this.sigma = sigma;
 		doRandomize = sigma != 0.;
 
@@ -116,7 +123,7 @@ class RandomizingTimeDistanceTravelDisutilityConfig {
 
 		prevPerson = person;
 
-		String subpop = null;
+		String subpop = (String) personAttributes.getAttribute( person.getId().toString() , subpopulationAttributeName );
 		prevCostOfDistance_m = costsOfDistance_m.get( subpop );
 		prevCostOfTime_s = costsOfTime_s.get( subpop );
 

@@ -21,9 +21,11 @@
 package org.matsim.core.router.costcalculators;
 
 import org.apache.log4j.Logger;
+import org.matsim.core.config.Config;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.utils.objectattributes.ObjectAttributes;
 
 import java.util.Collections;
 import java.util.Set;
@@ -32,15 +34,31 @@ public class RandomizingTimeDistanceTravelDisutilityFactory implements TravelDis
 	private static final Logger log = Logger.getLogger( RandomizingTimeDistanceTravelDisutilityFactory.class ) ;
 
 	private static int wrnCnt = 0 ;
-	private static int normalisationWrnCnt = 0;
 
 	private final String mode;
 	private double sigma = 0. ;
 	private final PlanCalcScoreConfigGroup cnScoringGroup;
+	private final String subpopulationAttributeName;
+	private final ObjectAttributes personAttributes;
 
-	public RandomizingTimeDistanceTravelDisutilityFactory(final String mode, PlanCalcScoreConfigGroup cnScoringGroup ) {
+	public RandomizingTimeDistanceTravelDisutilityFactory(
+			String mode,
+			PlanCalcScoreConfigGroup cnScoringGroup ) {
+		log.warn( "initializing "+this.getClass().getSimpleName()+" without subpopulation support" );
 		this.mode = mode;
 		this.cnScoringGroup = cnScoringGroup;
+		this.subpopulationAttributeName = "Blabla";
+		this.personAttributes = new ObjectAttributes();
+	}
+
+	public RandomizingTimeDistanceTravelDisutilityFactory(
+			ObjectAttributes personAttributes,
+			final String mode,
+			Config config ) {
+		this.mode = mode;
+		this.cnScoringGroup = config.planCalcScore();
+		this.subpopulationAttributeName = config.plans().getSubpopulationAttributeName();
+		this.personAttributes = personAttributes;
 	}
 
 	@Override
@@ -50,6 +68,8 @@ public class RandomizingTimeDistanceTravelDisutilityFactory implements TravelDis
 
 		RandomizingTimeDistanceTravelDisutilityConfig config =
 				new RandomizingTimeDistanceTravelDisutilityConfig(
+						subpopulationAttributeName,
+						personAttributes,
 						cnScoringGroup,
 						mode,
 						sigma );

@@ -22,6 +22,10 @@
 
 package org.matsim.core.router.costcalculators;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
 import org.matsim.core.controler.AbstractModule;
 
@@ -31,9 +35,27 @@ public class TravelDisutilityModule extends AbstractModule {
     public void install() {
         PlansCalcRouteConfigGroup routeConfigGroup = getConfig().plansCalcRoute();
         for (String mode : routeConfigGroup.getNetworkModes()) {
-            addTravelDisutilityFactoryBinding(mode).toInstance(
-                    new RandomizingTimeDistanceTravelDisutilityFactory(mode, getConfig().planCalcScore()));
+            addTravelDisutilityFactoryBinding(mode)
+                    .toProvider( new DisutilityProvider( mode ) )
+                    .asEagerSingleton();
         }
     }
 
+    private static class DisutilityProvider implements Provider<TravelDisutilityFactory> {
+    	private final String mode;
+    	@Inject
+        public Scenario scenario;
+
+        private DisutilityProvider(String mode) {
+            this.mode = mode;
+        }
+
+        @Override
+        public TravelDisutilityFactory get() {
+            return new RandomizingTimeDistanceTravelDisutilityFactory(
+            		scenario.getPopulation().getPersonAttributes(),
+                    mode,
+                    scenario.getConfig());
+        }
+    }
 }
