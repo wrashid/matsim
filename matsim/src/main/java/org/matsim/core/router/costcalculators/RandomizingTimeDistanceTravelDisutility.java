@@ -47,7 +47,7 @@ final class RandomizingTimeDistanceTravelDisutility implements TravelDisutility 
 	@Override
 	public double getLinkTravelDisutility(final Link link, final double time, final Person person, final Vehicle vehicle) {
 		double marginalCostOfTime = config.getCostOfTime_s( person );
-		double marginalCostOfDistance = config.getCostOfTime_s( person );
+		double marginalCostOfDistance = config.getCostOfDistance_m( person );
 		double logNormalRnd = config.getLognormalRandom( person );
 
 		double travelTime = this.timeCalculator.getLinkTravelTime(link, time, person, vehicle);
