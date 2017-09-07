@@ -103,7 +103,7 @@ public class CarsharingPersonDriverAgentImpl implements MobsimDriverAgent, Mobsi
 
 	private boolean carsharingLeg(PlanElement pe) {
 		String mode = ((Leg)pe).getMode();
-		if (mode.equals("freefloating") || mode.equals("oneway") || mode.equals("twoway"))
+		if (mode.equals("freefloating") || mode.equals("oneway") || mode.equals("twoway") || mode.equals("bikeshare"))
 			return true;
 		
 		return false;

@@ -10,7 +10,7 @@
           xml:lang       NMTOKEN "de-CH">
 
 
-<!ELEMENT company          (twoway*,oneway*,freefloating*)>
+<!ELEMENT company          (twoway*,oneway*,freefloating*,bikeshare*)>
 <!ATTLIST company
           name           CDATA   #IMPLIED>   
 
@@ -33,6 +33,14 @@
           x  	       CDATA #REQUIRED
           y       CDATA #REQUIRED
 	  type	CDATA #REQUIRED>
+
+<!ELEMENT bikeshare          EMPTY>
+<!ATTLIST bikeshare
+          id           CDATA   #REQUIRED
+          x  	       CDATA #REQUIRED
+          y       CDATA #REQUIRED
+	  type	CDATA #REQUIRED>
+
 
 <!ELEMENT vehicle         EMPTY>
 <!ATTLIST vehicle

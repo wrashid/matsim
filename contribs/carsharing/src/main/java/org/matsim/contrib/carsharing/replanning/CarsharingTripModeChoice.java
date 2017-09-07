@@ -53,8 +53,11 @@ public class CarsharingTripModeChoice extends AbstractMultithreadedModule{
 		if (!useBs && !useOneway && !useFf) {
 			this.availableModes = new String[1];
 		}
-		else
-			this.availableModes = (String[]) modes.toArray();
+		else {
+			
+			
+			this.availableModes = modes.toArray(new String[0]);
+		}
 	}
 	
 	

@@ -37,7 +37,7 @@ public class ParkCSVehicles implements AgentSource {
 		this.carsharingSupply =  carsharingSupply;
 		modeVehicleTypes.put("twoway", VehicleUtils.getDefaultVehicleType());
 		modeVehicleTypes.put("freefloating", VehicleUtils.getDefaultVehicleType());
-
+		modeVehicleTypes.put("bikeshare", VehicleUtils.getDefaultVehicleType());
 		modeVehicleTypes.put("oneway", VehicleUtils.getDefaultVehicleType());
 		
 		

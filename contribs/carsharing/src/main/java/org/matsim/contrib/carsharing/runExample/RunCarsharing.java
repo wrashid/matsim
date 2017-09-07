@@ -32,7 +32,7 @@ import org.matsim.contrib.carsharing.models.ChooseVehicleTypeExample;
 import org.matsim.contrib.carsharing.models.KeepingTheCarModel;
 import org.matsim.contrib.carsharing.models.KeepingTheCarModelExample;
 import org.matsim.contrib.carsharing.qsim.CarsharingQsimFactoryNew;
-import org.matsim.contrib.carsharing.readers.CarsharingXmlReaderNew;
+import org.matsim.contrib.carsharing.readers.CarsharingXmlReaderHenrik;
 import org.matsim.contrib.carsharing.replanning.CarsharingSubtourModeChoiceStrategy;
 import org.matsim.contrib.carsharing.replanning.RandomTripToCarsharingStrategy;
 import org.matsim.contrib.carsharing.scoring.CarsharingScoringFunctionFactory;
@@ -76,7 +76,7 @@ public class RunCarsharing {
 	public static void installCarSharing(final Controler controler) {		
 		
 		final Scenario scenario = controler.getScenario();
-		CarsharingXmlReaderNew reader = new CarsharingXmlReaderNew(scenario.getNetwork());
+		CarsharingXmlReaderHenrik reader = new CarsharingXmlReaderHenrik(scenario.getNetwork());
 		
 		final CarsharingConfigGroup configGroup = (CarsharingConfigGroup)
 				scenario.getConfig().getModule( CarsharingConfigGroup.GROUP_NAME );

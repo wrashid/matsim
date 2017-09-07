@@ -7,11 +7,12 @@ public class FFVehicleImpl implements CSVehicle{
 	private String type;
 	private String vehicleId;
 	private String companyId;
-	private final static String csType= "freefloating";
+	private String csType;
 	
-	public FFVehicleImpl(String type, String vehicleId, String companyId) {
+	public FFVehicleImpl(String type, String vehicleId, String companyId, String csType) {
 		
 		this.type = type;
+		this.csType = csType;
 		this.vehicleId = vehicleId;
 		this.companyId = companyId;
 	}
