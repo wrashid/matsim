@@ -20,21 +20,33 @@
 
 package org.matsim.core.router.util;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 
-public class LinkToLinkArrayRoutingNetwork extends LinkToLinkAbstractRoutingNetwork {
+//public class LinkToLinkArrayRoutingNetwork extends LinkToLinkAbstractRoutingNetwork {
+public class LinkToLinkArrayRoutingNetwork extends ArrayRoutingNetwork implements LinkToLinkRoutingNetwork {
 
+	/*package*/ final Map<Id<Link>, LinkToLinkRoutingNetworkLink> links = new HashMap<>();
+	
 	public LinkToLinkArrayRoutingNetwork(final Network network) {
 		super(network);
 	}
 	
-	@Override
-	public void setName(String name) {
-		throw new RuntimeException("not implemented");
+	/*package*/ void addLink(LinkToLinkRoutingNetworkLink ll) {
+		this.links.put(ll.getId(), ll);
 	}
 
 	@Override
-	public String getName() {
-		throw new RuntimeException("not implemented");
+	public Map<Id<Link>, LinkToLinkRoutingNetworkLink> getLinks() {
+		return this.links;
+	}
+
+	@Override
+	public Link removeLink(Id<Link> linkId) {
+		return this.links.remove(linkId);
 	}
 }
