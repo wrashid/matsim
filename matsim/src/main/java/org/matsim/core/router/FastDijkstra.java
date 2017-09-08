@@ -47,9 +47,9 @@ import org.matsim.vehicles.Vehicle;
  */
 public class FastDijkstra extends Dijkstra {
 
-	private final RoutingNetwork routingNetwork;
-	private final FastRouterDelegate fastRouter;
-	private BinaryMinHeap<ArrayRoutingNetworkNode> heap = null;
+	/*package*/ final RoutingNetwork routingNetwork;
+	/*package*/ final FastRouterDelegate fastRouter;
+	/*package*/ BinaryMinHeap<ArrayRoutingNetworkNode> heap = null;
 	private int maxSize = -1;
 	
 	/*
