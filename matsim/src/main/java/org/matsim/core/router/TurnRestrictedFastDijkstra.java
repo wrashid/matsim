@@ -92,17 +92,22 @@ public class TurnRestrictedFastDijkstra extends FastDijkstra implements TurnRest
 		 * new nodes, we get that single node. Otherwise, the canEndSearch(...) method in
 		 * AbstractFastRouterDelegate handles checking whether one of the valid nodes was reached.
 		 */
-		if (this.toLink != null) {
+		if (this.toLink != null) {	// i.e. we have a RoutingNetworkLink, therefore, we might have multiple to-nodes
 	        this.toNodes = this.toLink.getFromNodes();
-			if (this.toLink.getFromNodes() == null || this.toLink.getFromNodes().length == 1) routingNetworkToNode = this.toLink.getFromNode();
-			else {
-		        this.toNodes = null;
+			if ( this.toNodes == null ||  this.toNodes.length == 1) {
+				routingNetworkToNode = this.toLink.getFromNode();
+				this.toNodes = null;	// there is only a single to-node, therefore, we can set the array to null
+			} else {
 				routingNetworkToNode = null;	// unclear which toNode is valid; let the canEndSearch method decide
 			}
+		} else {	// it is a regular to-node, i.e. it can only be accessed from a single node 
+			routingNetworkToNode = this.routingNetwork.getNodes().get(toLink.getFromNode().getId());
+			this.toNodes = null;
 		}
-		else routingNetworkToNode = this.routingNetwork.getNodes().get(toLink.getFromNode().getId());
-		
-		return super.calcLeastCostPath(routingNetworkFromNode, routingNetworkToNode, startTime, person, vehicle);
+
+		// in case the routingNetworkToNode is null, we use the node from the regular network
+		if (routingNetworkToNode == null) return super.calcLeastCostPath(routingNetworkFromNode, toLink.getFromNode(), startTime, person, vehicle);
+		else return super.calcLeastCostPath(routingNetworkFromNode, routingNetworkToNode, startTime, person, vehicle);
 	}
 	
 	// Replace search logic from plain Dijkstra. In a future step, we could extract the "outNode == toNode" check to its own clas

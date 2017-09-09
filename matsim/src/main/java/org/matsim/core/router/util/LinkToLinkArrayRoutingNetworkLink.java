@@ -36,16 +36,4 @@ public class LinkToLinkArrayRoutingNetworkLink extends LinkToLinkAbstractRouting
 	public int getArrayIndex() {
 		return this.arrayIndex;
 	}
-
-	@Override
-	public RoutingNetworkNode[] getFromNodes() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void setFromNodes(RoutingNetworkNode[] fromNodes) {
-		// TODO Auto-generated method stub
-		
-	}
 }
