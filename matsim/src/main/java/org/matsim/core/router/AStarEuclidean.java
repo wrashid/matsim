@@ -165,7 +165,7 @@ public class AStarEuclidean extends Dijkstra {
 		if (totalCost < nCost) {
 			revisitNode(n, data, pendingNodes, currTime + travelTime, totalCost, l);
 			return true;
-		} else if (totalCost == nCost) {
+		} else if (totalCost == nCost && travelCost > 0) {
 			// Special case: a node can be reached from two links with exactly the same costs.
 			// Decide based on the linkId which one to take... just have to common criteria to be deterministic.
 			if (data.getPrevLink().getId().compareTo(l.getId()) > 0) {
