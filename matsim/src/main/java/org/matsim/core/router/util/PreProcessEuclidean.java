@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.lanes.data.Lanes;
 
 /**
  * Pre-processes a given network, gathering information which can be used by a
@@ -61,7 +62,18 @@ public class PreProcessEuclidean extends PreProcessDijkstra {
 
 		updateMinTravelCostPerLength(network);
 	}
+	
+	@Override
+	public void run(final Network network, final Lanes lanes) {
+		super.run(network, lanes);
 
+		if (!checkLinkLengths(network)) {
+			log.warn("There are links with stored length smaller than their Euclidean distance in this network. Thus, A* cannot guarantee to calculate the least-cost paths between two nodes.");
+		}
+
+		updateMinTravelCostPerLength(network);
+	}
+	
 	private void updateMinTravelCostPerLength(final Network network) {
 		for (Link link : network.getLinks().values()) {
 			double minCost = this.costFunction.getLinkMinimumTravelDisutility(link) / link.getLength();

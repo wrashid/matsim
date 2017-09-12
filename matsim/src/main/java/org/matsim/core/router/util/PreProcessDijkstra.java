@@ -21,8 +21,11 @@
 package org.matsim.core.router.util;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,6 +34,9 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
+import org.matsim.lanes.data.Lane;
+import org.matsim.lanes.data.Lanes;
+import org.matsim.lanes.data.LanesToLinkAssignment;
 
 /**
  * Pre-processes a given network, gathering information which
@@ -54,6 +60,35 @@ public class PreProcessDijkstra {
 		this.containsData = true;
 	}
 
+	/**
+	 * Extended version of PreProcessDijkstra that takes turn restriction into account.
+	 * Assume the following setup:
+	 * 
+	 *        [1]
+	 *         |
+	 *         |
+	 *        [2]
+	 *         |
+	 *         | 
+	 * --[0]--[3]--[4]--
+	 * 
+	 * [1] would be identified as dead end by the default algorithm. However, in case
+	 * turning from link 02 to link 34 is not allowed, a detour 03 -> 32 -> 23 -> 34
+	 * is necessary. As a result, [2] must not be marked as dead end (but [1] can, since
+	 * there are no turn restrictions at [2])!
+	 * 
+	 * So far, all nodes in dead ends starting at a restricted node are marked as not
+	 * located in a dead end. For an OSM based Switzerland network, this affected only
+	 * ~500 nodes. Therefore, I did not try to reduce the amount any further (e.g. by
+	 * identifying nodes among them that are still in a "valid" dead end). 
+	 *
+	 * @author cdobler
+	 */
+	public void run(final Network network, final Lanes lanes) {
+		this.markDeadEnds(network, lanes);
+		this.containsData = true;
+	}
+	
 	/**
 	 * Marks nodes that are in dead ends (i.e. nodes that are connected through a single node to the rest of the network), starting at all nodes with degree 2.
 	 * @param network The network on which to process.
@@ -120,6 +155,96 @@ public class PreProcessDijkstra {
 				+ (System.currentTimeMillis() - now) + " ms");
 	}
 
+	/**
+	 * Marks nodes that are in dead ends (i.e. nodes that are connected through a single node to the rest of the network), starting at all nodes with degree 2.
+	 * 
+	 * @param network The network on which to process.
+	 * @param lanes The lanes containing the turn restrictions for the given network.
+	 */
+	private void markDeadEnds(final Network network, final Lanes lanes) {
+		long now = System.currentTimeMillis();
+
+		// Set of all nodes with turn restrictions, i.e. to-nodes of restricted links.
+		Set<Id<Node>> restrictedNodes = new HashSet<>();
+		for (LanesToLinkAssignment assignment : lanes.getLanesToLinkAssignments().values()) {
+			Link link = network.getLinks().get(assignment.getLinkId());
+			Set<Id<Link>> toLinks = new HashSet<>();
+			for (Lane lane : assignment.getLanes().values()) {
+				if (lane.getToLinkIds() != null) toLinks.addAll(lane.getToLinkIds());
+			}
+			// if turning is not allowed to all out-links of the to-node, mark node as restricted
+			if (link.getToNode().getOutLinks().size() > toLinks.size()) restrictedNodes.add(link.getToNode().getId());
+		}
+		log.info("Found " + restrictedNodes.size() + " restricted nodes.");		
+		
+		/*
+		 * We use a concurrentHashMap because if FastRouters are used for the re-routing,
+		 * their parallel initialization in multiple threads may result in concurrent
+		 * calls to getNodeData(...).
+		 */
+		this.nodeData = new ConcurrentHashMap<>(network.getNodes().size());
+
+		DeadEndData deadEndData;
+		for (Node node : network.getNodes().values()) {
+			deadEndData = getNodeData(node);
+
+			Map<Id<Node>, Node> incidentNodes = getIncidentNodes(node);
+			if (incidentNodes.size() == 1) {
+				List<Node> deadEndNodes = new ArrayList<>();
+
+				while (deadEndData.getInDeadEndCount() == incidentNodes.size() - 1) {
+
+					deadEndNodes.add(node);
+					deadEndNodes.addAll(deadEndData.getDeadEndNodes());
+					deadEndData.getDeadEndNodes().clear();
+
+					// Just set a dummy DeadEndEntryNode, such that is isn't null. We use this as a flag to determine whether we already processed this node.
+					deadEndData.setDeadEndEntryNode(node);
+
+					Iterator<? extends Node> it = incidentNodes.values().iterator();
+					while (deadEndData.getDeadEndEntryNode() != null && it.hasNext()) {
+						node = it.next();
+						deadEndData = getNodeData(node);
+					}
+					if (deadEndData.getDeadEndEntryNode() == null) {
+						deadEndData.incrementInDeadEndCount();
+						incidentNodes = getIncidentNodes(node);
+					} else {
+						log.error("All " + incidentNodes.size() + " incident nodes of node " + node.getId() + " are dead ends!");
+						return;
+					}
+				}
+				deadEndData.getDeadEndNodes().addAll(deadEndNodes);
+			}
+		}
+
+		// Now set the proper deadEndEntryNode for each node
+		int deadEndNodeCount = 0;
+		for (Node node : network.getNodes().values()) {
+			deadEndData = getNodeData(node);
+			for (Node n : deadEndData.getDeadEndNodes()) {
+				DeadEndData r = getNodeData(n);
+				r.setDeadEndEntryNode(node);
+				deadEndNodeCount++;
+			}
+			deadEndData.getDeadEndNodes().clear();
+		}
+		
+		// Now remove deadEndEntryNode in case it is a restricted node
+		int skippedDeadEndNodeCount = 0;
+		for (Node node : network.getNodes().values()) {
+			deadEndData = getNodeData(node);
+			if (deadEndData.getDeadEndEntryNode() != null && restrictedNodes.contains(deadEndData.getDeadEndEntryNode().getId())) {
+				deadEndData.setDeadEndEntryNode(null);
+				deadEndNodeCount--;
+				skippedDeadEndNodeCount++;
+			}
+		}
+		
+		log.info("nodes in dead ends: " + deadEndNodeCount + " (total nodes: " + network.getNodes().size() + "). Done in " 	+ (System.currentTimeMillis() - now) + " ms");
+		log.info("skipped nodes in dead ends due to turn restrictions: " + skippedDeadEndNodeCount);
+	}
+	
 	private static Map<Id<Node>, Node> getIncidentNodes(Node node) {
 		Map<Id<Node>, Node> nodes = new TreeMap<>();
 		for (Link link : node.getInLinks().values()) {

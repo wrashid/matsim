@@ -20,12 +20,6 @@
 
 package org.matsim.core.router.util;
 
-import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.network.Node;
-import org.matsim.core.api.internal.MatsimComparator;
-
 import java.awt.geom.Rectangle2D;
 import java.util.Comparator;
 import java.util.Map;
@@ -33,6 +27,13 @@ import java.util.PriorityQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.network.Node;
+import org.matsim.core.api.internal.MatsimComparator;
+import org.matsim.lanes.data.Lanes;
 
 /**
  * Pre-processes a given network, gathering information which can be used by
@@ -108,10 +109,19 @@ public class PreProcessLandmarks extends PreProcessEuclidean {
 	@Override
 	public void run(final Network network) {
 		super.run(network);
-		
+		calculateLandmarks(network);
+	}
+	
+	@Override
+	public void run(final Network network, final Lanes lanes) {
+		super.run(network, lanes);
+		calculateLandmarks(network);
+	}
+	
+	private void calculateLandmarks(final Network network) {
 		log.info("Putting landmarks on network...");
 		long now = System.currentTimeMillis();
-		landmarks = landmarker.identifyLandmarks( landmarkCount , network );
+		landmarks = landmarker.identifyLandmarks(this.landmarkCount, network);
 		log.info("done in " + (System.currentTimeMillis() - now) + " ms");
 
 		log.info("Initializing landmarks data");
@@ -244,7 +254,7 @@ public class PreProcessLandmarks extends PreProcessEuclidean {
 			this.nodeData.put(n, r);
 		}
 		// would be better to work with a Map<Node,LandmarksData>, but for some reason the implementor of this class
-		// decided to inherit from PreProcessEuclidean, which inherits from PreprocessDijkstra, which is wehre the field
+		// decided to inherit from PreProcessEuclidean, which inherits from PreprocessDijkstra, which is where the field
 		// is..
 		// Before I casted here, the cast was done from whithin AStarLandmarks algorithm, which is even worse.
 		// td dec 15
