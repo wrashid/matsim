@@ -47,8 +47,8 @@ import org.matsim.vehicles.Vehicle;
  */
 public class FastAStarLandmarks extends AStarLandmarks {
 
-	private final RoutingNetwork routingNetwork;
-	private final FastRouterDelegate fastRouter;
+	/*package*/ final RoutingNetwork routingNetwork;
+	/*package*/ final FastRouterDelegate fastRouter;
 	private BinaryMinHeap<ArrayRoutingNetworkNode> heap = null;
 	private int maxSize = -1;
 

@@ -123,11 +123,8 @@ public class TurnRestrictedFastDijkstra extends FastDijkstra implements TurnRest
 				return null;
 			}
 
-			if (canEndSearch(outNode, toNode)) {
-				stillSearching = false;
-			} else {
-				relaxNode(outNode, toNode, pendingNodes);
-			}
+			if (canEndSearch(outNode, toNode)) stillSearching = false;
+			else relaxNode(outNode, toNode, pendingNodes);
 		}
 		return toNode;
 	}

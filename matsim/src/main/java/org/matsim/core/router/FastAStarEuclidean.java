@@ -48,12 +48,12 @@ import org.matsim.vehicles.Vehicle;
  */
 public class FastAStarEuclidean extends AStarEuclidean {
 
-	private final RoutingNetwork routingNetwork;
-	private final FastRouterDelegate fastRouter;
+	/*package*/ final RoutingNetwork routingNetwork;
+	/*package*/ final FastRouterDelegate fastRouter;
 	private BinaryMinHeap<ArrayRoutingNetworkNode> heap = null;
 	private int maxSize = -1;
 	
-	FastAStarEuclidean(final RoutingNetwork routingNetwork, final PreProcessEuclidean preProcessData,
+	protected FastAStarEuclidean(final RoutingNetwork routingNetwork, final PreProcessEuclidean preProcessData,
 			final TravelDisutility costFunction, final TravelTime timeFunction, final double overdoFactor,
 			final FastRouterDelegateFactory fastRouterFactory) {
 		super(routingNetwork, preProcessData, costFunction, timeFunction, overdoFactor);

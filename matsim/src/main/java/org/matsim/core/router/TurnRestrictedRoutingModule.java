@@ -41,7 +41,7 @@ import org.matsim.core.router.util.TurnRestrictedLeastCostPathCalculatorFactory;
 import org.matsim.facilities.Facility;
 import org.matsim.lanes.data.Lanes;
 
-class TurnRestrictedRoutingModule implements RoutingModule {
+public class TurnRestrictedRoutingModule implements RoutingModule {
 	
 	private final Network network;
     private final TurnRestrictedLeastCostPathCalculator leastCostPathCalculator;

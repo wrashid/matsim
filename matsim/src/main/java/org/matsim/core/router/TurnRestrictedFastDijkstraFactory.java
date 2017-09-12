@@ -66,7 +66,7 @@ public class TurnRestrictedFastDijkstraFactory implements TurnRestrictedLeastCos
 			if (this.usePreProcessData) {
 				if (preProcessDijkstra == null) {
 					preProcessDijkstra = new PreProcessDijkstra();
-					preProcessDijkstra.run(network);
+					preProcessDijkstra.run(network, lanes);
 					this.preProcessData.put(network, preProcessDijkstra);
 					
 					for (RoutingNetworkNode node : routingNetwork.getNodes().values()) {
