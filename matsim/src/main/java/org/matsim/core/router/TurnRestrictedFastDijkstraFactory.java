@@ -26,10 +26,14 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.router.util.LinkToLinkRoutingNetwork;
 import org.matsim.core.router.util.LinkToLinkRoutingNetworkFactory;
 import org.matsim.core.router.util.PreProcessDijkstra;
+import org.matsim.core.router.util.RoutingNetworkLink;
 import org.matsim.core.router.util.RoutingNetworkNode;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
@@ -69,8 +73,28 @@ public class TurnRestrictedFastDijkstraFactory implements TurnRestrictedLeastCos
 					preProcessDijkstra.run(network, lanes);
 					this.preProcessData.put(network, preProcessDijkstra);
 					
+					/*
+					 * Collect data for nodes that are only present in the routing network. 
+					 * Duplicated nodes are identified by links ending at them. We collect
+					 * the nodes that they replicate and store the data in a lookup map.
+					 */
+					Map<Id<Node>, Node> originalNodes = new HashMap<>();
+					for (RoutingNetworkLink link : routingNetwork.getLinks().values()) {
+						if (!network.getNodes().containsKey(link.getToNode())) {
+							Link originalLink = network.getLinks().get(link.getId());
+							originalNodes.put(link.getToNode().getId(), originalLink.getToNode());
+						}
+					}
+					
+					/*
+					 * If the node is not present in the original network, no  pre-process data is found.
+					 * As a result, new data is created, which cannot be used for meaningful routing since
+					 * it contains default cost values (which are Double.POSITIVE_INFINITY!).
+					 * To avoid this, we refer to the data of the original node.
+					 */
 					for (RoutingNetworkNode node : routingNetwork.getNodes().values()) {
-						node.setDeadEndData(preProcessDijkstra.getNodeData(node.getNode()));
+						if (network.getNodes().containsKey(node.getId())) node.setDeadEndData(preProcessDijkstra.getNodeData(node.getNode()));
+						else node.setDeadEndData(preProcessDijkstra.getNodeData(originalNodes.get(node.getNode().getId())));
 					}
 				}
 			}

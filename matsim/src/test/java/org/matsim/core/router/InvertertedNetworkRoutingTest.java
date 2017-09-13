@@ -19,20 +19,34 @@
  * *********************************************************************** */
 package org.matsim.core.router;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Assert;
 import org.junit.Test;
-import org.matsim.api.core.v01.*;
-import org.matsim.api.core.v01.network.*;
-import org.matsim.api.core.v01.population.*;
+import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.network.NetworkFactory;
+import org.matsim.api.core.v01.network.Node;
+import org.matsim.api.core.v01.population.Leg;
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.algorithms.NetworkTurnInfoBuilder;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.NetworkRoute;
-import org.matsim.core.router.costcalculators.*;
-import org.matsim.core.router.util.*;
+import org.matsim.core.router.costcalculators.LinkToLinkRandomizingTimeDistanceTravelDisutilityFactory;
+import org.matsim.core.router.costcalculators.LinkToLinkTravelDisutilityFactory;
+import org.matsim.core.router.costcalculators.RandomizingTimeDistanceTravelDisutilityFactory;
+import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
+import org.matsim.core.router.util.LeastCostPathCalculatorFactory;
+import org.matsim.core.router.util.LinkToLinkLeastCostPathCalculatorFactory;
+import org.matsim.core.router.util.LinkToLinkTravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.facilities.Facility;
-
-import junit.framework.Assert;
 
 
 /**
@@ -41,7 +55,6 @@ import junit.framework.Assert;
  *
  */
 public class InvertertedNetworkRoutingTest {
-
 
 	@Test
 	public void testInvertedNetworkLegRouter() {
@@ -95,18 +108,79 @@ public class InvertertedNetworkRoutingTest {
 		Assert.assertEquals(Id.create("23", Link.class), route.getLinkIds().get(0));
 		Assert.assertEquals(Id.create("36", Link.class), route.getLinkIds().get(1));
 		Assert.assertEquals(Id.create("67", Link.class), route.getLinkIds().get(2));
-
-
-		
 	}
 
+	@Test
+	public void testLinkToLinkRouter() {
+		Fixture f = new Fixture();
+		final LinkToLinkTravelTimeStub tt = new LinkToLinkTravelTimeStub();
+		final LinkToLinkTravelDisutilityFactory tc = new LinkToLinkRandomizingTimeDistanceTravelDisutilityFactory(TransportMode.car, f.s.getConfig().planCalcScore());
+		
+		List<LinkToLinkLeastCostPathCalculatorFactory> algos = new ArrayList<>();
+		algos.add(new LinkToLinkFastDijkstraFactory());
+		algos.add(new LinkToLinkFastDijkstraFactory(true));
+		algos.add(new LinkToLinkFastAStarEuclideanFactory());
+		algos.add(new LinkToLinkFastAStarLandmarksFactory());
+
+		for (LinkToLinkLeastCostPathCalculatorFactory algo : algos) {
+			System.out.println("testing " + algo.getClass());
+			
+			LinkToLinkRoutingModuleV2 router = new LinkToLinkRoutingModuleV2("car", f.s.getPopulation().getFactory(), f.s.getNetwork(), f.s.getLanes(), algo, tc, tt);
+			
+			Person person = PopulationUtils.getFactory().createPerson(Id.create(1, Person.class));
+			Facility<?> fromFacility = new LinkWrapperFacility(//
+					f.s.getNetwork().getLinks().get(Id.create("12", Link.class)));
+			Facility<?> toFacility = new LinkWrapperFacility(//
+					f.s.getNetwork().getLinks().get(Id.create("78", Link.class)));
+			
+			//test 1
+			tt.setTurningMoveCosts(0.0, 100.0, 50.0);
+			
+			NetworkRoute route = calcLinkToLinkRoute(router, fromFacility, toFacility, person);
+			Assert.assertNotNull(route);
+			Assert.assertEquals(Id.create("12", Link.class), route.getStartLinkId());
+			Assert.assertEquals(Id.create("78", Link.class), route.getEndLinkId());
+			Assert.assertEquals(3, route.getLinkIds().size());
+			Assert.assertEquals(Id.create("23", Link.class), route.getLinkIds().get(0));
+			Assert.assertEquals(Id.create("34", Link.class), route.getLinkIds().get(1));
+			Assert.assertEquals(Id.create("47", Link.class), route.getLinkIds().get(2));
+			
+			//test 2
+			tt.setTurningMoveCosts(100.0, 0.0, 50.0);
+			route = calcLinkToLinkRoute(router, fromFacility, toFacility, person);
+			Assert.assertNotNull(route);
+			Assert.assertEquals(Id.create("12", Link.class), route.getStartLinkId());
+			Assert.assertEquals(Id.create("78", Link.class), route.getEndLinkId());
+			Assert.assertEquals(3, route.getLinkIds().size());
+			Assert.assertEquals(Id.create("23", Link.class), route.getLinkIds().get(0));
+			Assert.assertEquals(Id.create("35", Link.class), route.getLinkIds().get(1));
+			Assert.assertEquals(Id.create("57", Link.class), route.getLinkIds().get(2));
+			
+			//test 3
+			tt.setTurningMoveCosts(50.0, 100.0, 0.0);
+			
+			route = calcLinkToLinkRoute(router, fromFacility, toFacility, person);
+			Assert.assertNotNull(route);
+			Assert.assertEquals(Id.create("12", Link.class), route.getStartLinkId());
+			Assert.assertEquals(Id.create("78", Link.class), route.getEndLinkId());
+			Assert.assertEquals(3, route.getLinkIds().size());
+			Assert.assertEquals(Id.create("23", Link.class), route.getLinkIds().get(0));
+			Assert.assertEquals(Id.create("36", Link.class), route.getLinkIds().get(1));
+			Assert.assertEquals(Id.create("67", Link.class), route.getLinkIds().get(2));
+		}	
+	}
+	
 	private NetworkRoute calcRoute(LinkToLinkRoutingModule router, final Facility<?> fromFacility,
-            final Facility<?> toFacility, final Person person)
-	{
+            final Facility<?> toFacility, final Person person) {
         Leg leg = (Leg)router.calcRoute(fromFacility, toFacility, 0.0, person).get(0);
         return (NetworkRoute) leg.getRoute();
 	}
 	
+	private NetworkRoute calcLinkToLinkRoute(LinkToLinkRoutingModuleV2 router, final Facility<?> fromFacility,
+            final Facility<?> toFacility, final Person person) {
+        Leg leg = (Leg)router.calcRoute(fromFacility, toFacility, 0.0, person).get(0);
+        return (NetworkRoute) leg.getRoute();
+	}
 	
 	private static class LinkToLinkTravelTimeStub implements LinkToLinkTravelTime {
 
@@ -136,7 +210,6 @@ public class InvertertedNetworkRoutingTest {
 		}
 
 	}
-
 	
 	private static class Fixture {
 		public final Scenario s = ScenarioUtils.createScenario(ConfigUtils.createConfig());
@@ -144,15 +217,14 @@ public class InvertertedNetworkRoutingTest {
 		public Fixture() {
 			Network net = this.s.getNetwork();
 			NetworkFactory nf = net.getFactory();
-			Node n1 = nf.createNode(Id.create("1", Node.class), new Coord((double) 0, (double) 0));
-			Node n2 = nf.createNode(Id.create("2", Node.class), new Coord((double) 0, (double) 1000));
-			Node n3 = nf.createNode(Id.create("3", Node.class), new Coord((double) 0, (double) 2000));
-			Node n4 = nf.createNode(Id.create("4", Node.class), new Coord((double) 500, (double) 3000));
-			Node n5 = nf.createNode(Id.create("5", Node.class), new Coord((double) 0, (double) 3000));
-			double x = -500;
-			Node n6 = nf.createNode(Id.create("6", Node.class), new Coord(x, (double) 3000));
-			Node n7 = nf.createNode(Id.create("7", Node.class), new Coord((double) 0, (double) 4000));
-			Node n8 = nf.createNode(Id.create("8", Node.class), new Coord((double) 0, (double) 5000));
+			Node n1 = nf.createNode(Id.createNodeId("1"), new Coord(0, 0));
+			Node n2 = nf.createNode(Id.createNodeId("2"), new Coord(0, 1000));
+			Node n3 = nf.createNode(Id.createNodeId("3"), new Coord(0, 2000));
+			Node n4 = nf.createNode(Id.createNodeId("4"), new Coord(500, 3000));
+			Node n5 = nf.createNode(Id.createNodeId("5"), new Coord(0, 3000));
+			Node n6 = nf.createNode(Id.createNodeId("6"), new Coord(-500, 3000));
+			Node n7 = nf.createNode(Id.createNodeId("7"), new Coord(0, 4000));
+			Node n8 = nf.createNode(Id.createNodeId("8"), new Coord(0, 5000));
 			net.addNode(n1);
 			net.addNode(n2);
 			net.addNode(n3);
@@ -161,15 +233,15 @@ public class InvertertedNetworkRoutingTest {
 			net.addNode(n6);
 			net.addNode(n7);
 			net.addNode(n8);
-			Link l12 = nf.createLink(Id.create("12", Link.class), n1, n2);
-			Link l23 = nf.createLink(Id.create("23", Link.class), n2, n3);
-			Link l34 = nf.createLink(Id.create("34", Link.class), n3, n4);
-			Link l35 = nf.createLink(Id.create("35", Link.class), n3, n5);
-			Link l36 = nf.createLink(Id.create("36", Link.class), n3, n6);
-			Link l47 = nf.createLink(Id.create("47", Link.class), n4, n7);
-			Link l57 = nf.createLink(Id.create("57", Link.class), n5, n7);
-			Link l67 = nf.createLink(Id.create("67", Link.class), n6, n7);
-			Link l78 = nf.createLink(Id.create("78", Link.class), n7, n8);
+			Link l12 = nf.createLink(Id.createLinkId("12"), n1, n2);
+			Link l23 = nf.createLink(Id.createLinkId("23"), n2, n3);
+			Link l34 = nf.createLink(Id.createLinkId("34"), n3, n4);
+			Link l35 = nf.createLink(Id.createLinkId("35"), n3, n5);
+			Link l36 = nf.createLink(Id.createLinkId("36"), n3, n6);
+			Link l47 = nf.createLink(Id.createLinkId("47"), n4, n7);
+			Link l57 = nf.createLink(Id.createLinkId("57"), n5, n7);
+			Link l67 = nf.createLink(Id.createLinkId("67"), n6, n7);
+			Link l78 = nf.createLink(Id.createLinkId("78"), n7, n8);
 			l12.setFreespeed(10.0);
 			l12.setLength(1000.0);
 			l23.setFreespeed(10.0);
@@ -199,5 +271,4 @@ public class InvertertedNetworkRoutingTest {
 			net.addLink(l78);
 		}
 	}
-	
 }

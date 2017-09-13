@@ -27,5 +27,5 @@ import org.matsim.lanes.data.Lanes;
 
 public interface LinkToLinkLeastCostPathCalculatorFactory extends MatsimFactory, MatsimExtensionPoint {
 	
-	public LinkToLinkLeastCostPathCalculator createPathCalculator(final Network network, final Lanes lanes, final TravelDisutility travelCosts, final LinkToLinkTravelTime travelTimes);
+	public LinkToLinkLeastCostPathCalculator createPathCalculator(final Network network, final Lanes lanes, final LinkToLinkTravelDisutility travelCost, final LinkToLinkTravelTime travelTime);
 }

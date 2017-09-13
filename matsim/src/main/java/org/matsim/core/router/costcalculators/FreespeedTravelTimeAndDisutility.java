@@ -26,6 +26,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.gbl.Gbl;
+import org.matsim.core.router.util.LinkToLinkTravelDisutility;
 import org.matsim.core.router.util.LinkToLinkTravelTime;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
@@ -44,7 +45,7 @@ import org.matsim.vehicles.Vehicle;
  * @author mrieser
  * @author dgrether
  */
-public class FreespeedTravelTimeAndDisutility implements TravelDisutility, TravelTime, LinkToLinkTravelTime {
+public class FreespeedTravelTimeAndDisutility implements TravelDisutility, LinkToLinkTravelDisutility, TravelTime, LinkToLinkTravelTime {
 	
 	private static final Logger log = Logger.getLogger(FreespeedTravelTimeAndDisutility.class);
 
@@ -92,6 +93,12 @@ public class FreespeedTravelTimeAndDisutility implements TravelDisutility, Trave
 		}
 		return (link.getLength() / link.getFreespeed(time)) * this.travelCostFactor - this.marginalUtlOfDistance * link.getLength();
 	}
+	
+	@Override
+	public double getLinkToLinkTravelDisutility(final Link fromLink, final Link toLink, final double time, final Person person, final Vehicle vehicle) {
+		// free speed travel times, i.e. no delay for turn to toLink
+		return getLinkTravelDisutility(fromLink, time, person, vehicle);
+	}	
 
 	@Override
 	public double getLinkMinimumTravelDisutility(Link link) {
@@ -107,12 +114,9 @@ public class FreespeedTravelTimeAndDisutility implements TravelDisutility, Trave
 		return link.getLength() / link.getFreespeed(time);
 	}
 
-	/**
-	 * If travelling freespeed the turning move travel time is not relevant
-	 */
 	@Override
 	public double getLinkToLinkTravelTime(Link fromLink, Link toLink, double time) {
+		// If traveling at free speed, the turning move travel time is not relevant.
 		return this.getLinkTravelTime(fromLink, time, null, null);
 	}
-	
 }

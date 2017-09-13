@@ -185,9 +185,10 @@ public class LinkToLinkRoutingNetworkFactory {
 					 * However, for our purpose it is okay since we need only the to-node of the link which is
 					 * the same for all versions.
 					 */
-					if (!network.getNodes().containsKey(fromNode.getId()) || !network.getNodes().containsKey(toNode.getId())) {
-						routingNetwork.addLink(routingLink);				
-					}
+//					if (!network.getNodes().containsKey(fromNode.getId()) || !network.getNodes().containsKey(toNode.getId())) {
+//						routingNetwork.addLink(routingLink);				
+//					}
+					routingNetwork.addLink(routingLink);
 				}
 				
 				/*
