@@ -78,19 +78,17 @@ public class SubPopMunichControler {
 
 		String emissionEfficiencyFactor ="1.0";
 		String considerCO2Costs = "true";
-		String emissionCostFactor = args[5];
+		String emissionCostFactor = args[4];
 
-		String outputDir = args[6];
+		String outputDir = args[5];
 
 		Config config = ConfigUtils.loadConfig(inputFilesDir+configFileName);
 		config.controler().setOutputDirectory(outputDir);
 
-		if(offline){
-			config.network().setInputFile(inputFilesDir+"/network-86-85-87-84_simplifiedWithStrongLinkMerge---withLanes.xml");
-			config.plans().setInputFile(inputFilesDir+"/output_plans.xml.gz");
-			config.plans().setInputPersonAttributeFile(inputFilesDir+"/output_personAttributes.xml.gz");
-			config.counts().setCountsFileName(null);
-		}
+		config.network().setInputFile(inputFilesDir+"/network-86-85-87-84_simplifiedWithStrongLinkMerge---withLanes.xml");
+		config.plans().setInputFile(inputFilesDir+"/output_plans.xml.gz");
+		config.plans().setInputPersonAttributeFile(inputFilesDir+"/output_personAttributes.xml.gz");
+		config.counts().setCountsFileName(null);
 
 		Controler controler = new Controler(config);
 
