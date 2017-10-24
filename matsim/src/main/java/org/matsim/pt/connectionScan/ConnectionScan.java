@@ -7,6 +7,7 @@ import org.matsim.pt.router.AbstractTransitRouter;
 import org.matsim.pt.router.TransitRouter;
 import org.matsim.pt.router.TransitRouterConfig;
 import org.matsim.pt.router.TransitTravelDisutility;
+import edu.kit.ifv.mobitopp.publictransport.connectionscan.RouteSearch;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
 
     public ConnectionScan(TransitRouterConfig config, TransitTravelDisutility travelDisutility) {
         super(config, travelDisutility);
-        
+        RouteSearch routeSearch = null;
     }
 
     @Override
