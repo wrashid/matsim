@@ -293,6 +293,10 @@
             <id>matsim</id>
             <url>http://dl.bintray.com/matsim/matsim</url>
         </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
 	</repositories>
 
 	<dependencies>
@@ -394,6 +398,11 @@
 			<artifactId>trove4j</artifactId>
 			<version>3.0.3</version>
 		</dependency>
+        <dependency>
+            <groupId>com.github.mobitopp</groupId>
+            <artifactId>connection-scan</artifactId>
+            <version>LATEST</version>
+        </dependency>
 	</dependencies>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
