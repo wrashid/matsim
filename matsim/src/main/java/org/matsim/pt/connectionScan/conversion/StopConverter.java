@@ -10,39 +10,52 @@ import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyList;
 
+/**
+ * TODO
+ */
 class StopConverter {
 
     private Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops;
     private List<Stop> connectionScanStops = new ArrayList<>();
+    private IdHandler idHandler;
 
-    StopConverter(Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops) {
+    /**
+     * TODO
+     * @param matsimStops
+     */
+    StopConverter(Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops, IdHandler idHandler) {
 
         this.matsimStops = matsimStops;
+        this.idHandler = idHandler;
     }
 
-    List<Stop> convert() {
+    /**
+     * Converts the given Map of matsim/TransitStopFacility into a List of connection-scan/Stop.
+     * Thereby the method creates a idMap which points from newly for the connection-scan created ids
+     *  to the old matsim-ids.
+     */
+    void convert() {
 
         for (TransitStopFacility matsimStop : matsimStops.values()) {
             Stop connectionScanStop = convertStop(matsimStop);
             connectionScanStops.add(connectionScanStop);
         }
-
-        return connectionScanStops;
     }
 
     /**
-     * Converts a matsim/TransitStopFacility into a Stop from mobitopp/connection-scan.
+     * Converts a matsim/TransitStopFacility into a connection-scan/Stop.
      *
      * @param matsimStop the matsim/TransitStopFacility that is to be converted
      * @return the converted connection-scan stop
      */
     private Stop convertStop(TransitStopFacility matsimStop) {
-        int id = Integer.getInteger(matsimStop.getId().toString());
+        int id = idHandler.createAndMapId(matsimStop.getId());
         String name = matsimStop.getName();
         Point2D location = convert2Point2D(matsimStop.getCoord());
         RelativeTime changeTime = RelativeTime.ZERO;
@@ -61,12 +74,16 @@ class StopConverter {
     }
 
     /**
-     * Converts a matsim/TransitStopFacility into a Station from mobitopp/connection-scan.
+     * Converts a matsim/TransitStopFacility into a connection-scan/Station.
      *
      * @param matsimStop the matsim/TransitStopFacility that contains the required matsim/Id
      * @return the converted connection-scan Station
      */
     private Station convert2Station(TransitStopFacility matsimStop) {
         return new DefaultStation(Integer.getInteger(matsimStop.getId().toString()), emptyList());
+    }
+
+    List<Stop> getConnectionScanStops() {
+        return connectionScanStops;
     }
 }
