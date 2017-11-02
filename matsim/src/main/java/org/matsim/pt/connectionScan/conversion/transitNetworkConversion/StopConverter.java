@@ -1,4 +1,4 @@
-package org.matsim.pt.connectionScan.conversion;
+package org.matsim.pt.connectionScan.conversion.transitNetworkConversion;
 
 import edu.kit.ifv.mobitopp.publictransport.model.DefaultStation;
 import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
@@ -20,7 +20,6 @@ import static java.util.Collections.emptyList;
  */
 class StopConverter {
 
-    @Deprecated
     private Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops;
     private List<Stop> connectionScanStops = new ArrayList<>();
     private IdAndMappingHandler idAndMappingHandler;
@@ -29,8 +28,9 @@ class StopConverter {
      * TODO
      * @param idAndMappingHandler
      */
-    StopConverter(IdAndMappingHandler idAndMappingHandler) {
+    StopConverter(Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops, IdAndMappingHandler idAndMappingHandler) {
 
+        this.matsimStops = matsimStops;
         this.idAndMappingHandler = idAndMappingHandler;
     }
 
@@ -39,19 +39,17 @@ class StopConverter {
      * Thereby the method creates a idMap which points from newly for the connection-scan created ids
      *  to the old matsim-ids.
      */
-    @Deprecated
     void convert() {
 
         for (TransitStopFacility matsimStop : matsimStops.values()) {
-            Stop connectionScanStop = convertStop(matsimStop);
-            connectionScanStops.add(connectionScanStop);
+            convertAndAddStop(matsimStop);
         }
     }
 
-    Stop convertAndAddStop(TransitStopFacility matsimStop) {
+
+    private void convertAndAddStop(TransitStopFacility matsimStop) {
         Stop stop = convertStop(matsimStop);
         this.connectionScanStops.add(stop);
-        return stop;
     }
 
     /**

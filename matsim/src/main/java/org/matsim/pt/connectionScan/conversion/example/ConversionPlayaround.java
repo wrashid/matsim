@@ -4,6 +4,7 @@ import edu.kit.ifv.mobitopp.publictransport.connectionscan.ConnectionScan;
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.PublicTransportRoute;
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.RouteSearch;
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.TransitNetwork;
+import edu.kit.ifv.mobitopp.publictransport.model.Connections;
 import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
 import edu.kit.ifv.mobitopp.publictransport.model.Stop;
 import edu.kit.ifv.mobitopp.publictransport.model.Time;
@@ -12,9 +13,8 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.pt.connectionScan.conversion.NetworkConverter;
+import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.NetworkConverter;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
-import org.matsim.pt.transitSchedule.api.TransitScheduleReader;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 
 import java.time.temporal.ChronoUnit;
@@ -27,10 +27,27 @@ public class ConversionPlayaround {
 
     public static void main(String[] args) {
 
+
+    }
+
+    private static void m2() {
         Config config = ConfigUtils.createConfig();
-        Scenario scenario = ScenarioUtils.createScenario(config);
-        TransitScheduleReader reader = new TransitScheduleReader(scenario);
-        reader.readFile("C:\\Users\\gthunig\\Desktop\\Vsp\\ConnectionScan\\sampleSchedule.xml");
+        Scenario scenario = ScenarioUtils.loadScenario(config);
+//        Scenario scenario = ScenarioUtils.createScenario(config);
+//        TransitScheduleReader reader = new TransitScheduleReader(scenario);
+//        reader.readFile("C:\\Users\\gthunig\\Desktop\\Vsp\\ConnectionScan\\sampleSchedule.xml");
+        TransitSchedule transitSchedule = scenario.getTransitSchedule();
+
+        org.matsim.pt.connectionScan.ConnectionScan connectionScan =
+                new org.matsim.pt.connectionScan.ConnectionScan(null, null, null);
+    }
+
+    private static void m1() {
+        Config config = ConfigUtils.createConfig();
+        Scenario scenario = ScenarioUtils.loadScenario(config);
+//        Scenario scenario = ScenarioUtils.createScenario(config);
+//        TransitScheduleReader reader = new TransitScheduleReader(scenario);
+//        reader.readFile("C:\\Users\\gthunig\\Desktop\\Vsp\\ConnectionScan\\sampleSchedule.xml");
         TransitSchedule transitSchedule = scenario.getTransitSchedule();
 
         NetworkConverter networkConverter = new NetworkConverter(transitSchedule);
