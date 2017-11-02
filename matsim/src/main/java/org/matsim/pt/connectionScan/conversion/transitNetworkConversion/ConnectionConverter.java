@@ -1,4 +1,4 @@
-package org.matsim.pt.connectionScan.conversion;
+package org.matsim.pt.connectionScan.conversion.transitNetworkConversion;
 
 import edu.kit.ifv.mobitopp.publictransport.model.*;
 import org.matsim.api.core.v01.Id;
@@ -15,7 +15,6 @@ import java.util.Map;
 class ConnectionConverter {
 
     private Map<Id<TransitLine>, TransitLine> transitLines;
-    private StopConverter stopConverter;
     private Connections connections = new Connections();
     private IdAndMappingHandler idAndMappingHandler;
 
@@ -23,11 +22,10 @@ class ConnectionConverter {
     private Time day;
     private final int CAPACITY = 1000;
 
-    ConnectionConverter(Map<Id<TransitLine>, TransitLine> transitLines, StopConverter stopConverter,
+    ConnectionConverter(Map<Id<TransitLine>, TransitLine> transitLines,
                         IdAndMappingHandler idAndMappingHandler, Time day) {
 
         this.transitLines = transitLines;
-        this.stopConverter = stopConverter;
         this.idAndMappingHandler = idAndMappingHandler;
         this.day = day;
     }
@@ -50,11 +48,23 @@ class ConnectionConverter {
 
         List<StopWithMatsimOffsets> stops = new ArrayList<>();
         for (TransitRouteStop transitRouteStop : transitRoute.getStops()) {
-            Stop currentStop = stopConverter.convertAndAddStop(transitRouteStop.getStopFacility());
+
+            Stop currentStop = idAndMappingHandler.getMatsimId2Stop().get(transitRouteStop.getStopFacility().getId());
             stops.add(new StopWithMatsimOffsets(currentStop, transitRouteStop.getArrivalOffset(),
                     transitRouteStop.getDepartureOffset()));
         }
         Connections newConnections = new Connections();
+
+        for (Departure departure : transitRoute.getDepartures().values()) {
+            for (int i = 1; i < transitRoute.getStops().size(); i++) {
+                Connection connection = convertConnection(
+                        stops.get(i-1),
+                        stops.get(i),
+                        convertDeparture(departure),
+                        journey);
+                newConnections.add(connection);
+            }
+        }
 
         for (Departure departure : transitRoute.getDepartures().values()) {
             for (int i = 1; i < stops.size(); i++) {

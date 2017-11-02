@@ -1,4 +1,4 @@
-package org.matsim.pt.connectionScan.conversion;
+package org.matsim.pt.connectionScan.conversion.transitNetworkConversion;
 
 import edu.kit.ifv.mobitopp.publictransport.model.Stop;
 import org.matsim.api.core.v01.Id;

@@ -1,7 +1,8 @@
-package org.matsim.pt.connectionScan.conversion;
+package org.matsim.pt.connectionScan.conversion.transitNetworkConversion;
 
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.TransitNetwork;
 import edu.kit.ifv.mobitopp.publictransport.model.*;
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 public class NetworkConverter {
+    private static final Logger log = Logger.getLogger(NetworkConverter.class);
 
     //matsim
     private TransitSchedule transitSchedule;
@@ -36,15 +38,20 @@ public class NetworkConverter {
     }
 
     public TransitNetwork convert() {
+        log.info("Start converting TransitNetwork");
 
-        StopConverter stopConverter = new StopConverter(idAndMappingHandler);
-        ConnectionConverter connectionConverter = new ConnectionConverter(transitSchedule.getTransitLines(),
-                stopConverter, idAndMappingHandler, getDay());
-        connectionConverter.convert();
+        StopConverter stopConverter = new StopConverter(transitSchedule.getFacilities(), idAndMappingHandler);
+        stopConverter.convert();
         this.stops = stopConverter.getConnectionScanStops();
+
+        ConnectionConverter connectionConverter = new ConnectionConverter(transitSchedule.getTransitLines(),
+                idAndMappingHandler, getDay());
+        connectionConverter.convert();
         this.connections = connectionConverter.getConnections();
 
-        return TransitNetwork.createOf(stops, connections);
+        TransitNetwork transitNetwork = TransitNetwork.createOf(stops, connections);
+        log.info("Finished converting TransitNetwork");
+        return transitNetwork;
     }
 
     private void createDay() { this.day = new Time(LocalDateTime.of(2017, 3, 14, 0, 0));}
