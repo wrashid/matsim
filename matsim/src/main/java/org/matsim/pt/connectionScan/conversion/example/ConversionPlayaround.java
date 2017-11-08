@@ -27,7 +27,6 @@ public class ConversionPlayaround {
 
     public static void main(String[] args) {
 
-
     }
 
     private static void m2() {

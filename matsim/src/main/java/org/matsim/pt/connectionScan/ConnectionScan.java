@@ -1,8 +1,6 @@
 package org.matsim.pt.connectionScan;
 
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.PublicTransportRoute;
-import edu.kit.ifv.mobitopp.publictransport.connectionscan.RouteSearch;
-import edu.kit.ifv.mobitopp.publictransport.connectionscan.TransitNetwork;
 import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
 import edu.kit.ifv.mobitopp.publictransport.model.Stop;
 import edu.kit.ifv.mobitopp.publictransport.model.Time;
