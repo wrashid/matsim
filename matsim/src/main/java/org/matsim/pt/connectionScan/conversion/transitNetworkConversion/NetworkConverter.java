@@ -20,7 +20,7 @@ public class NetworkConverter {
     private TransitSchedule transitSchedule;
 
     //transformation
-    private IdAndMappingHandler idAndMappingHandler;
+    private MappingHandler idAndMappingHandler;
     //TODO
     private CoordinateTransformation coordinateTransformation;
 
@@ -33,7 +33,7 @@ public class NetworkConverter {
     public NetworkConverter(TransitSchedule transitSchedule) {
 
         this.transitSchedule = transitSchedule;
-        this.idAndMappingHandler = new IdAndMappingHandler();
+        this.idAndMappingHandler = new MappingHandler();
         createDay();
     }
 
@@ -60,11 +60,7 @@ public class NetworkConverter {
         return day;
     }
 
-    public Map<Id<TransitStopFacility>, Stop> getTransitStopFacilityId2StopMap() {
-        return idAndMappingHandler.getMatsimId2Stop();
-    }
-
-    public Map<Integer, TransitStopFacility> getStopId2TransitStopFacilityMap() {
-        return idAndMappingHandler.getStopId2TransitStopFacility();
+    public MappingHandler getMappingHandler() {
+        return idAndMappingHandler;
     }
 }

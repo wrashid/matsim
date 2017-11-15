@@ -16,14 +16,14 @@ class ConnectionConverter {
 
     private Map<Id<TransitLine>, TransitLine> transitLines;
     private Connections connections = new Connections();
-    private IdAndMappingHandler idAndMappingHandler;
+    private MappingHandler idAndMappingHandler;
 
     //Journey attributes
     private Time day;
     private final int CAPACITY = 1000;
 
     ConnectionConverter(Map<Id<TransitLine>, TransitLine> transitLines,
-                        IdAndMappingHandler idAndMappingHandler, Time day) {
+                        MappingHandler idAndMappingHandler, Time day) {
 
         this.transitLines = transitLines;
         this.idAndMappingHandler = idAndMappingHandler;
@@ -34,13 +34,13 @@ class ConnectionConverter {
 
         for (TransitLine transitLine : transitLines.values()) {
             for (TransitRoute transitRoute : transitLine.getRoutes().values()) {
-                Connections newConnections = convertConnections(transitRoute);
+                Connections newConnections = convertConnections(transitRoute, transitLine.getId());
                 this.connections.addAll(newConnections);
             }
         }
     }
 
-    private Connections convertConnections(TransitRoute transitRoute) {
+    private Connections convertConnections(TransitRoute transitRoute, Id<TransitLine> lineId) {
 
         String transportMode = transitRoute.getTransportMode();
         Journey journey = new DefaultModifiableJourney(
@@ -63,17 +63,7 @@ class ConnectionConverter {
                         convertDeparture(departure),
                         journey);
                 newConnections.add(connection);
-            }
-        }
-
-        for (Departure departure : transitRoute.getDepartures().values()) {
-            for (int i = 1; i < stops.size(); i++) {
-                Connection connection = convertConnection(
-                        stops.get(i-1),
-                        stops.get(i),
-                        convertDeparture(departure),
-                        journey);
-                newConnections.add(connection);
+                idAndMappingHandler.addConnectionId2LineAndRouteId(connection.id(), new Id[] {lineId, transitRoute.getId()});
             }
         }
 

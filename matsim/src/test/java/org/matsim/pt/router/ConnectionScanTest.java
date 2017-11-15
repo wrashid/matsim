@@ -5,20 +5,11 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.Leg;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.api.core.v01.population.Route;
 import org.matsim.pt.connectionScan.ConnectionScan;
 import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.NetworkConverter;
 import org.matsim.pt.transitSchedule.TransitScheduleFactoryImpl;
-import org.matsim.pt.transitSchedule.api.TransitSchedule;
-import org.matsim.pt.transitSchedule.api.TransitScheduleReader;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 
 import java.util.List;
@@ -61,22 +52,58 @@ public class ConnectionScanTest {
 
     @Test
     public void TestSingleConnectionFromBToC() {
+        instantiateNetworkAndTravelDisutility();
         Fixture f = new Fixture();
         f.init();
-        TransitRouterConfig conf = new TransitRouterConfig(f.scenario.getConfig().planCalcScore(),
-                f.scenario.getConfig().plansCalcRoute(), f.scenario.getConfig().transitRouter(),
-                f.scenario.getConfig().vspExperimental());
 
-        ConnectionScan connectionScan = new ConnectionScan(conf, travelDisutility, f.schedule);
+        ConnectionScan connectionScan = new ConnectionScan(travelDisutility.config, travelDisutility, f.schedule);
+        TransitRouterImpl transitRouterImpl = new TransitRouterImpl(travelDisutility.config, f.schedule);
 
         TransitScheduleFactoryImpl factory = new TransitScheduleFactoryImpl();
-        TransitStopFacility from = factory.createTransitStopFacility(Id.create(0, TransitStopFacility.class), new Coord((double) 8001, (double) 5002), false);
-        TransitStopFacility to = factory.createTransitStopFacility(Id.create(0, TransitStopFacility.class), new Coord((double) 12001, (double) 5002), false);
+        TransitStopFacility from = factory.createTransitStopFacility(Id.create("0", TransitStopFacility.class), new Coord((double) 8000, (double) 5002), false);
+        TransitStopFacility to = factory.createTransitStopFacility(Id.create("1", TransitStopFacility.class), new Coord((double) 12000, (double) 5002), false);
         double departure = 60*60*5 + 60*10;
 
         List<Leg> result = connectionScan.calcRoute(from, to, departure, null);
+        List<Leg> result2 = transitRouterImpl.calcRoute(from, to, departure, null);
 
-        assert true;
+        Assert.assertNotNull("No Route calculated.", result);
+        Assert.assertTrue("Different Result from TransitRouterImpl", areLegListsEqual(result, result2));
+
+    }
+
+    private boolean areLegListsEqual(List<Leg> list1, List<Leg> list2) {
+        if (list1.size() != list2.size())
+            return false;
+        for (int i = 0; i < list1.size(); i++) {
+            if (!areLegsEqual(list1.get(i), list2.get(i)))
+                return false;
+        }
+        return true;
+    }
+
+    private boolean areLegsEqual(Leg leg1, Leg leg2) {
+        if (leg1.getDepartureTime() != leg2.getDepartureTime())
+            return false;
+        if (!leg1.getMode().equals(leg2.getMode()))
+            return false;
+        if (leg1.getTravelTime() != leg2.getTravelTime())
+            return false;
+        if (!areRoutesEqual(leg1.getRoute(), leg2.getRoute()))
+            return false;
+
+        return true;
+    }
+
+    private boolean areRoutesEqual(Route route1, Route route2) {
+        if (route1 == null && route2 == null)
+            return true;
+        if (!route1.getStartLinkId().equals(route2.getStartLinkId()))
+            return false;
+        if (!route1.getEndLinkId().equals(route2.getEndLinkId()))
+            return false;
+
+        return true;
     }
 
 //    /**
