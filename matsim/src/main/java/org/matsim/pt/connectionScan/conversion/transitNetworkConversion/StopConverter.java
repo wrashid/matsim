@@ -22,13 +22,13 @@ class StopConverter {
 
     private Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops;
     private List<Stop> connectionScanStops = new ArrayList<>();
-    private IdAndMappingHandler idAndMappingHandler;
+    private MappingHandler idAndMappingHandler;
 
     /**
      * TODO
      * @param idAndMappingHandler
      */
-    StopConverter(Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops, IdAndMappingHandler idAndMappingHandler) {
+    StopConverter(Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops, MappingHandler idAndMappingHandler) {
 
         this.matsimStops = matsimStops;
         this.idAndMappingHandler = idAndMappingHandler;
