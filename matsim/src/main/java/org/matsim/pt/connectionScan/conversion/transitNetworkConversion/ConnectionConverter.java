@@ -50,7 +50,7 @@ class ConnectionConverter {
         for (TransitRouteStop transitRouteStop : transitRoute.getStops()) {
 
             Stop currentStop = idAndMappingHandler.getMatsimId2Stop().get(transitRouteStop.getStopFacility().getId());
-            stops.add(new StopWithMatsimOffsets(currentStop, transitRouteStop.getArrivalOffset(),
+            stops.add(StopWithMatsimOffsets.from(currentStop, transitRouteStop.getArrivalOffset(),
                     transitRouteStop.getDepartureOffset()));
         }
         Connections newConnections = new Connections();

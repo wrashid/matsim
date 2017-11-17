@@ -31,6 +31,12 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
     private MappingHandler mappingHandler;
     private TransitPassengerRouteConverter transitPassengerRouteConverter;
 
+    public ConnectionScan(TransitRouterConfig config, TransitSchedule transitSchedule) {
+        super(config, transitSchedule);
+        init(transitSchedule);
+    }
+
+    @Deprecated
     public ConnectionScan(TransitRouterConfig config, TransitTravelDisutility travelDisutility,
                           TransitSchedule transitSchedule) {
         super(config, travelDisutility);

@@ -27,49 +27,50 @@ public class TransitPassengerRouteConverter {
         this.mappingHandler = mappingHandler;
     }
 
-    public List<Leg> fromPublicTransportRoute(PublicTransportRoute route) {
-//        List<Leg> legs = new ArrayList<>();
-//
-//        Map<TransportSystem, List<Connection>> transportSystem2Connections =
-//                sortConnectionsByLegMode(route.connections());
-//
-//        PopulationFactory factory = PopulationUtils.getFactory();
-//        for (Map.Entry<TransportSystem, List<Connection>> currentTransportSystem2Connections : transportSystem2Connections.entrySet()) {
-//
-//            legs.add(createLeg(currentTransportSystem2Connections, factory));
-//        }
-//
-//        return convertPassengerRouteToLegList(departureTime, transitPassengerRoute, fromFacility.getCoord(), toFacility.getCoord(), person);;
-        return null;
-    }
-
-    public TransitPassengerRoute createTransitPassengerRoute(double departureTime, List<Connection> connections) {
+    public TransitPassengerRoute createTransitPassengerRoute(double lastArrivalTime, List<Connection> connections) {
 
         double cost = 0;
 
         List<RouteSegment> routeSegments = new ArrayList<>();
 
-
-
+        RouteSegment storedRouteSegment = null;
         for (int i = 0; i < connections.size(); i++) {
             Connection connection = connections.get(i);
             TransitStopFacility fromFacility = mappingHandler.getStopId2TransitStopFacility().get(connection.start().id());
             TransitStopFacility toFacility = mappingHandler.getStopId2TransitStopFacility().get(connection.end().id());
             double travelTime = connection.duration().seconds();
 
-            //TODO extract for performance?
-            if (i == 0) {
-                double departureOffset = timeInSecondsFromMidnight(connection.departure()) - departureTime;
-                travelTime += departureOffset;
-            }
+            double departureOffset = timeInSecondsFromMidnight(connection.departure()) - lastArrivalTime;
+            travelTime += departureOffset;
+            lastArrivalTime = timeInSecondsFromMidnight(connection.arrival());
+
             Id[] lineAndRouteId = mappingHandler.getConnectionId2LineAndRouteId().get(connection.id());
 
-            routeSegments.add(new RouteSegment(fromFacility, toFacility,
-                    travelTime,
-                    lineAndRouteId[0],
-                    lineAndRouteId[1]));
+            if (storedRouteSegment != null) {
+                if (storedRouteSegment.getRouteTaken().equals(lineAndRouteId[1])) {
+
+                    storedRouteSegment = new RouteSegment(storedRouteSegment.getFromStop(), toFacility,
+                            travelTime + storedRouteSegment.getTravelTime(),
+                            lineAndRouteId[0],
+                            lineAndRouteId[1]);
+                } else {
+                    routeSegments.add(storedRouteSegment);
+                    storedRouteSegment = new RouteSegment(fromFacility, toFacility,
+                            travelTime,
+                            lineAndRouteId[0],
+                            lineAndRouteId[1]);
+                }
+            } else {
+                storedRouteSegment = new RouteSegment(fromFacility, toFacility,
+                        travelTime,
+                        lineAndRouteId[0],
+                        lineAndRouteId[1]);
+            }
+
             cost += travelTime;
         }
+        if (storedRouteSegment != null)
+            routeSegments.add(storedRouteSegment);
 
         if (routeSegments.size()==0) return null;
         else return new TransitPassengerRoute(cost, routeSegments);
