@@ -44,27 +44,34 @@ public class TransitPassengerRouteConverter {
             travelTime += departureOffset;
             lastArrivalTime = timeInSecondsFromMidnight(connection.arrival());
 
-            Id[] lineAndRouteId = mappingHandler.getConnectionId2LineAndRouteId().get(connection.id());
+            if (connection.id() == -1) {
+                routeSegments.add(storedRouteSegment);
+                routeSegments.add(new RouteSegment(fromFacility, toFacility,
+                        travelTime, null, null));
+                storedRouteSegment = null;
+            } else {
+                Id[] lineAndRouteId = mappingHandler.getConnectionId2LineAndRouteId().get(connection.id());
 
-            if (storedRouteSegment != null) {
-                if (storedRouteSegment.getRouteTaken().equals(lineAndRouteId[1])) {
+                if (storedRouteSegment != null) {
+                    if (storedRouteSegment.getRouteTaken().equals(lineAndRouteId[1])) {
 
-                    storedRouteSegment = new RouteSegment(storedRouteSegment.getFromStop(), toFacility,
-                            travelTime + storedRouteSegment.getTravelTime(),
-                            lineAndRouteId[0],
-                            lineAndRouteId[1]);
+                        storedRouteSegment = new RouteSegment(storedRouteSegment.getFromStop(), toFacility,
+                                travelTime + storedRouteSegment.getTravelTime(),
+                                lineAndRouteId[0],
+                                lineAndRouteId[1]);
+                    } else {
+                        routeSegments.add(storedRouteSegment);
+                        storedRouteSegment = new RouteSegment(fromFacility, toFacility,
+                                travelTime,
+                                lineAndRouteId[0],
+                                lineAndRouteId[1]);
+                    }
                 } else {
-                    routeSegments.add(storedRouteSegment);
                     storedRouteSegment = new RouteSegment(fromFacility, toFacility,
                             travelTime,
                             lineAndRouteId[0],
                             lineAndRouteId[1]);
                 }
-            } else {
-                storedRouteSegment = new RouteSegment(fromFacility, toFacility,
-                        travelTime,
-                        lineAndRouteId[0],
-                        lineAndRouteId[1]);
             }
 
             cost += travelTime;

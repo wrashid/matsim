@@ -5,6 +5,8 @@ import edu.kit.ifv.mobitopp.publictransport.model.*;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
+import org.matsim.pt.router.TransitRouterConfig;
+import org.matsim.pt.router.TransitTravelDisutility;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 
@@ -28,19 +30,24 @@ public class NetworkConverter {
     private List<Stop> stops = new ArrayList<>();
     private Connections connections = new Connections();
     private Time day;
+    private TransitRouterConfig config;
+    private TransitTravelDisutility costFunction;
 
 
-    public NetworkConverter(TransitSchedule transitSchedule) {
+    public NetworkConverter(TransitSchedule transitSchedule, TransitRouterConfig config, TransitTravelDisutility costFunction) {
 
         this.transitSchedule = transitSchedule;
         this.idAndMappingHandler = new MappingHandler();
+        this.config = config;
+        this.costFunction = costFunction;
         createDay();
     }
 
     public TransitNetwork convert() {
         log.info("Start converting TransitNetwork");
 
-        StopConverter stopConverter = new StopConverter(transitSchedule.getFacilities(), idAndMappingHandler);
+        StopConverter stopConverter = new StopConverter(transitSchedule.getFacilities(), idAndMappingHandler,
+                config.getBeelineWalkConnectionDistance(), costFunction);
         stopConverter.convert();
         this.stops = stopConverter.getConnectionScanStops();
 
