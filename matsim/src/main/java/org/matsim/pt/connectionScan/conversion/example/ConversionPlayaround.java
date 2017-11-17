@@ -51,12 +51,14 @@ public class ConversionPlayaround {
                 new org.matsim.pt.connectionScan.ConnectionScan(trc, tc, transitSchedule);
 
         FakeFacility fromFacility = new FakeFacility(new Coord(13.411267, 52.521512));
-        FakeFacility toFacility = new FakeFacility(new Coord(13.368924, 52.525847));
+//        FakeFacility toFacility = new FakeFacility(new Coord(13.368924, 52.525847));
+        FakeFacility toFacility = new FakeFacility(new Coord(13.308924, 52.521847));
         double departureTime = 4*60*60;
 
         List<Leg> result = connectionScan.calcRoute(fromFacility, toFacility, departureTime, null);
 
         assertNotNull(result);
+        assert true;
 
 //        Optional<PublicTransportRoute> potentialRoute = connectionScan.findRoute(fromAlex, toHbf, departure);
 //        PublicTransportRoute route = potentialRoute.get();
