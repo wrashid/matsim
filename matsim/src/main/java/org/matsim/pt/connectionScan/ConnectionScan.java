@@ -60,6 +60,10 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
 
         PublicTransportRoute route = calcRouteFrom(from, to, departure);
 
+        if (route == null) {
+            return this.createDirectWalkLegList(null, fromFacility.getCoord(), toFacility.getCoord());
+        }
+
         TransitPassengerRoute transitPassengerRoute = transitPassengerRouteConverter.createTransitPassengerRoute(departureTime, route.connections());
         return convertPassengerRouteToLegList(departureTime, transitPassengerRoute, fromFacility.getCoord(), toFacility.getCoord(), person);
     }

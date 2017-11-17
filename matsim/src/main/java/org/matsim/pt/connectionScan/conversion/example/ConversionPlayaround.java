@@ -48,7 +48,7 @@ public class ConversionPlayaround {
                 scenario.getConfig().vspExperimental());
 
         org.matsim.pt.connectionScan.ConnectionScan connectionScan =
-                new org.matsim.pt.connectionScan.ConnectionScan(trc, tc, transitSchedule);
+                new org.matsim.pt.connectionScan.ConnectionScan(trc, transitSchedule);
 
         FakeFacility fromFacility = new FakeFacility(new Coord(13.411267, 52.521512));
 //        FakeFacility toFacility = new FakeFacility(new Coord(13.368924, 52.525847));
