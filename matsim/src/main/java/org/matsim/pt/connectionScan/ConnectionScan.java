@@ -5,18 +5,17 @@ import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
 import edu.kit.ifv.mobitopp.publictransport.model.Stop;
 import edu.kit.ifv.mobitopp.publictransport.model.Time;
 import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.facilities.Facility;
 import org.matsim.pt.connectionScan.conversion.legConversion.TransitPassengerRouteConverter;
 import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.MappingHandler;
 import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.NetworkConverter;
+import org.matsim.pt.connectionScan.utils.CoordinateUtils;
 import org.matsim.pt.connectionScan.utils.TransitNetworkUtils;
 import org.matsim.pt.router.*;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 
-import java.awt.geom.Point2D;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -35,18 +34,18 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
 
     public ConnectionScan(TransitRouterConfig config, TransitSchedule transitSchedule) {
         super(config, transitSchedule);
-        init(transitSchedule);
+        init(config, transitSchedule);
     }
 
     @Deprecated
     public ConnectionScan(TransitRouterConfig config, TransitTravelDisutility travelDisutility,
                           TransitSchedule transitSchedule) {
         super(config, travelDisutility);
-        init(transitSchedule);
+        init(config, transitSchedule);
     }
 
-    private void init(TransitSchedule transitSchedule) {
-        NetworkConverter networkConverter = new NetworkConverter(transitSchedule);
+    private void init(TransitRouterConfig config, TransitSchedule transitSchedule) {
+        NetworkConverter networkConverter = new NetworkConverter(transitSchedule, config, getTravelDisutility());
         this.connectionScan = new edu.kit.ifv.mobitopp.publictransport.connectionscan.ConnectionScan(networkConverter.convert());
         this.mappingHandler = networkConverter.getMappingHandler();
         this.transitPassengerRouteConverter = new TransitPassengerRouteConverter(mappingHandler);
@@ -59,7 +58,10 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
         Stop from = findNextStop(fromFacility);
         Stop to = findNextStop(toFacility);
 
-        double initialTime = getWalkTime(person, fromFacility.getCoord(), convertPoint2D(from.coordinate()));
+        if (from == null || to == null) {
+            return this.createDirectWalkLegList(null, fromFacility.getCoord(), toFacility.getCoord());
+        }
+        double initialTime = getWalkTime(person, fromFacility.getCoord(), CoordinateUtils.convert2Coord(from.coordinate()));
         Time departure = convertDeparture(departureTime + initialTime);
 
         PublicTransportRoute route = calcRouteFrom(from, to, departure);
@@ -91,9 +93,5 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
     private PublicTransportRoute calcRouteFrom(Stop from, Stop to, Time departure) {
         Optional<PublicTransportRoute> potentialRoute = connectionScan.findRoute(from, to, departure);
         return potentialRoute.orElse(null);
-    }
-
-    private Coord convertPoint2D(Point2D point) {
-        return new Coord(point.getX(), point.getY());
     }
 }
