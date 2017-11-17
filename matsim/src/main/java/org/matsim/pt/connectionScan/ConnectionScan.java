@@ -5,6 +5,7 @@ import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
 import edu.kit.ifv.mobitopp.publictransport.model.Stop;
 import edu.kit.ifv.mobitopp.publictransport.model.Time;
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.facilities.Facility;
@@ -15,6 +16,7 @@ import org.matsim.pt.connectionScan.utils.TransitNetworkUtils;
 import org.matsim.pt.router.*;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 
+import java.awt.geom.Point2D;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -56,15 +58,24 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
 
         Stop from = findNextStop(fromFacility);
         Stop to = findNextStop(toFacility);
-        Time departure = convertDeparture(departureTime);
+
+        double initialTime = getWalkTime(person, fromFacility.getCoord(), convertPoint2D(from.coordinate()));
+        Time departure = convertDeparture(departureTime + initialTime);
 
         PublicTransportRoute route = calcRouteFrom(from, to, departure);
 
         if (route == null) {
             return this.createDirectWalkLegList(null, fromFacility.getCoord(), toFacility.getCoord());
         }
+        TransitPassengerRoute transitPassengerRoute = transitPassengerRouteConverter.createTransitPassengerRoute(departureTime + initialTime, route.connections());
 
-        TransitPassengerRoute transitPassengerRoute = transitPassengerRouteConverter.createTransitPassengerRoute(departureTime, route.connections());
+//        double pathCost = transitPassengerRoute.getTravelCost();
+//        double directWalkCost = getWalkDisutility(person, fromFacility.getCoord(), toFacility.getCoord());
+//
+//        if (directWalkCost * getConfig().getDirectWalkFactor() < pathCost ) {
+//            return this.createDirectWalkLegList(null, fromFacility.getCoord(), toFacility.getCoord());
+//        }
+
         return convertPassengerRouteToLegList(departureTime, transitPassengerRoute, fromFacility.getCoord(), toFacility.getCoord(), person);
     }
 
@@ -80,5 +91,9 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
     private PublicTransportRoute calcRouteFrom(Stop from, Stop to, Time departure) {
         Optional<PublicTransportRoute> potentialRoute = connectionScan.findRoute(from, to, departure);
         return potentialRoute.orElse(null);
+    }
+
+    private Coord convertPoint2D(Point2D point) {
+        return new Coord(point.getX(), point.getY());
     }
 }
