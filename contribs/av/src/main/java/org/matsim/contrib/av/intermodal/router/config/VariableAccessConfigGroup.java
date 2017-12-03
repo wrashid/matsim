@@ -30,7 +30,7 @@ import org.matsim.core.config.ReflectiveConfigGroup;
 
 /**
  * @author  jbischoff
- *
+ * @author	vsp-gleich
  */
 /**
  *
@@ -41,10 +41,17 @@ public class VariableAccessConfigGroup extends ReflectiveConfigGroup {
 	private static final String STYLE = "VariableAccessStyle";
 	private static final String SCHEDULE = "VariableAccessTransitScheduleFile";
 	private static final String MODE = "mode";
+	private static final String AREA_FILE = "VariableAccessAreaShpFile";
+	private static final String AREA_KEY = "VariableAccessAreaShpKey";
+	private static final String COORDS2TIME_SURCHARGE_FILE = "coords2TimeSurchargeFile";
+	private static final String MAX_DISTANCE_ONLY_TRANSIT_WALK_AVAILABLE = "maxDistanceOnlyTransitWalkAvailable";
 	private String style = "fixed";
 	private String mode = "pt";
-
+	private double maxDistanceOnlyTransitWalkAvailable = 0.;
 	private String transitScheduleFile = null;
+	private String variableAccessAreaShpFile = null;
+	private String variableAccessAreaShpKey = null;
+	private String coords2TimeSurchargeFile = null;
 	
 	public static final String MODEGROUPNAME = "variableAccessMode";
 
@@ -87,6 +94,95 @@ public class VariableAccessConfigGroup extends ReflectiveConfigGroup {
 		this.transitScheduleFile = transitScheduleFile;
 	}
 	
+	/**
+	 * @return the variableAccessAreaShpFile containing the geometry elements
+	 * which describe the area(s) wherein variable access is
+	 * used for all routes originating or ending there. Outside this area variable
+	 * access is not used. Without any file given the default is to use variable
+	 * access for all routes.
+	 */
+	@StringGetter(AREA_FILE)
+	public String getVariableAccessAreaShpFile() {
+		return variableAccessAreaShpFile;
+	}
+	
+	public URL getVariableAccessAreaShpFileURL(URL context) {
+		return ConfigGroup.getInputFileURL(context, getVariableAccessAreaShpFile() ) ;
+	}	
+	/**
+	 * @param variableAccessAreaShpFile the variableAccessAreaShpFile to set 
+	 * containing the geometry elements
+	 * which describe the area(s) wherein variable access is
+	 * used for all routes originating or ending there. Outside this area variable
+	 * access is not used. Without any file given the default is to use variable
+	 * access for all routes.
+	 * Path relative to config file
+	 */
+	@StringSetter(AREA_FILE)
+	public void setVariableAccessAreaShpFile(String variableAccessAreaShpFile) {
+		this.variableAccessAreaShpFile = variableAccessAreaShpFile;
+	}
+	
+	
+	/**
+	 * @return the variableAccessAreaShpKey
+	 */
+	@StringGetter(AREA_KEY)
+	public String getVariableAccessAreaShpKey() {
+		return variableAccessAreaShpKey;
+	}
+
+	/**
+	 * @param variableAccessAreaShpKey the variableAccessAreaShpKey to set
+	 */
+	@StringSetter(AREA_KEY)
+	public void setVariableAccessAreaShpKey(String variableAccessAreaShpKey) {
+		this.variableAccessAreaShpKey = variableAccessAreaShpKey;
+	}
+	
+	/**
+	 * @return the coords2TimeSurchargeFile containing the coords and time surcharges
+	 * applied to them. Can be used for example to make some TransitStops less attractive
+	 * than others. Is only applied to routes starting or ending in the variable access area
+	 * Without any file given the default is to use variable access for all routes.
+	 * Path relative to config file
+	 */
+	@StringGetter(COORDS2TIME_SURCHARGE_FILE)
+	public String getCoords2TimeSurchargeFile() {
+		return coords2TimeSurchargeFile;
+	}
+	
+	public URL getCoords2TimeSurchargeFileURL(URL context) {
+		return ConfigGroup.getInputFileURL(context, getCoords2TimeSurchargeFile() ) ;
+	}	
+	/**
+	 * @param coords2TimeSurchargeFile path to the the coords2TimeSurchargeFile to set 
+	 * containing the coords and time surcharges
+	 * applied to them. Can be used for example to make some TransitStops less attractive
+	 * than others. Is only applied to routes starting or ending in the variable access area
+	 * Without any file given the default is to use variable access for all routes.
+	 */
+	@StringSetter(COORDS2TIME_SURCHARGE_FILE)
+	public void setCoords2TimeSurchargeFile(String coords2TimeSurchargeFile) {
+		this.coords2TimeSurchargeFile = coords2TimeSurchargeFile;
+	}
+	
+	/**
+	 * @param maxDistanceOnlyTransitWalkAvailable
+	 * 			the maxDistanceOnlyTransitWalkAvailable to set
+	 */
+	@StringSetter(MAX_DISTANCE_ONLY_TRANSIT_WALK_AVAILABLE)
+	public void setMaxDistanceOnlyTransitWalkAvailable(double maxDistanceOnlyTransitWalkAvailable) {
+		this.maxDistanceOnlyTransitWalkAvailable = maxDistanceOnlyTransitWalkAvailable;
+	}
+	
+	/**
+	 * @return the maxDistanceOnlyTransitWalkAvailable
+	 */
+	@StringGetter(MAX_DISTANCE_ONLY_TRANSIT_WALK_AVAILABLE)
+	public double getMaxDistanceOnlyTransitWalkAvailable() {
+		return maxDistanceOnlyTransitWalkAvailable;
+	}
 	
 	/**
 	 * @param mode

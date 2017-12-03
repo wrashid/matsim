@@ -89,7 +89,7 @@ public class FixedDistanceBasedVariableAccessModule implements VariableAccessEgr
 	 * @see playground.jbischoff.pt.VariableAccessEgressTravelDisutility#getAccessEgressModeAndTraveltime(org.matsim.api.core.v01.population.Person, org.matsim.api.core.v01.Coord, org.matsim.api.core.v01.Coord)
 	 */
 	@Override
-	public Leg getAccessEgressModeAndTraveltime(Person person, Coord coord, Coord toCoord, double time) {
+	public Leg getAccessEgressModeAndTraveltime(Person person, Coord coord, Coord toCoord, double time, boolean ignore) {
 		double egressDistance = CoordUtils.calcEuclideanDistance(coord, toCoord);
 		String mode = getModeForDistance(egressDistance);
 		Leg leg = PopulationUtils.createLeg(mode);

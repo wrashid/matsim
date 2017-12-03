@@ -25,7 +25,9 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
@@ -35,6 +37,7 @@ import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Route;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
+import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.RouteUtils;
@@ -62,6 +65,7 @@ import org.matsim.pt.transitSchedule.api.TransitStopFacility;
  * Not thread-safe because MultiNodeDijkstra is not. Does not expect the TransitSchedule to change once constructed! michaz '13
  *
  * @author jbischoff
+ * @author vsp-gleich
  */
 public class VariableAccessTransitRouterImpl implements TransitRouter {
 
@@ -72,7 +76,9 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 	private final TransitTravelDisutility travelDisutility;
 	private final TravelTime travelTime;
 	private final VariableAccessEgressTravelDisutility variableAccessEgressTravelDisutility;
-
+	private boolean variableSurchargeOn;
+	private final Random rand = MatsimRandom.getRandom();
+	private Logger log = Logger.getLogger(VariableAccessTransitRouterImpl.class);
 
 	private final PreparedTransitSchedule preparedTransitSchedule;
 
@@ -94,8 +100,15 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 		this.preparedTransitSchedule = preparedTransitSchedule;
 		this.variableAccessEgressTravelDisutility = variableAccessEgressTravelDisutility;
 		this.network = network;
+		/* Before each iteration a new VariableAccessTransitRouterImpl is instantiated for each thread.
+		 * Therefore any information whether an agent was routed last time with variableSurcharge or without
+		 * is lost. As a temporary solution, let at each instantiation choose by random, if the
+		 * variableSurcharge is applied (to all agents routed by this instance) or not.
+		 */
+		this.variableSurchargeOn = rand.nextBoolean();
 	}
 
+	// find the nearest pt stops in order to calculate the shortest path
 	private Map<Node, InitialNode> locateWrappedNearestTransitNodes(Person person, Coord coord, double departureTime) {
 		Collection<TransitRouterNetworkNode> nearestNodes = this.transitNetwork.getNearestNodes(coord, this.trConfig.getSearchRadius());
 		if (nearestNodes.size() < 2) {
@@ -105,9 +118,15 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 			nearestNodes = this.transitNetwork.getNearestNodes(coord, distance + this.trConfig.getExtensionRadius());
 		}
 		Map<Node, InitialNode> wrappedNearestNodes = new LinkedHashMap<>();
+		/*
+		 * Travel time surcharge to discouraged transit stops is added in every other routing per agent. This way all discouraged
+		 * pt stops receive the travel time surcharge at the same time and one discouraged pt stop is not simply replaced by
+		 * another discouraged pt stop. When the same agent is routed the next time, no surcharge will be added to any of the
+		 * randomOnOff discouraged pt stop. See also DistanceBasedVariableAccessModule
+		 */
 		for (TransitRouterNetworkNode node : nearestNodes) {
 			Coord toCoord = node.stop.getStopFacility().getCoord();
-			Leg initialLeg = getAccessEgressLeg(person, coord, toCoord, departureTime);
+			Leg initialLeg = getAccessEgressLeg(person, coord, toCoord, departureTime, variableSurchargeOn);
 			double initialTime = initialLeg.getTravelTime();
 			double marginalUtilityOfDistance_utl_m = 
 					pcsConfig.getModes().get(initialLeg.getMode()).getMonetaryDistanceRate() * pcsConfig.getMarginalUtilityOfMoney() +
@@ -126,8 +145,8 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 		return wrappedNearestNodes;
 	}
 
-	private Leg getAccessEgressLeg(Person person, Coord coord, Coord toCoord, double time) {
-		return variableAccessEgressTravelDisutility.getAccessEgressModeAndTraveltime(person, coord, toCoord, time);
+	private Leg getAccessEgressLeg(Person person, Coord coord, Coord toCoord, double time, boolean variableSurchargeOn) {
+		return variableAccessEgressTravelDisutility.getAccessEgressModeAndTraveltime(person, coord, toCoord, time, variableSurchargeOn);
 	}
 
 
@@ -167,11 +186,12 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 
 	private List<Leg> createDirectAccessEgressModeLegList(Person person, Coord fromCoord, Coord toCoord, double time) {
 		List<Leg> legs = new ArrayList<>();
-		Leg leg = getAccessEgressLeg(person, fromCoord, toCoord, time);
+		Leg leg = getAccessEgressLeg(person, fromCoord, toCoord, time, false);
 		legs.add(leg);
 		return legs;
 	}
 
+	// convert the shortest path found before to legs
 	protected List<Leg> convertPathToLegList(double departureTime, Path path, Coord fromCoord, Coord toCoord, Person person) {
 		// yy would be nice if the following could be documented a bit better.  kai, jul'16
 		
@@ -247,7 +267,7 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 								legs.add(leg);
 							} else {
 								// accessStop == null, so it must be the first access-leg. If mode is e.g. taxi, we need a transit_walk to get to pt link
-								leg = getAccessEgressLeg(person, fromCoord, egressStop.getCoord(),time);
+								leg = getAccessEgressLeg(person, fromCoord, egressStop.getCoord(), time, false);
 								if (variableAccessEgressTravelDisutility.isTeleportedAccessEgressMode(leg.getMode()))
 								{
 									leg.getRoute().setEndLinkId(egressStop.getLinkId());
@@ -310,11 +330,11 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 		if (prevLink != null) {
 			if (accessStop == null) {
 				// no use of pt
-				leg = getAccessEgressLeg(person, fromCoord, toCoord, time);
+				leg = getAccessEgressLeg(person, fromCoord, toCoord, time, false);
 				legs.add(leg);
 
 			} else {
-				Leg eleg = getAccessEgressLeg(person, accessStop.getCoord(), toCoord, time);
+				Leg eleg = getAccessEgressLeg(person, accessStop.getCoord(), toCoord, time, false);
 				
 				if (variableAccessEgressTravelDisutility.isTeleportedAccessEgressMode(eleg.getMode())){
 					leg = eleg;
@@ -339,7 +359,7 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 			// it seems, the agent only walked
 			legs.clear();
 			try{
-			leg = getAccessEgressLeg(person, fromCoord, toCoord, time);
+			leg = getAccessEgressLeg(person, fromCoord, toCoord, time, false);
 
 			legs.add(leg);
 			} catch (NullPointerException e){

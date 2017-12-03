@@ -88,18 +88,12 @@ public class VariableAccessTransitRouterImplFactory implements Provider<TransitR
 				
 		VariableAccessConfigGroup vaConfig = (VariableAccessConfigGroup) config.getModule(VariableAccessConfigGroup.GROUPNAME);
 		VariableAccessEgressTravelDisutility variableAccessEgressTravelDisutility;
-		if (vaConfig.getStyle().equals("fixed")){
-		variableAccessEgressTravelDisutility = new FixedDistanceBasedVariableAccessModule(carnetwork,config);
-		
-		for (ConfigGroup cg: vaConfig.getVariableAccessModeConfigGroups()){
-			VariableAccessModeConfigGroup modeconfig = (VariableAccessModeConfigGroup) cg;
-			((FixedDistanceBasedVariableAccessModule) variableAccessEgressTravelDisutility).registerMode(modeconfig.getMode(), (int) modeconfig.getDistance(), modeconfig.isTeleported());
-		}
-		} else if (vaConfig.getStyle().equals("flexible")){
-			variableAccessEgressTravelDisutility = new FlexibleDistanceBasedVariableAccessModule(carnetwork,config);
+		if (vaConfig.getStyle().equals("fixed") || vaConfig.getStyle().equals("flexible")){
+			variableAccessEgressTravelDisutility = new DistanceBasedVariableAccessModule(carnetwork,config);
+
 			for (ConfigGroup cg: vaConfig.getVariableAccessModeConfigGroups()){
 				VariableAccessModeConfigGroup modeconfig = (VariableAccessModeConfigGroup) cg;
-				((FlexibleDistanceBasedVariableAccessModule) variableAccessEgressTravelDisutility).registerMode(modeconfig.getMode(), (int) modeconfig.getDistance(), modeconfig.isTeleported());
+				((DistanceBasedVariableAccessModule) variableAccessEgressTravelDisutility).registerMode(modeconfig.getMode(), (int) modeconfig.getDistance(), modeconfig.isTeleported());
 			}
 		} else {
 			throw new RuntimeException("Unsupported Style");

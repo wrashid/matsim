@@ -7,7 +7,8 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.contrib.av.intermodal.router.FixedDistanceBasedVariableAccessModule;
+import org.matsim.contrib.av.intermodal.router.DistanceBasedVariableAccessModule;
+import org.matsim.contrib.av.intermodal.router.config.VariableAccessConfigGroup;
 import org.matsim.contrib.taxi.run.TaxiConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -24,9 +25,12 @@ public class FixedDistanceBasedVariableAccessModuleTest {
 	public void testGetAccessEgressModeAndTraveltime() {
 		Config config = ConfigUtils.loadConfig(
 				"./src/test/resources/intermodal_scenario/config.xml",
-				new TaxiConfigGroup());
+				new TaxiConfigGroup(), new VariableAccessConfigGroup());
+		VariableAccessConfigGroup vaConfig = (VariableAccessConfigGroup) config.getModules().get(VariableAccessConfigGroup.GROUPNAME);
+		vaConfig.setStyle("fixed");
+
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		FixedDistanceBasedVariableAccessModule module = new FixedDistanceBasedVariableAccessModule(scenario.getNetwork(), config);
+		DistanceBasedVariableAccessModule module = new DistanceBasedVariableAccessModule(scenario.getNetwork(), config);
 		
 /*		
  * 		FixedDistanceBasedVariableAccessModule.getModeForDistance() currently 
@@ -43,25 +47,25 @@ public class FixedDistanceBasedVariableAccessModuleTest {
 		Person personCarAlwaysAvailable = scenario.getPopulation().getPersons().get(Id.create("car_always_available", Person.class));
 		
 		// Check decision points between available modes
-		Leg leg999m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(4949.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60);
+		Leg leg999m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(4949.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60, false);
 		Assert.assertTrue(leg999m.getMode().equals("walk"));
 		
-		Leg leg1000m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(4950.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60);
+		Leg leg1000m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(4950.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60, false);
 		Assert.assertTrue(leg1000m.getMode().equals("walk"));
 		
-		Leg leg1001m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(4951.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60);
+		Leg leg1001m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(4951.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60, false);
 		Assert.assertTrue(leg1001m.getMode().equals("bike"));
 		
-		Leg leg1999m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(5949.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60);
+		Leg leg1999m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(5949.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60, false);
 		Assert.assertTrue(leg1999m.getMode().equals("bike"));
 		
-		Leg leg2000m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(5950.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60);
+		Leg leg2000m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(5950.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60, false);
 		Assert.assertTrue(leg2000m.getMode().equals("bike"));
 		
-		Leg leg2001m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(5951.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60);
+		Leg leg2001m = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(5951.00, 1050.00), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60, false);
 		Assert.assertTrue(leg2001m.getMode().equals("av"));
 		
-		Leg leg1001mDiagonal = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(4949.00, 1113.25), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60);
+		Leg leg1001mDiagonal = module.getAccessEgressModeAndTraveltime(personCarAlwaysAvailable, CoordUtils.createCoord(4949.00, 1113.25), CoordUtils.createCoord(3950.00, 1050.00), 8*60*60, false);
 		Assert.assertTrue(leg1001mDiagonal.getMode().equals("bike"));
 		
 		// egressDistance > maximumAccessDistance of all available modes
