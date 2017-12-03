@@ -7,17 +7,16 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.contrib.av.intermodal.router.FixedDistanceBasedVariableAccessModule;
+import org.matsim.contrib.av.intermodal.router.DistanceBasedVariableAccessModule;
 import org.matsim.contrib.av.intermodal.router.VariableAccessTransitRouterImpl;
+import org.matsim.contrib.av.intermodal.router.config.VariableAccessConfigGroup;
 import org.matsim.contrib.taxi.run.TaxiConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
-import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ModeParams;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
@@ -86,8 +85,10 @@ public class VariableAccessTransitRouterImplTest {
 		TravelTime travelTime = transitRouterNetworkTravelTimeAndDisutility;
 		TransitTravelDisutility travelDisutility = transitRouterNetworkTravelTimeAndDisutility;
 		
-		FixedDistanceBasedVariableAccessModule variableAccessModule = 
-				new FixedDistanceBasedVariableAccessModule(scenario.getNetwork(), config);
+		VariableAccessConfigGroup vaConfig = (VariableAccessConfigGroup) config.getModules().get(VariableAccessConfigGroup.GROUPNAME);
+		vaConfig.setStyle("fixed");
+		DistanceBasedVariableAccessModule variableAccessModule = 
+				new DistanceBasedVariableAccessModule(scenario.getNetwork(), config);
 		variableAccessModule.registerMode("av", 4500, false);
 		variableAccessModule.registerMode("walk", 2000, true);
 		variableAccessModule.registerMode("bike", 4000, true);
