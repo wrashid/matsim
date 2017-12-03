@@ -1,10 +1,13 @@
 package org.matsim.contrib.av.intermodal;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
@@ -30,6 +33,8 @@ import org.matsim.pt.router.TransitTravelDisutility;
 import org.matsim.pt.routes.ExperimentalTransitRoute;
 import org.matsim.pt.transitSchedule.api.TransitLine;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
+
+import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 
 /**
  * Tests VariableAccessTransitRouterImpl
@@ -87,8 +92,11 @@ public class VariableAccessTransitRouterImplTest {
 		
 		VariableAccessConfigGroup vaConfig = (VariableAccessConfigGroup) config.getModules().get(VariableAccessConfigGroup.GROUPNAME);
 		vaConfig.setStyle("fixed");
-		DistanceBasedVariableAccessModule variableAccessModule = 
-				new DistanceBasedVariableAccessModule(scenario.getNetwork(), config);
+		Map<String, PreparedPolygon> geometriesVariableAccessArea = new HashMap<>();
+		Map<Coord, Double> discouragedCoord2TimeSurchargeFixed = new HashMap<>();
+		Map<Coord, Double> discouragedCoord2TimeSurchargeOnOff = new HashMap<>();
+		DistanceBasedVariableAccessModule variableAccessModule = new DistanceBasedVariableAccessModule(scenario.getNetwork(), config, 
+				geometriesVariableAccessArea, discouragedCoord2TimeSurchargeFixed, discouragedCoord2TimeSurchargeOnOff);
 		variableAccessModule.registerMode("av", 4500, false);
 		variableAccessModule.registerMode("walk", 2000, true);
 		variableAccessModule.registerMode("bike", 4000, true);

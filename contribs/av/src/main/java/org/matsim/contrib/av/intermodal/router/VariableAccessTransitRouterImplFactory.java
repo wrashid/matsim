@@ -20,29 +20,31 @@
 
 package org.matsim.contrib.av.intermodal.router;
 
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.av.intermodal.router.config.VariableAccessConfigGroup;
 import org.matsim.contrib.av.intermodal.router.config.VariableAccessModeConfigGroup;
+import org.matsim.contrib.av.intermodal.router.fileReader.Coord2SurchargeFileReader;
+import org.matsim.contrib.av.intermodal.router.fileReader.GeometryReader;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
-import org.matsim.core.router.DijkstraFactory;
-import org.matsim.core.router.costcalculators.FreespeedTravelTimeAndDisutility;
-import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.pt.router.PreparedTransitSchedule;
 import org.matsim.pt.router.TransitRouter;
 import org.matsim.pt.router.TransitRouterConfig;
-import org.matsim.pt.router.TransitRouterImpl;
 import org.matsim.pt.router.TransitRouterNetwork;
 import org.matsim.pt.router.TransitRouterNetworkTravelTimeAndDisutility;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 
 import com.google.inject.name.Named;
+import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -58,11 +60,15 @@ public class VariableAccessTransitRouterImplFactory implements Provider<TransitR
 
 	private final TransitRouterConfig transitRouterconfig;
 	private final PlanCalcScoreConfigGroup planCalcScoreConfig;
+	private final VariableAccessConfigGroup variableAccessConfig;
 	private final TransitRouterNetwork routerNetwork;
 	private final PreparedTransitSchedule preparedTransitSchedule;
 	private final Config config;
 	private final Network network;
 	private final Network carnetwork;
+	private final Map<String, PreparedPolygon> geometriesVariableAccessArea = new HashMap<>();
+	private final Map<Coord, Double> discouragedCoord2TimeSurchargeFixed = new HashMap<>();
+	private final Map<Coord, Double> discouragedCoord2TimeSurchargeOnOff = new HashMap<>();
 
 	@Inject
 	VariableAccessTransitRouterImplFactory(final @Named("variableAccess") TransitSchedule schedule, final Config config, final Network network) {
@@ -70,6 +76,7 @@ public class VariableAccessTransitRouterImplFactory implements Provider<TransitR
 		this.transitRouterconfig = new TransitRouterConfig(config.planCalcScore(),config.plansCalcRoute(),config.transitRouter(),config.vspExperimental());
 		this.planCalcScoreConfig = config.planCalcScore();
 		planCalcScoreConfig.setLocked();
+		this.variableAccessConfig = (VariableAccessConfigGroup) config.getModules().get(VariableAccessConfigGroup.GROUPNAME);
 		this.routerNetwork = TransitRouterNetwork.createFromSchedule(schedule, this.transitRouterconfig.getBeelineWalkConnectionDistance());
 		this.preparedTransitSchedule = new PreparedTransitSchedule(schedule);
 		this.network = network;
@@ -80,18 +87,30 @@ public class VariableAccessTransitRouterImplFactory implements Provider<TransitR
 		modes.add(TransportMode.car);
 		filter.filter(net, modes);
 		this.carnetwork = net;
+		
+		if (variableAccessConfig.getVariableAccessAreaShpFile() != null) {
+			GeometryReader.readShapeFileAndExtractGeometry(
+					variableAccessConfig.getVariableAccessAreaShpFileURL(config.getContext()),
+					variableAccessConfig.getVariableAccessAreaShpKey(),
+					geometriesVariableAccessArea);
+		}
+		if (variableAccessConfig.getCoords2TimeSurchargeFile() != null) {
+			Coord2SurchargeFileReader.readAndAddCoord2SurchargeFromFile(
+					variableAccessConfig.getCoords2TimeSurchargeFileURL(config.getContext()), 
+					discouragedCoord2TimeSurchargeFixed,
+					discouragedCoord2TimeSurchargeOnOff);
+		}
 	}
 
 	@Override
 	public TransitRouter get() {
-		
-				
-		VariableAccessConfigGroup vaConfig = (VariableAccessConfigGroup) config.getModule(VariableAccessConfigGroup.GROUPNAME);
 		VariableAccessEgressTravelDisutility variableAccessEgressTravelDisutility;
-		if (vaConfig.getStyle().equals("fixed") || vaConfig.getStyle().equals("flexible")){
-			variableAccessEgressTravelDisutility = new DistanceBasedVariableAccessModule(carnetwork,config);
+		if (variableAccessConfig.getStyle().equals("fixed") || variableAccessConfig.getStyle().equals("flexible")){
+			variableAccessEgressTravelDisutility = new DistanceBasedVariableAccessModule(carnetwork, config,
+					geometriesVariableAccessArea,
+					discouragedCoord2TimeSurchargeFixed, discouragedCoord2TimeSurchargeOnOff);
 
-			for (ConfigGroup cg: vaConfig.getVariableAccessModeConfigGroups()){
+			for (ConfigGroup cg: variableAccessConfig.getVariableAccessModeConfigGroups()){
 				VariableAccessModeConfigGroup modeconfig = (VariableAccessModeConfigGroup) cg;
 				((DistanceBasedVariableAccessModule) variableAccessEgressTravelDisutility).registerMode(modeconfig.getMode(), (int) modeconfig.getDistance(), modeconfig.isTeleported());
 			}

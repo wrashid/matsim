@@ -1,7 +1,11 @@
 package org.matsim.contrib.av.intermodal;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Test;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -15,6 +19,8 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
+
+import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 
 /**
  * @author  vsp-gleich
@@ -51,7 +57,11 @@ public class FlexibleDistanceBasedVariableAccessModuleTest {
 		vaConfig.setStyle("flexible");
 		vaConfig.setMaxDistanceOnlyTransitWalkAvailable(1000);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		DistanceBasedVariableAccessModule module = new DistanceBasedVariableAccessModule(scenario.getNetwork(), config);
+		Map<String, PreparedPolygon> geometriesVariableAccessArea = new HashMap<>();
+		Map<Coord, Double> discouragedCoord2TimeSurchargeFixed = new HashMap<>();
+		Map<Coord, Double> discouragedCoord2TimeSurchargeOnOff = new HashMap<>();
+		DistanceBasedVariableAccessModule module = new DistanceBasedVariableAccessModule(scenario.getNetwork(), config, 
+				geometriesVariableAccessArea, discouragedCoord2TimeSurchargeFixed, discouragedCoord2TimeSurchargeOnOff);
 		
 		module.registerMode("av", 2500, false);
 //		module.registerMode("walk", 1000, true); transit_walk is always available as default up to MaxDistanceOnlyTransitWalkAvailable

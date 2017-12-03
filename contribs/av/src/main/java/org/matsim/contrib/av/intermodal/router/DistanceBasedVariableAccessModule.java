@@ -22,11 +22,6 @@
  */
 package org.matsim.contrib.av.intermodal.router;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,15 +46,8 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.geometry.geotools.MGC;
-import org.matsim.core.utils.gis.ShapeFileReader;
-import org.opengis.feature.simple.SimpleFeature;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.prep.PreparedPolygon;
-import com.vividsolutions.jts.io.ParseException;
-import com.vividsolutions.jts.io.WKTReader;
 
 /**
  * TODO: checkCarAvail
@@ -74,7 +62,7 @@ public class DistanceBasedVariableAccessModule implements VariableAccessEgressTr
 	
 	private Map<String,Boolean> teleportedModes = new HashMap<>();
 	private Map<Integer,String> distanceMode = new TreeMap<>();
-	private Map<String, PreparedPolygon> geometriesVariableAccessArea = new HashMap<>();
+	private Map<String, PreparedPolygon> geometriesVariableAccessArea;
 	/* 
 	 * Time surcharges are only applied to trips starting or ending in the variable access area.
 	 * There are to types available: fixed and onOff time surcharges
@@ -89,9 +77,9 @@ public class DistanceBasedVariableAccessModule implements VariableAccessEgressTr
 	 * same coord is subject to both a fixed and an onOff time surcharge, both are added up.
 	 */
 	/** fixed time surcharge: full time surcharge always applied */
-	private Map<Coord, Double> discouragedCoord2TimeSurchargeFixed = new HashMap<>();
+	private Map<Coord, Double> discouragedCoord2TimeSurchargeFixed;
 	/** onOff time surcharge: alternate between no or full time surcharge applied */
-	private Map<Coord, Double> discouragedCoord2TimeSurchargeOnOff = new HashMap<>();
+	private Map<Coord, Double> discouragedCoord2TimeSurchargeOnOff;
 	private final Random rand = MatsimRandom.getRandom();
 	private final String variableAccessStyle;
 	private final double maxDistanceOnlyTransitWalkAvailable;
@@ -103,17 +91,16 @@ public class DistanceBasedVariableAccessModule implements VariableAccessEgressTr
 	/**
 	 * 
 	 */
-	public DistanceBasedVariableAccessModule(Network carnetwork, Config config) {
+	public DistanceBasedVariableAccessModule(Network carnetwork, Config config, 
+			Map<String, PreparedPolygon> geometriesVariableAccessArea,
+			Map<Coord, Double> discouragedCoord2TimeSurchargeFixed,
+			Map<Coord, Double> discouragedCoord2TimeSurchargeOnOff) {
 		this.config = config;
 		this.carnetwork = carnetwork;
+		this.geometriesVariableAccessArea = geometriesVariableAccessArea;
+		this.discouragedCoord2TimeSurchargeFixed =discouragedCoord2TimeSurchargeFixed;
+		this.discouragedCoord2TimeSurchargeOnOff = discouragedCoord2TimeSurchargeOnOff;
 		VariableAccessConfigGroup vaconfig = (VariableAccessConfigGroup) config.getModules().get(VariableAccessConfigGroup.GROUPNAME);
-		if (vaconfig.getVariableAccessAreaShpFile() != null && vaconfig.getVariableAccessAreaShpKey() != null) {
-			geometriesVariableAccessArea = readShapeFileAndExtractGeometry(
-					vaconfig.getVariableAccessAreaShpFileURL(config.getContext()), vaconfig.getVariableAccessAreaShpKey());
-		}
-		if (vaconfig.getCoords2TimeSurchargeFile() != null) {
-			readCoord2SurchargeFile(vaconfig.getCoords2TimeSurchargeFileURL(config.getContext()));
-		}
 		variableAccessStyle = vaconfig.getStyle();
 		if (!(variableAccessStyle.equals("fixed") || variableAccessStyle.equals("flexible"))) {
 			throw new RuntimeException("Unsupported Style");
@@ -280,27 +267,6 @@ public class DistanceBasedVariableAccessModule implements VariableAccessEgressTr
 		return this.teleportedModes.get(mode);
 	}
 	
-	public static Map<String, PreparedPolygon> readShapeFileAndExtractGeometry(URL fileURL, String key){
-		Map<String,PreparedPolygon> geometry = new HashMap<>();	
-		for (SimpleFeature ft : ShapeFileReader.getAllFeatures(fileURL.getFile())) {
-			
-				GeometryFactory geometryFactory= new GeometryFactory();
-				WKTReader wktReader = new WKTReader(geometryFactory);
-
-				try {
-					Geometry geo = wktReader.read((ft.getAttribute("the_geom")).toString());
-					MultiPolygon poly = (MultiPolygon) geo;
-					PreparedPolygon preparedPoly = new PreparedPolygon(poly);
-					String lor = ft.getAttribute(key).toString();
-					geometry.put(lor, preparedPoly);
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}			 
-		}	
-		return geometry;
-	}
-	
 	private boolean isInVariableAccessArea(Coord coord){
 		if(geometriesVariableAccessArea.size() > 0){
 			for(String name: geometriesVariableAccessArea.keySet()){
@@ -312,39 +278,6 @@ public class DistanceBasedVariableAccessModule implements VariableAccessEgressTr
 		} else {			
 			return true;
 		}
-	}
-	
-	private void readCoord2SurchargeFile(URL fileURL){
-		try {
-			BufferedReader coords2SurchargeReader = new BufferedReader(new FileReader(fileURL.getFile()));
-			String line;
-			// check header
-			if (coords2SurchargeReader.readLine().equals("coordX,coordY,timeSurcharge,type")) {
-				while((line = coords2SurchargeReader.readLine()) != null){
-					// ignore comments after "//"
-					String[] lineSplits = line.split("//")[0].split(",");
-					if(lineSplits.length == 4) { // else ignore
-						Coord coord = new Coord(Double.parseDouble(lineSplits[0]), Double.parseDouble(lineSplits[1]));
-						if(lineSplits[3].equals("fixed")){
-							discouragedCoord2TimeSurchargeFixed.put(coord, Double.parseDouble(lineSplits[2]));
-						} else if (lineSplits[3].equals("onOff")) {
-							discouragedCoord2TimeSurchargeOnOff.put(coord, Double.parseDouble(lineSplits[2]));
-						} else {
-							throw new RuntimeException("unknown discouragedCoord2TimeSurcharge type: " + 
-									lineSplits[3]);
-						}
-					}
-				}
-			} else {
-				throw new RuntimeException("unknown header in Coord2SurchargeFile, should be: coordX,coordY,timeSurcharge,type");
-			}
-			coords2SurchargeReader.close();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
+	}	
 
 }
