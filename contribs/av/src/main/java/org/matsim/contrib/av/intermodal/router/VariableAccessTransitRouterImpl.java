@@ -127,12 +127,17 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 		for (TransitRouterNetworkNode node : nearestNodes) {
 			Coord toCoord = node.stop.getStopFacility().getCoord();
 			Leg initialLeg = getAccessEgressLeg(person, coord, toCoord, departureTime, variableSurchargeOn);
+			String initialMode = initialLeg.getMode();
+			if (initialMode.equals(TransportMode.transit_walk)) {
+				// workaround: no params set for transit_walk in PlanCalcScoreConfigGroup -> take walk params
+				initialMode = TransportMode.walk;
+			}
 			double initialTime = initialLeg.getTravelTime();
 			double marginalUtilityOfDistance_utl_m = 
-					pcsConfig.getModes().get(initialLeg.getMode()).getMonetaryDistanceRate() * pcsConfig.getMarginalUtilityOfMoney() +
-					pcsConfig.getModes().get(initialLeg.getMode()).getMarginalUtilityOfDistance();
+					pcsConfig.getModes().get(initialMode).getMonetaryDistanceRate() * pcsConfig.getMarginalUtilityOfMoney() +
+					pcsConfig.getModes().get(initialMode).getMarginalUtilityOfDistance();
 			double marginalUtilityOfTravelTime_utl_s = 
-					pcsConfig.getModes().get(initialLeg.getMode()).getMarginalUtilityOfTraveling()/3600.0 -
+					pcsConfig.getModes().get(initialMode).getMarginalUtilityOfTraveling()/3600.0 -
 					pcsConfig.getPerforming_utils_hr()/3600.;
 			//  getMarginalUtilityOfTravelTimeWalk includes the opportunity cost of time.
 			double timeCost = - initialLeg.getTravelTime() * marginalUtilityOfTravelTime_utl_s ;
