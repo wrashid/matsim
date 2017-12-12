@@ -98,7 +98,7 @@ public class DistanceBasedVariableAccessModule implements VariableAccessEgressTr
 		this.config = config;
 		this.carnetwork = carnetwork;
 		this.geometriesVariableAccessArea = geometriesVariableAccessArea;
-		this.discouragedCoord2TimeSurchargeFixed =discouragedCoord2TimeSurchargeFixed;
+		this.discouragedCoord2TimeSurchargeFixed = discouragedCoord2TimeSurchargeFixed;
 		this.discouragedCoord2TimeSurchargeOnOff = discouragedCoord2TimeSurchargeOnOff;
 		VariableAccessConfigGroup vaconfig = (VariableAccessConfigGroup) config.getModules().get(VariableAccessConfigGroup.GROUPNAME);
 		variableAccessStyle = vaconfig.getStyle();

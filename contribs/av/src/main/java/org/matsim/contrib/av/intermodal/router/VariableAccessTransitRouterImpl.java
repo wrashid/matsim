@@ -127,10 +127,12 @@ public class VariableAccessTransitRouterImpl implements TransitRouter {
 		for (TransitRouterNetworkNode node : nearestNodes) {
 			Coord toCoord = node.stop.getStopFacility().getCoord();
 			Leg initialLeg = getAccessEgressLeg(person, coord, toCoord, departureTime, variableSurchargeOn);
-			String initialMode = initialLeg.getMode();
-			if (initialMode.equals(TransportMode.transit_walk)) {
+			String initialMode;
+			if (initialLeg.getMode().equals(TransportMode.transit_walk)) {
 				// workaround: no params set for transit_walk in PlanCalcScoreConfigGroup -> take walk params
 				initialMode = TransportMode.walk;
+			} else {
+				initialMode = initialLeg.getMode();
 			}
 			double initialTime = initialLeg.getTravelTime();
 			double marginalUtilityOfDistance_utl_m = 
