@@ -42,10 +42,15 @@
            	<artifactId>floetteroed-utilities</artifactId>
            	<version>1.0.0</version>
       </dependency>
+      <!--<dependency>-->
+           	<!--<groupId>com.github.gunnarfloetteroed</groupId>-->
+           	<!--<artifactId>java</artifactId>-->
+           	<!--<version>master-SNAPSHOT</version>-->
+      <!--</dependency>-->
       <dependency>
-           	<groupId>com.github.gunnarfloetteroed</groupId>
-           	<artifactId>java</artifactId>
-           	<version>master-SNAPSHOT</version>
+        <groupId>com.github.amit2011</groupId>
+        <artifactId>java</artifactId>
+        <version>master-SNAPSHOT</version>
       </dependency>
 
   </dependencies>
