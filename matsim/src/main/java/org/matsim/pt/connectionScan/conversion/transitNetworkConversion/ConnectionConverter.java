@@ -20,7 +20,8 @@ class ConnectionConverter {
 
     //Journey attributes
     private Time day;
-    private final int CAPACITY = 1000;
+    //TODO
+    private final int CAPACITY = 2000000000;
 
     ConnectionConverter(Map<Id<TransitLine>, TransitLine> transitLines,
                         MappingHandler idAndMappingHandler, Time day) {
@@ -82,7 +83,6 @@ class ConnectionConverter {
     }
 
     private Time convertDeparture(Departure departure) {
-        //TODO Unit correct?
         return day.add(RelativeTime.of((long)departure.getDepartureTime(), ChronoUnit.SECONDS));
     }
 
