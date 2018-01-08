@@ -27,21 +27,21 @@ class StopConverter {
 
     private Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops;
     private List<Stop> connectionScanStops = new ArrayList<>();
-    private MappingHandler idAndMappingHandler;
+    private MappingHandler mappingHandler;
     private final double maxBeelineWalkConnectionDistance;
     private TransitTravelDisutility costFunction;
     private QuadTree<Stop> qtStops = null;
 
     /**
      * TODO
-     * @param idAndMappingHandler
+     * @param mappingHandler
      * @param costFunction
      */
-    StopConverter(Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops, MappingHandler idAndMappingHandler,
+    StopConverter(Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops, MappingHandler mappingHandler,
                   double maxBeelineWalkConnectionDistance, TransitTravelDisutility costFunction) {
 
         this.matsimStops = matsimStops;
-        this.idAndMappingHandler = idAndMappingHandler;
+        this.mappingHandler = mappingHandler;
         this.maxBeelineWalkConnectionDistance = maxBeelineWalkConnectionDistance;
         this.costFunction = costFunction;
     }
@@ -126,13 +126,13 @@ class StopConverter {
      * @return the converted connection-scan stop
      */
     private Stop convertStop(TransitStopFacility matsimStop) {
-        int id = idAndMappingHandler.createAndMapId(matsimStop);
+        int id = mappingHandler.createAndMapId(matsimStop);
         String name = matsimStop.getName();
         Point2D location = CoordinateUtils.convert2Point2D(matsimStop.getCoord());
         RelativeTime changeTime = RelativeTime.ZERO;
         Station station = convert2Station(id);
         Stop stop = new Stop(id, name, location, changeTime, station, 0);
-        idAndMappingHandler.addMatsimId2StopMapping(matsimStop.getId(), stop);
+        mappingHandler.addMatsimId2StopMapping(matsimStop.getId(), stop);
         return stop;
     }
 
