@@ -30,6 +30,7 @@ public class TransitPassengerRouteConverter {
     public TransitPassengerRoute createTransitPassengerRoute(double lastArrivalTime, List<Connection> connections) {
 
         double cost = 0;
+//        double lastArrivalTime = timeInSecondsFromMidnight(departure);
 
         List<RouteSegment> routeSegments = new ArrayList<>();
 

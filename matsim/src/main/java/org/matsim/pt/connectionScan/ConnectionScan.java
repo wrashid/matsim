@@ -62,14 +62,15 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
             return this.createDirectWalkLegList(null, fromFacility.getCoord(), toFacility.getCoord());
         }
         double initialTime = getWalkTime(person, fromFacility.getCoord(), CoordinateUtils.convert2Coord(from.coordinate()));
-        Time departure = convertDeparture(departureTime + initialTime);
+        double ptDeparture = normalize(departureTime + initialTime);
+        Time departure = convertDeparture(ptDeparture);
 
         PublicTransportRoute route = calcRouteFrom(from, to, departure);
 
         if (route == null) {
             return this.createDirectWalkLegList(null, fromFacility.getCoord(), toFacility.getCoord());
         }
-        TransitPassengerRoute transitPassengerRoute = transitPassengerRouteConverter.createTransitPassengerRoute(departureTime + initialTime, route.connections());
+        TransitPassengerRoute transitPassengerRoute = transitPassengerRouteConverter.createTransitPassengerRoute(ptDeparture, route.connections());
 
 //        double pathCost = transitPassengerRoute.getTravelCost();
 //        double directWalkCost = getWalkDisutility(person, fromFacility.getCoord(), toFacility.getCoord());
@@ -87,7 +88,14 @@ public class ConnectionScan extends AbstractTransitRouter implements TransitRout
 
     private Time convertDeparture(double departure) {
         Time day = new Time(LocalDateTime.of(2017, 3, 14, 0, 0));
-        return day.add(RelativeTime.of((long)departure, ChronoUnit.SECONDS));
+        return day.add(RelativeTime.of((long) departure, ChronoUnit.SECONDS));
+    }
+
+    private double normalize(double relativeTime) {
+        while (relativeTime >= 86400) {
+            relativeTime -= 86400;
+        }
+        return relativeTime;
     }
 
     private PublicTransportRoute calcRouteFrom(Stop from, Stop to, Time departure) {
