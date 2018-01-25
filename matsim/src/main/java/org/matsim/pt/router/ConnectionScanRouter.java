@@ -1,4 +1,4 @@
-package org.matsim.pt.connectionScan;
+package org.matsim.pt.router;
 
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.PublicTransportRoute;
 import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
@@ -13,7 +13,6 @@ import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.MappingH
 import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.NetworkConverter;
 import org.matsim.pt.connectionScan.utils.CoordinateUtils;
 import org.matsim.pt.connectionScan.utils.TransitNetworkUtils;
-import org.matsim.pt.router.*;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 
 import java.time.LocalDateTime;
@@ -25,21 +24,21 @@ import java.util.Optional;
 /**
  * @author gthunig on 17.10.2017.
  */
-public class ConnectionScan extends AbstractTransitRouter implements TransitRouter {
-    private static final Logger log = Logger.getLogger(ConnectionScan.class);
+public class ConnectionScanRouter extends AbstractTransitRouter implements TransitRouter {
+    private static final Logger log = Logger.getLogger(ConnectionScanRouter.class);
 
     private edu.kit.ifv.mobitopp.publictransport.connectionscan.ConnectionScan connectionScan;
     private MappingHandler mappingHandler;
     private TransitPassengerRouteConverter transitPassengerRouteConverter;
 
-    public ConnectionScan(TransitRouterConfig config, TransitSchedule transitSchedule) {
+    public ConnectionScanRouter(TransitRouterConfig config, TransitSchedule transitSchedule) {
         super(config, transitSchedule);
         init(config, transitSchedule);
     }
 
     @Deprecated
-    public ConnectionScan(TransitRouterConfig config, TransitTravelDisutility travelDisutility,
-                          TransitSchedule transitSchedule) {
+    public ConnectionScanRouter(TransitRouterConfig config, TransitTravelDisutility travelDisutility,
+                                TransitSchedule transitSchedule) {
         super(config, travelDisutility);
         init(config, transitSchedule);
     }

@@ -3,35 +3,18 @@ package org.matsim.pt.router;
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.TransitNetwork;
 import junit.framework.TestCase;
 import org.junit.Assert;
-import org.junit.Test;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.network.Node;
-import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
-import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.api.core.v01.population.Route;
-import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.population.routes.NetworkRoute;
-import org.matsim.core.population.routes.RouteUtils;
-import org.matsim.core.router.DefaultRoutingModules;
-import org.matsim.core.router.RoutingModule;
-import org.matsim.core.router.TransitRouterWrapper;
-import org.matsim.core.scenario.MutableScenario;
-import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
-import org.matsim.core.utils.misc.Time;
-import org.matsim.pt.connectionScan.ConnectionScan;
 import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.NetworkConverter;
 import org.matsim.pt.routes.ExperimentalTransitRoute;
 import org.matsim.pt.transitSchedule.api.*;
 import org.matsim.testcases.MatsimTestCase;
 import org.matsim.testcases.MatsimTestUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -42,11 +25,11 @@ import static org.junit.Assert.assertTrue;
  *
  * @author gabriel.thunig on 23.05.2016.
  */
-public class ConnectionScanTest extends TestCase {
+public class ConnectionScanRouterTest extends TestCase {
 
     private TransitNetwork network;
     private TransitRouterNetworkTravelTimeAndDisutility travelDisutility;
-    private ConnectionScan connectionScan;
+    private ConnectionScanRouter connectionScanRouter;
     private TransitRouterImpl transitRouterImpl;
     private Fixture f;
 
@@ -78,7 +61,7 @@ public class ConnectionScanTest extends TestCase {
 
     private void instantiateRouters() {
 
-        connectionScan = new ConnectionScan(travelDisutility.config, f.schedule);
+        connectionScanRouter = new ConnectionScanRouter(travelDisutility.config, f.schedule);
         transitRouterImpl = new TransitRouterImpl(travelDisutility.config, f.schedule);
     }
 
@@ -94,7 +77,7 @@ public class ConnectionScanTest extends TestCase {
     public void testFixtureAndRouterInstantiated() {
 
         Assert.assertNotNull(f);
-        Assert.assertNotNull(connectionScan);
+        Assert.assertNotNull(connectionScanRouter);
         Assert.assertNotNull(transitRouterImpl);
     }
 
@@ -104,7 +87,7 @@ public class ConnectionScanTest extends TestCase {
         FakeFacility to = new FakeFacility(new Coord((double) 12000, (double) 5002));
         double departure = 60*60*5 + 60*10;
 
-        List<Leg> legs = connectionScan.calcRoute(from, to, departure, null);
+        List<Leg> legs = connectionScanRouter.calcRoute(from, to, departure, null);
 
         Assert.assertNotNull("No Route calculated.", legs);
         assertEquals(3, legs.size());
@@ -127,7 +110,7 @@ public class ConnectionScanTest extends TestCase {
         FakeFacility to = new FakeFacility(new Coord((double) 16000, (double) 5002));
         double departure = 60*60*5 + 60*5;
 
-        List<Leg> legs = connectionScan.calcRoute(from, to, departure, null);
+        List<Leg> legs = connectionScanRouter.calcRoute(from, to, departure, null);
 
         Assert.assertNotNull("No Route calculated.", legs);
         assertEquals(3, legs.size());
@@ -146,7 +129,7 @@ public class ConnectionScanTest extends TestCase {
 
     public void testSingleLineWithTransitWalk() {
 
-        TransitRouter router = connectionScan;
+        TransitRouter router = connectionScanRouter;
 
         Coord fromCoord = new Coord(3800, 5100);
         Coord toCoord = new Coord(16100, 5050);
@@ -179,7 +162,7 @@ public class ConnectionScanTest extends TestCase {
 
     public void testFromToSameStop() {
 
-        TransitRouter router = connectionScan;
+        TransitRouter router = connectionScanRouter;
 
         Coord fromCoord = new Coord((double) 3800, (double) 5100);
         Coord toCoord = new Coord((double) 4100, (double) 5050);
@@ -197,7 +180,7 @@ public class ConnectionScanTest extends TestCase {
 
     public void testDirectWalkCheaper() {
 
-        TransitRouter router = connectionScan;
+        TransitRouter router = connectionScanRouter;
 
         Coord fromCoord = new Coord((double) 4000, (double) 3000);
         Coord toCoord = new Coord((double) 8000, (double) 3000);
@@ -215,7 +198,7 @@ public class ConnectionScanTest extends TestCase {
 
     public void testSingleLine_DifferentWaitingTime() {
 
-        TransitRouter router = connectionScan;
+        TransitRouter router = connectionScanRouter;
 
         long start = System.currentTimeMillis();
 
@@ -363,7 +346,7 @@ public class ConnectionScanTest extends TestCase {
     public void testAfterMidnight() {
 
         travelDisutility.config.setBeelineWalkSpeed(0.1); // something very slow, so the agent does not walk over night
-        TransitRouter router = connectionScan;
+        TransitRouter router = connectionScanRouter;
         Coord toCoord = new Coord((double) 16100, (double) 5050);
         List<Leg> legs = router.calcRoute(new FakeFacility(new Coord((double) 3800, (double) 5100)), new FakeFacility(toCoord), 25.0*3600, null);
         assertEquals(3, legs.size());

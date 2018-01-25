@@ -46,7 +46,7 @@ public class TransitPassengerRouteConverter {
             lastArrivalTime = timeInSecondsFromMidnight(connection.arrival());
 
             if (connection.id() == -1) {
-                routeSegments.add(storedRouteSegment);
+                if (storedRouteSegment != null) routeSegments.add(storedRouteSegment);
                 routeSegments.add(new RouteSegment(fromFacility, toFacility,
                         travelTime, null, null));
                 storedRouteSegment = null;
