@@ -11,14 +11,12 @@ import org.matsim.api.core.v01.population.Route;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.NetworkConverter;
 import org.matsim.pt.routes.ExperimentalTransitRoute;
-import org.matsim.pt.transitSchedule.api.*;
+import org.matsim.pt.transitSchedule.api.TransitRoute;
+import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.testcases.MatsimTestCase;
 import org.matsim.testcases.MatsimTestUtils;
 
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Junit Test for the TransitLeastCostPathTree.
@@ -261,8 +259,7 @@ public class ConnectionScanRouterTest extends TestCase {
                 CoordUtils.calcEuclideanDistance(
                         f.schedule.getFacilities().get(Id.create("19", TransitStopFacility.class)).getCoord(), toCoord)
                         / travelDisutility.config.getBeelineWalkSpeed();
-        //TODO is that legit?
-        assertEquals(expectedTravelTime, actualTravelTime, 0.2);//MatsimTestCase.EPSILON);
+        assertEquals(expectedTravelTime, actualTravelTime, MatsimTestCase.EPSILON);
 
         long end = System.currentTimeMillis();
         long completedIn = end - start;
