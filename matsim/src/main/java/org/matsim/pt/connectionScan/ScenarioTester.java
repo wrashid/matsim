@@ -17,9 +17,9 @@ public class ScenarioTester {
         System.out.println(file.getAbsolutePath());
 
         String config = "examples\\scenarios\\pt-simple\\config.xml";
+//        String config = "contribs\\av\\src\\test\\resources\\intermodal_scenario\\config2.xml";
 
         Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.loadConfig(config));
-//        Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.createConfig());
 
         scenario.getConfig().controler().setLastIteration(1);
 

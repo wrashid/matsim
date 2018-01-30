@@ -227,7 +227,7 @@ public class ConnectionScanRouterTest extends TestCase {
 
     public void testLineChange() {
 
-        TransitRouter router = transitRouterImpl;
+        TransitRouter router = connectionScanRouter;
 
         long start = System.currentTimeMillis();
 
@@ -283,10 +283,10 @@ public class ConnectionScanRouterTest extends TestCase {
 
         travelDisutility.config.setUtilityOfLineSwitch_utl(0);
 
-        TransitRouter router = transitRouterImpl;
+        TransitRouter router = connectionScanRouter;
         List<Leg> legs = router.calcRoute(new FakeFacility(new Coord((double) 11900, (double) 5100)),
                 new FakeFacility(new Coord((double) 24100, (double) 4950)),
-                6.0*3600 - 5.0*60, null);
+                6.0*3600 /*- 5.0*60*/, null);
         assertEquals(5, legs.size());
         assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
         assertEquals(TransportMode.pt, legs.get(1).getMode());

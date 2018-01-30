@@ -5,6 +5,7 @@ import edu.kit.ifv.mobitopp.publictransport.model.*;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
+import org.matsim.pt.connectionScan.plausibilityCheck.LoopFinder;
 import org.matsim.pt.router.TransitRouterConfig;
 import org.matsim.pt.router.TransitTravelDisutility;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
@@ -55,6 +56,9 @@ public class NetworkConverter {
                 idAndMappingHandler, getDay());
         connectionConverter.convert();
         this.connections = connectionConverter.getConnections();
+
+        //TODO on or off?
+        LoopFinder.hasLoop(this.connections);
 
         TransitNetwork transitNetwork = TransitNetwork.createOf(stops, connections);
         log.info("Finished converting TransitNetwork");

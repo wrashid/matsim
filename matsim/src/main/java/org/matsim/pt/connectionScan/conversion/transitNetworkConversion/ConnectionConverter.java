@@ -68,6 +68,14 @@ class ConnectionConverter {
             }
         }
 
+        for (Connection con : newConnections.asCollection()) {
+            System.out.println(con.duration().toMinutes());
+            if (con.duration().toMinutes() <= 0) {
+                boolean bool = true;
+
+            }
+        }
+
         return newConnections;
     }
 
