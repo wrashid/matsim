@@ -43,10 +43,6 @@ class ConnectionConverter {
 
     private Connections convertConnections(TransitRoute transitRoute, Id<TransitLine> lineId) {
 
-        String transportMode = transitRoute.getTransportMode();
-        Journey journey = new DefaultModifiableJourney(
-                idAndMappingHandler.createNewJourneyId(), this.day, new TransportSystem(transportMode), this.CAPACITY);
-
         List<StopWithMatsimOffsets> stops = new ArrayList<>();
         for (TransitRouteStop transitRouteStop : transitRoute.getStops()) {
 
@@ -57,6 +53,11 @@ class ConnectionConverter {
         Connections newConnections = new Connections();
 
         for (Departure departure : transitRoute.getDepartures().values()) {
+
+            String transportMode = transitRoute.getTransportMode();
+            Journey journey = new DefaultModifiableJourney(
+                    idAndMappingHandler.createNewJourneyId(), this.day, new TransportSystem(transportMode), this.CAPACITY);
+
             for (int i = 1; i < transitRoute.getStops().size(); i++) {
                 Connection connection = convertConnection(
                         stops.get(i-1),
@@ -65,14 +66,6 @@ class ConnectionConverter {
                         journey);
                 newConnections.add(connection);
                 idAndMappingHandler.addConnectionId2LineAndRouteId(connection.id(), new Id[] {lineId, transitRoute.getId()});
-            }
-        }
-
-        for (Connection con : newConnections.asCollection()) {
-            System.out.println(con.duration().toMinutes());
-            if (con.duration().toMinutes() <= 0) {
-                boolean bool = true;
-
             }
         }
 
