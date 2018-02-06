@@ -153,38 +153,39 @@
 		<module>accessibility</module>
 		<module>av</module>
 		<module>analysis</module>
+		<module>bicycle</module>
 		<module>cadytsIntegration</module>
 		<module>carsharing</module>
+		<module>common</module>
+		<module>deprecated</module>
 		<module>drt</module>
 		<module>dvrp</module>
-		<module>taxi</module>
 		<module>emissions</module>
+		<module>eventsBasedPTRouter</module>
 		<module>freight</module>
-		<module>signals</module>
+		<module>hybridsim</module>
+		<module>integration</module>
 		<module>locationchoice</module>
+		<module>mapMatching</module>
+		<module>matrixbasedptrouter</module>
 		<module>matsim4urbansim</module>
 		<module>minibus</module>
+		<module>multimodal</module>
 		<module>networkEditor</module>
+		<module>noise</module>
+		<module>opdytsIntegration</module>
 		<module>otfvis</module>
-		<module>matrixbasedptrouter</module>
 		<module>parking</module>
+		<module>protobuf</module>
+		<module>pseudosimulation</module>
+		<module>roadpricing</module>
+		<module>signals</module>
 		<module>socnetsim</module>
 		<module>socnetgen</module>
+		<module>taxi</module>
 		<module>transEnergySim</module>
-		<module>roadpricing</module>
-		<module>opdytsIntegration</module>
-		<module>multimodal</module>
-		<module>integration</module>
-		<module>wagonSim</module>
-		<module>pseudosimulation</module>
-		<module>common</module>
-		<module>eventsBasedPTRouter</module>
 		<module>travelsummary</module>
-		<module>deprecated</module>
-		<module>protobuf</module>
-		<module>hybridsim</module>
-		<module>noise</module>
-		<module>bicycle</module>
+		<module>wagonSim</module>
 	</modules>
 	<repositories>
 		<repository>
