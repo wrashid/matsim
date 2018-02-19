@@ -21,8 +21,13 @@
 package org.matsim.contrib.mapMatching.run;
 
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
 import org.junit.Rule;
 import org.junit.Test;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
@@ -37,8 +42,10 @@ public class MapMatcherTest {
 		Network network = NetworkUtils.createNetwork();
 		new MatsimNetworkReader(network).readFile(utils.getPackageInputDirectory() + "network.xml.gz");
 		
-		MapMatcher mm = new MapMatcher(network, 2.0, 5.0, 5, utils.getOutputDirectory());
-		mm.mapGPStrajectory(utils.getPackageInputDirectory() + "trace.csv.gz");
+		MapMatcher mm = new MapMatcher(network, 0.5, 1.0, 3, utils.getOutputDirectory());
+		List<Link> mappedLinks = mm.mapGPStrajectory(utils.getPackageInputDirectory() + "trace.csv.gz");
+		/* I would like the following to actually be a correct match, but it's not. */
+		assertEquals("Wrong number of links", 12, mappedLinks.size());
 	}
 
 }

@@ -34,6 +34,7 @@ import org.matsim.core.gbl.MatsimRandom;
 import org.matsim.core.utils.io.IOUtils;
 
 import com.vividsolutions.jts.algorithm.Angle;
+import com.vividsolutions.jts.geom.Coordinate;
 
 public class TraceGenerator {
 	final private static Logger LOG = Logger.getLogger(TraceGenerator.class);
@@ -81,9 +82,9 @@ public class TraceGenerator {
 			while (link.getFreespeed() * (localTime + period) < link.getLength()) {
 				localTime += period;
 				distanceOnLink = link.getFreespeed() * localTime;
-				double a = Angle.angle(
-						MapMatchingUtils.convertFromCoordToCoordinate(link.getFromNode().getCoord()),
-						MapMatchingUtils.convertFromCoordToCoordinate(link.getToNode().getCoord()));
+				Coordinate cFrom = new Coordinate(link.getFromNode().getCoord().getX(), link.getFromNode().getCoord().getY());
+				Coordinate cTo = new Coordinate(link.getToNode().getCoord().getX(), link.getToNode().getCoord().getY());
+				double a = Angle.angle(cFrom, cTo);
 				x = Math.cos(a) * distanceOnLink + link.getFromNode().getCoord().getX() + random.nextDouble()*2*gpsError-gpsError ;
 				y = Math.sin(a) * distanceOnLink + link.getFromNode().getCoord().getY()+ random.nextDouble()*2*gpsError-gpsError;
 				GpsCoord	 gc = new GpsCoord(x, y, globalTime+localTime);

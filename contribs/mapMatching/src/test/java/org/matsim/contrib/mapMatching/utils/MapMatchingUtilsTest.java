@@ -1,6 +1,6 @@
 /* *********************************************************************** *
  * project: org.matsim.*
- * GenerateScenarioTest.java
+ * MapMatchingUtilsTest.java
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
@@ -18,41 +18,47 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.contrib.mapMatching.experiment;
+package org.matsim.contrib.mapMatching.utils;
 
-import static org.junit.Assert.fail;
-
-import java.io.File;
-
-import org.junit.Rule;
+import org.junit.Assert;
 import org.junit.Test;
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.network.Node;
+import org.matsim.contrib.mapMatching.experiment.NetworkGenerator;
+import org.matsim.core.router.util.LeastCostPathCalculator.Path;
+import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.testcases.MatsimTestUtils;
 
-public class GenerateScenarioIT {
+public class MapMatchingUtilsTest {
 
-	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 	
 	@Test
-	public void testScenario() {
-		/* Remove the output folder. */
-		new File(utils.getOutputDirectory()).delete();
+	public void testCreateQuadTree() {
+		Network network = NetworkGenerator.generateGrid(10, 10, 100);
+		QuadTree<Id<Node>> qt = MapMatchingUtils.createQuadTree(network);
+		Assert.assertEquals("Wrong number of nodes.", 100, qt.size());
 		
-		String[] args = {
-				"10", // Number of nodes in x-direction of grid
-				"20", // Number of nodes in y-direction of grid;
-				"50", // Link length in grid network;
-				"40.0", // Frequency of GPS coordinates (expressed as time-between-coordinates);
-				"5.0", // GPS error, expressed in the same units of measure as network;
-				utils.getOutputDirectory() // Path where scenario is written to. 
-		};
-		try {
-			GenerateScenario.run(args);
+		/* Check random node. */
+		Id<Node> node = qt.getClosest(310.0, 310.0);
+		Assert.assertTrue("Wrong node closest to (310, 310).", node.equals(Id.createNodeId("3-3")));
+	}
+	
+	@Test
+	public void testGetPath() {
+		Network network = NetworkGenerator.generateGrid(10, 10, 100);
+		Node nodeFrom = network.getNodes().get(Id.createNodeId("0-0"));
+		Node nodeTo = network.getNodes().get(Id.createNodeId("0-3"));
+		
+		Path path = null;
+		try{
+			path = MapMatchingUtils.getPath(network, nodeFrom, nodeTo, true); 
 		} catch(Exception e) {
 			e.printStackTrace();
-			fail("Should not throw exceptions");
+			Assert.fail("Should not throw exceptions when calculating shortest path.");
 		}
-		
-		
+		Assert.assertEquals("Wrong number of links in shortest path.", 3, path.links.size());
+		Assert.assertEquals("Wrong path length.", 300.0, path.travelCost, MatsimTestUtils.EPSILON);
 	}
 
 }

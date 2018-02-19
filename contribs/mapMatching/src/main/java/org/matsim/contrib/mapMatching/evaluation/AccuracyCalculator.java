@@ -36,7 +36,9 @@ public class AccuracyCalculator {
 	public static boolean saveSpeedAnalysis = true;
 	
 	
-	static List<String[]> combinedAnalysis = new ArrayList<String[]>(){{
+	static List<String[]> combinedAnalysis = new ArrayList<String[]>(){
+		private static final long serialVersionUID = 1L;
+	{
 		add(new String[]{"Name", "Type", "Value"});
 	}};
 	
@@ -79,13 +81,15 @@ public class AccuracyCalculator {
 	
 	
 	public static void writeOutAccuracyData(String directory){
-		MapMatchingUtils.writeDataToCSV(directory + "/Accuracy Data.csv", combinedAnalysis);
+		MapMatchingUtils.writeDataToCSV(directory + "/AccuracyData.csv", combinedAnalysis);
 	}
 	
 	public static void writeOutSpeedAccuracyData(String directory) {
 		addLinkEntryAndExitTime();
-		List<String[]> linkSpeedList = new ArrayList<String[]>(){{
-			add(new String[]{"Numb", "ExperimentName", "LinkID", "Length", "CalculatedSpeed", "ActualSpeed", "DeltaN", "DeltaP", "Link Enter Time", "Link Exit Time"});
+		List<String[]> linkSpeedList = new ArrayList<String[]>(){
+			private static final long serialVersionUID = 1L;
+		{
+			add(new String[]{"Numb", "ExperimentName", "LinkID", "Length", "CalculatedSpeed", "ActualSpeed", "DeltaN", "DeltaP", "LinkEnterTime", "LinkExitTime"});
 		}};
 		
 		for (String id:combinedChosenPathSpeedAnalysis.keySet()) {

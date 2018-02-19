@@ -22,6 +22,7 @@ package org.matsim.contrib.mapMatching.run;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
@@ -31,7 +32,10 @@ import org.matsim.contrib.mapMatching.graph.GraphCreator;
 import org.matsim.contrib.mapMatching.graph.PossibleCandidateLink;
 import org.matsim.contrib.mapMatching.trace.GpsCoord;
 import org.matsim.contrib.mapMatching.utils.MapMatchingUtils;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.network.io.NetworkWriter;
+import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.collections.QuadTree;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -110,15 +114,24 @@ public class MapMatcher {
 	 * @param directory absolute path of the location where output is written to.
 	 */
 	public MapMatcher(String inputNetworkName, double standardDeviationGPSerror, double meanGPSerror, int numberOfLinks, String directory, String name) {
-		network = MapMatchingUtils.parseNetwork(inputNetworkName);
+		/* Parse the network. */ 
+		Scenario sc = ScenarioUtils.createScenario(ConfigUtils.createConfig());
+		new MatsimNetworkReader(sc.getNetwork()).readFile(inputNetworkName);
+		this.network = sc.getNetwork();
+		
 		mapMatcherConstructor(network, standardDeviationGPSerror, meanGPSerror, numberOfLinks, directory, name);
 	}
+	
+	
 	public MapMatcher(Network network, double standardDeviationGPSerror, double meanGPSerror, int numberOfLinks, String directory, String name) {
 		mapMatcherConstructor(network, standardDeviationGPSerror, meanGPSerror, numberOfLinks, directory, name);
 	}
+	
+	
 	public MapMatcher(Network network, double standardDeviationGPSerror, double meanGPSerror, int numberOfLinks, String directory) {
 		mapMatcherConstructor(network, standardDeviationGPSerror, meanGPSerror, numberOfLinks, directory, null);
 	}
+	
 	
 	private void mapMatcherConstructor(Network network,  double standardDeviationGPSerror, double meanGPSerror, int numberOfLinks, String directory, String name) {
 		this.network = network;
