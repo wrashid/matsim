@@ -7,58 +7,32 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Route;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.RouteUtils;
-import org.matsim.core.router.util.TravelTime;
 import org.matsim.pt.routes.ExperimentalTransitRoute;
-import org.matsim.pt.transitSchedule.api.TransitSchedule;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 
 public class AbstractTransitRouter {
 
-	private final TransitRouterNetwork transitNetwork; // specific to default pt router
-	private final TravelTime travelTime ; // specific to default pt router
+	private TransitRouterConfig trConfig;
+	private TransitTravelDisutility travelDisutility;
 
-	private final TransitRouterConfig trConfig;
-	private final TransitTravelDisutility travelDisutility;
-
-
-	//used mainly as MATSim default PT router
-	protected AbstractTransitRouter(
-			TransitRouterConfig trConfig,
-			TransitSchedule schedule) {
-
-		TransitRouterNetworkTravelTimeAndDisutility transitRouterNetworkTravelTimeAndDisutility = new TransitRouterNetworkTravelTimeAndDisutility(trConfig, new PreparedTransitSchedule(schedule));
-
-		this.trConfig = trConfig;
-		this.travelDisutility = transitRouterNetworkTravelTimeAndDisutility;
-
-		this.transitNetwork = TransitRouterNetwork.createFromSchedule(schedule, trConfig.getBeelineWalkConnectionDistance());
-		this.travelTime = transitRouterNetworkTravelTimeAndDisutility;
+	protected AbstractTransitRouter (TransitRouterConfig transitRouterConfig){
+		this.trConfig = transitRouterConfig;
 	}
 
-	protected AbstractTransitRouter(
-			TransitRouterConfig config,
-			TransitRouterNetwork routerNetwork,
-			TravelTime travelTime,
-			TransitTravelDisutility travelDisutility) {
+    protected AbstractTransitRouter(TransitRouterConfig config, TransitTravelDisutility transitTravelDisutility){
 		this.trConfig = config;
-		this.transitNetwork = routerNetwork;
-		this.travelTime = travelTime;
-		this.travelDisutility = travelDisutility;
+		this.travelDisutility = transitTravelDisutility;
 	}
 
-	// for other routers which does not use TransitRouterNetwork e.g. raptor. Amit Oct'17
-	protected AbstractTransitRouter(
-			TransitRouterConfig config,
-			TransitTravelDisutility travelDisutility) {
-		this.trConfig = config;
-		this.travelDisutility = travelDisutility;
-		// not necessary for raptor
-		this.travelTime = null;
-		this.transitNetwork = null;
+	// a setter is required for default PT router, I dont see any other way to make AbstractTransitRouter 'general purpose'.
+	protected void setTransitTravelDisutility(TransitTravelDisutility transitTravelDisutility){
+		this.travelDisutility = transitTravelDisutility;
 	}
 
+	// methods
 	protected final double getWalkTime(Person person, Coord coord, Coord toCoord) {
 		return getTravelDisutility().getWalkTravelTime(person, coord, toCoord);
 	}
@@ -79,6 +53,24 @@ public class AbstractTransitRouter {
 		return legs;
 	}
 
+	private Leg createAccessTransitWalkLeg(Coord fromCoord, RouteSegment routeSegement) {
+		Leg leg = this.createTransitWalkLeg(fromCoord, routeSegement.fromStop.getCoord());
+		Route walkRoute = RouteUtils.createGenericRouteImpl(null, routeSegement.fromStop.getLinkId());
+		walkRoute.setTravelTime(leg.getTravelTime() );
+		walkRoute.setDistance(trConfig.getBeelineDistanceFactor() * NetworkUtils.getEuclideanDistance(fromCoord, routeSegement.fromStop.getCoord()));
+		leg.setRoute(walkRoute);
+		return leg;
+	}
+
+	private Leg createEgressTransitWalkLeg(RouteSegment routeSegement, Coord toCoord) {
+		Leg leg = this.createTransitWalkLeg(routeSegement.toStop.getCoord(), toCoord);
+		Route walkRoute = RouteUtils.createGenericRouteImpl(routeSegement.toStop.getLinkId(), null);
+		walkRoute.setTravelTime(leg.getTravelTime() );
+		walkRoute.setDistance(trConfig.getBeelineDistanceFactor() * NetworkUtils.getEuclideanDistance(routeSegement.toStop.getCoord(), toCoord));
+		leg.setRoute(walkRoute);
+		return leg;
+	}
+
 	private Leg createTransferTransitWalkLeg(RouteSegment routeSegement) {
 		Leg leg = this.createTransitWalkLeg(routeSegement.getFromStop().getCoord(), routeSegement.getToStop().getCoord());
 		Route walkRoute = RouteUtils.createGenericRouteImpl(routeSegement.getFromStop().getLinkId(), routeSegement.getToStop().getLinkId());
@@ -86,6 +78,7 @@ public class AbstractTransitRouter {
 		// transit walk leg should include additional transfer time; Amit, Aug'17
 		leg.setTravelTime( getTransferTime(null, routeSegement.getFromStop().getCoord(), routeSegement.getToStop().getCoord()) );
 		walkRoute.setTravelTime(getTransferTime(null, routeSegement.getFromStop().getCoord(), routeSegement.getToStop().getCoord()) );
+		walkRoute.setDistance(trConfig.getBeelineDistanceFactor() * NetworkUtils.getEuclideanDistance(routeSegement.fromStop.getCoord(), routeSegement.toStop.getCoord()));
 		leg.setRoute(walkRoute);
 
 		return leg;
@@ -100,12 +93,15 @@ public class AbstractTransitRouter {
 		// check if first leg extends walking distance
 		if (p.getRoute().get(0).getRouteTaken() == null) {
 			// route starts with transfer - extend initial walk to that stop
-			accessLeg = createTransitWalkLeg(fromCoord, p.getRoute().get(0).getToStop().getCoord());
+			//TODO: what if first leg extends the walking distance to more than first routeSegment i.e., (accessLeg, transfer, transfer ...). Amit Jan'18
+//			accessLeg = createTransitWalkLeg(fromCoord, p.getRoute().get(0).getToStop().getCoord());
+			accessLeg = createAccessTransitWalkLeg(fromCoord, p.getRoute().get(0));
 			p.getRoute().remove(0);
 		} else {
 			// do not extend it - add a regular walk leg
 			//
-			accessLeg = createTransitWalkLeg(fromCoord, p.getRoute().get(0).getFromStop().getCoord());
+//			accessLeg = createTransitWalkLeg(fromCoord, p.getRoute().get(0).getFromStop().getCoord());
+			accessLeg = createAccessTransitWalkLeg(fromCoord, p.getRoute().get(0));
 		}
 
 		// egress leg
@@ -113,12 +109,14 @@ public class AbstractTransitRouter {
 		// check if first leg extends walking distance
 		if (p.getRoute().get(p.getRoute().size() - 1).getRouteTaken() == null) {
 			// route starts with transfer - extend initial walk to that stop
-			egressLeg = createTransitWalkLeg(p.getRoute().get(p.getRoute().size() - 1).getFromStop().getCoord(), toCoord);
+//			egressLeg = createTransitWalkLeg(p.getRoute().get(p.getRoute().size() - 1).getFromStop().getCoord(), toCoord);
+			egressLeg = createEgressTransitWalkLeg(p.getRoute().get(p.getRoute().size() - 1), toCoord);
 			p.getRoute().remove(p.getRoute().size() - 1);
 		} else {
 			// do not extend it - add a regular walk leg
 			// access leg
-			egressLeg = createTransitWalkLeg(p.getRoute().get(p.getRoute().size() - 1).getToStop().getCoord(), toCoord);
+//			egressLeg = createTransitWalkLeg(p.getRoute().get(p.getRoute().size() - 1).getToStop().getCoord(), toCoord);
+			egressLeg = createEgressTransitWalkLeg(p.getRoute().get(p.getRoute().size() - 1), toCoord);
 		}
 
 
@@ -127,9 +125,10 @@ public class AbstractTransitRouter {
 
 		// route segments are now in pt-walk-pt sequence
 		for (RouteSegment routeSegement : p.getRoute()) {
-			if (routeSegement.getRouteTaken() == null) {
-				// transfer
-				legs.add(createTransferTransitWalkLeg(routeSegement));
+			if (routeSegement.getRouteTaken() == null) {// transfer
+				if (!routeSegement.fromStop.equals(routeSegement.toStop)) { // same to/from stop => no transfer. Amit Feb'18
+					legs.add(createTransferTransitWalkLeg(routeSegement));
+				}
 			} else {
 				// pt leg
 				legs.add(createTransitLeg(routeSegement));
@@ -149,6 +148,7 @@ public class AbstractTransitRouter {
 		TransitStopFacility egressStop = routeSegment.getToStop();
 
 		ExperimentalTransitRoute ptRoute = new ExperimentalTransitRoute(accessStop, egressStop, routeSegment.getLineTaken(), routeSegment.getRouteTaken());
+		ptRoute.setTravelTime(routeSegment.travelTime);
 		leg.setRoute(ptRoute);
 
 		leg.setTravelTime(routeSegment.getTravelTime());
@@ -162,11 +162,6 @@ public class AbstractTransitRouter {
 		return leg;
 	}
 
-	public final TransitRouterNetwork getTransitRouterNetwork() {
-		// publicly used in 2 places.  kai, jul'17
-		return this.transitNetwork;
-	}
-
 	protected final TransitRouterConfig getConfig() {
 		return trConfig;
 	}
@@ -177,11 +172,6 @@ public class AbstractTransitRouter {
 
 	protected final TransitTravelDisutility getTravelDisutility() {
 		return travelDisutility;
-	}
-
-	// specific to default pt router. Amit Oct'17
-	protected final TravelTime getTravelTime() {
-		return travelTime;
 	}
 
 }

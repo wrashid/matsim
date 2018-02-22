@@ -6,8 +6,9 @@ import org.matsim.contrib.drt.data.validator.DrtRequestValidator;
 import org.matsim.contrib.drt.optimizer.DefaultDrtOptimizer;
 import org.matsim.contrib.drt.optimizer.depot.DepotFinder;
 import org.matsim.contrib.drt.optimizer.depot.NearestStartLinkAsDepot;
+import org.matsim.contrib.drt.optimizer.rebalancing.NoRebalancingStrategy;
 import org.matsim.contrib.drt.optimizer.rebalancing.RebalancingStrategy;
-import org.matsim.contrib.drt.optimizer.rebalancing.SendToStartLinkStrategy;
+import org.matsim.contrib.drt.routing.DrtMainModeIdentifier;
 import org.matsim.contrib.drt.routing.DrtRoutingModule;
 import org.matsim.contrib.drt.routing.StopBasedDrtRoutingModule;
 import org.matsim.contrib.dvrp.data.Fleet;
@@ -15,6 +16,7 @@ import org.matsim.contrib.dvrp.data.file.FleetProvider;
 import org.matsim.contrib.dvrp.router.TimeAsTravelDisutility;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
+import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
@@ -31,7 +33,7 @@ public final class DrtModule extends AbstractModule {
 				.asEagerSingleton();
 		bind(DrtRequestValidator.class).to(DefaultDrtRequestValidator.class);
 		bind(DepotFinder.class).to(NearestStartLinkAsDepot.class);
-		bind(RebalancingStrategy.class).to(SendToStartLinkStrategy.class);
+		bind(RebalancingStrategy.class).to(NoRebalancingStrategy.class);
 		bind(TravelDisutilityFactory.class).annotatedWith(Names.named(DefaultDrtOptimizer.DRT_OPTIMIZER))
 				.toInstance(timeCalculator -> new TimeAsTravelDisutility(timeCalculator));
 
@@ -46,6 +48,7 @@ public final class DrtModule extends AbstractModule {
 						.readFile(drtCfg.getTransitStopsFileUrl(getConfig().getContext()).getFile());
 				bind(TransitSchedule.class).annotatedWith(Names.named(DrtConfigGroup.DRT_MODE))
 						.toInstance(scenario2.getTransitSchedule());
+				bind(MainModeIdentifier.class).to(DrtMainModeIdentifier.class).asEagerSingleton();
 				addRoutingModuleBinding(DrtConfigGroup.DRT_MODE).to(StopBasedDrtRoutingModule.class).asEagerSingleton();
 				break;
 

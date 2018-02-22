@@ -39,7 +39,7 @@
 
         <!ELEMENT attributes        (attribute*)>
 
-        <!ELEMENT attribute     EMPTY>
+        <!ELEMENT attribute     ANY>
         <!ATTLIST attribute
                 name          CDATA #REQUIRED
                 class         CDATA #REQUIRED>

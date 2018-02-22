@@ -19,13 +19,12 @@
 
 package org.matsim.contrib.drt.run;
 
-import org.apache.log4j.Logger;
+import org.matsim.contrib.drt.run.DrtConfigGroup.OperationalScheme;
 import org.matsim.contrib.dvrp.run.DvrpConfigConsistencyChecker;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.consistency.ConfigConsistencyChecker;
 
 public class DrtConfigConsistencyChecker implements ConfigConsistencyChecker {
-	private static final Logger log = Logger.getLogger(DrtConfigConsistencyChecker.class);
 
 	@Override
 	public void checkConsistency(Config config) {
@@ -33,13 +32,27 @@ public class DrtConfigConsistencyChecker implements ConfigConsistencyChecker {
 
 		DrtConfigGroup drtCfg = DrtConfigGroup.get(config);
 		if (drtCfg.getMaxTravelTimeAlpha() < 1) {
-			log.warn(DrtConfigGroup.MAX_TRAVEL_TIME_ALPHA + " is below 1.0! See comments in the DrtConfigGroup");
+			throw new RuntimeException(DrtConfigGroup.MAX_TRAVEL_TIME_ALPHA + " may not be less than 1.0");
 		}
 		if (drtCfg.getMaxTravelTimeBeta() < 0) {
-			log.warn(DrtConfigGroup.MAX_TRAVEL_TIME_BETA + " is below 0.0! See comments in the DrtConfigGroup");
+			throw new RuntimeException(DrtConfigGroup.MAX_TRAVEL_TIME_BETA + " must be zero or positive");
 		}
 		if (drtCfg.getMaxWaitTime() < 0) {
-			log.warn(DrtConfigGroup.MAX_WAIT_TIME + " is below 0.0! See comments in the DrtConfigGroup");
+			throw new RuntimeException(DrtConfigGroup.MAX_WAIT_TIME + " must be zero or positive");
+		}
+		if (drtCfg.getOperationalScheme() == OperationalScheme.stationbased && drtCfg.getMaxWalkDistance() < 0) {
+			throw new RuntimeException(DrtConfigGroup.MAX_WALK_DISTANCE + " must be zero or positive"
+					+ " when the operational scheme is " + DrtConfigGroup.OperationalScheme.stationbased);
+		}
+		if (drtCfg.getStopDuration() < 0) {
+			throw new RuntimeException(DrtConfigGroup.STOP_DURATION + " must be zero or positive");
+		}
+		if (drtCfg.getNumberOfThreads() > Runtime.getRuntime().availableProcessors()) {
+			throw new RuntimeException(
+					DrtConfigGroup.NUMBER_OF_THREADS + " is higher than the number of logical cores available to JVM");
+		}
+		if (config.qsim().getNumberOfThreads() != 1) {
+			throw new RuntimeException("Only a single-threaded QSim allowed");
 		}
 	}
 }
