@@ -225,120 +225,119 @@ public class ConnectionScanRouterTest extends TestCase {
         System.out.println(String.format("%d:%d:%d.%d", hours, mins, secs, completedIn));
     }
 
-    public void testLineChange() {
+//    public void testLineChange() {
+//
+//        TransitRouter router = connectionScanRouter;
+//
+//        long start = System.currentTimeMillis();
+//
+//        Coord toCoord = new Coord((double) 16100, (double) 10050);
+//        List<Leg> legs = router.calcRoute(new FakeFacility(new Coord((double) 3800, (double) 5100)), new FakeFacility(toCoord), 6.0*3600, null);
+//        assertEquals(5, legs.size());
+//        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
+//        assertEquals(TransportMode.pt, legs.get(1).getMode());
+//        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
+//        assertEquals(TransportMode.pt, legs.get(3).getMode());
+//        assertEquals(TransportMode.transit_walk, legs.get(4).getMode());
+//        assertTrue("expected TransitRoute in leg.", legs.get(1).getRoute() instanceof ExperimentalTransitRoute);
+//        ExperimentalTransitRoute ptRoute = (ExperimentalTransitRoute) legs.get(1).getRoute();
+//        assertEquals(Id.create("0", TransitStopFacility.class), ptRoute.getAccessStopId());
+//        assertEquals(Id.create("4", TransitStopFacility.class), ptRoute.getEgressStopId());
+//        assertEquals(f.blueLine.getId(), ptRoute.getLineId());
+//        assertEquals(Id.create("blue A > I", TransitRoute.class), ptRoute.getRouteId());
+//        assertTrue("expected TransitRoute in leg.", legs.get(3).getRoute() instanceof ExperimentalTransitRoute);
+//        ptRoute = (ExperimentalTransitRoute) legs.get(3).getRoute();
+//        assertEquals(Id.create("18", TransitStopFacility.class), ptRoute.getAccessStopId());
+//        assertEquals(Id.create("19", TransitStopFacility.class), ptRoute.getEgressStopId());
+//        assertEquals(f.greenLine.getId(), ptRoute.getLineId());
+//        assertEquals(Id.create("green clockwise", TransitRoute.class), ptRoute.getRouteId());
+//        double actualTravelTime = 0.0;
+//        for (Leg leg : legs) {
+//            actualTravelTime += leg.getTravelTime();
+//        }
+//        double expectedTravelTime = 31.0 * 60 + // agent takes the *:06 course, arriving in C at *:18, departing at *:21, arriving in K at*:31
+//                CoordUtils.calcEuclideanDistance(
+//                        f.schedule.getFacilities().get(Id.create("19", TransitStopFacility.class)).getCoord(), toCoord)
+//                        / travelDisutility.config.getBeelineWalkSpeed();
+//        assertEquals(expectedTravelTime, actualTravelTime, MatsimTestCase.EPSILON);
+//
+//        long end = System.currentTimeMillis();
+//        long completedIn = end - start;
+//
+//        int hours = (int)(completedIn / 3600000); completedIn -= hours * 3600000;
+//        int mins = (int)(completedIn / 60000); completedIn -= mins * 60000;
+//        int secs = (int)(completedIn / 1000); completedIn -= secs * 1000;
+//
+//        System.out.println(String.format("%d:%d:%d.%d", hours, mins, secs, completedIn));
+//    }
 
-        TransitRouter router = connectionScanRouter;
+//    public void testTransferWeights() {
+//		/* idea: travel from C to F
+//		 * If starting at the right time, one could take the red line to G and travel back with blue to F.
+//		 * If one doesn't want to switch lines, one could take the blue line from C to F directly.
+//		 * Using the red line (dep *:00, change at G *:09/*:12) results in an arrival time of *:19,
+//		 * using the blue line only (dep *:02) results in an arrival time of *:23. So the line switch
+//		 * cost must be larger than 4 minutes to have an effect.
+//		 */
+//
+//        travelDisutility.config.setUtilityOfLineSwitch_utl(0);
+//
+//        TransitRouter router = connectionScanRouter;
+//        List<Leg> legs = router.calcRoute(new FakeFacility(new Coord((double) 11900, (double) 5100)),
+//                new FakeFacility(new Coord((double) 24100, (double) 4950)),
+//                6.0*3600 - 5.0*60, null);
+//        assertEquals(5, legs.size());
+//        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
+//        assertEquals(TransportMode.pt, legs.get(1).getMode());
+//        assertEquals(f.redLine.getId(), ((ExperimentalTransitRoute) legs.get(1).getRoute()).getLineId());
+//        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
+//        assertEquals(TransportMode.pt, legs.get(3).getMode());
+//        assertEquals(f.blueLine.getId(), ((ExperimentalTransitRoute) legs.get(3).getRoute()).getLineId());
+//        assertEquals(TransportMode.transit_walk, legs.get(4).getMode());
+//
+//        travelDisutility.config.setUtilityOfLineSwitch_utl(
+//                300.0 * travelDisutility.config.getMarginalUtilityOfTravelTimePt_utl_s()); // corresponds to 5 minutes transit travel time
+//        legs = router.calcRoute(new FakeFacility(new Coord((double) 11900, (double) 5100)),
+//                new FakeFacility(new Coord((double) 24100, (double) 4950)),
+//                6.0*3600 - 5.0*60, null);
+//        assertEquals(3, legs.size());
+//        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
+//        assertEquals(TransportMode.pt, legs.get(1).getMode());
+//        assertEquals(f.blueLine.getId(), ((ExperimentalTransitRoute) legs.get(1).getRoute()).getLineId());
+//        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
+//    }
 
-        long start = System.currentTimeMillis();
-
-        Coord toCoord = new Coord((double) 16100, (double) 10050);
-        List<Leg> legs = router.calcRoute(new FakeFacility(new Coord((double) 3800, (double) 5100)), new FakeFacility(toCoord), 6.0*3600, null);
-        assertEquals(5, legs.size());
-        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
-        assertEquals(TransportMode.pt, legs.get(1).getMode());
-        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
-        assertEquals(TransportMode.pt, legs.get(3).getMode());
-        assertEquals(TransportMode.transit_walk, legs.get(4).getMode());
-        assertTrue("expected TransitRoute in leg.", legs.get(1).getRoute() instanceof ExperimentalTransitRoute);
-        ExperimentalTransitRoute ptRoute = (ExperimentalTransitRoute) legs.get(1).getRoute();
-        assertEquals(Id.create("0", TransitStopFacility.class), ptRoute.getAccessStopId());
-        assertEquals(Id.create("4", TransitStopFacility.class), ptRoute.getEgressStopId());
-        assertEquals(f.blueLine.getId(), ptRoute.getLineId());
-        assertEquals(Id.create("blue A > I", TransitRoute.class), ptRoute.getRouteId());
-        assertTrue("expected TransitRoute in leg.", legs.get(3).getRoute() instanceof ExperimentalTransitRoute);
-        ptRoute = (ExperimentalTransitRoute) legs.get(3).getRoute();
-        assertEquals(Id.create("18", TransitStopFacility.class), ptRoute.getAccessStopId());
-        assertEquals(Id.create("19", TransitStopFacility.class), ptRoute.getEgressStopId());
-        assertEquals(f.greenLine.getId(), ptRoute.getLineId());
-        assertEquals(Id.create("green clockwise", TransitRoute.class), ptRoute.getRouteId());
-        double actualTravelTime = 0.0;
-        for (Leg leg : legs) {
-            actualTravelTime += leg.getTravelTime();
-        }
-        double expectedTravelTime = 31.0 * 60 + // agent takes the *:06 course, arriving in C at *:18, departing at *:21, arriving in K at*:31
-                CoordUtils.calcEuclideanDistance(
-                        f.schedule.getFacilities().get(Id.create("19", TransitStopFacility.class)).getCoord(), toCoord)
-                        / travelDisutility.config.getBeelineWalkSpeed();
-        assertEquals(expectedTravelTime, actualTravelTime, MatsimTestCase.EPSILON);
-
-        long end = System.currentTimeMillis();
-        long completedIn = end - start;
-
-        int hours = (int)(completedIn / 3600000); completedIn -= hours * 3600000;
-        int mins = (int)(completedIn / 60000); completedIn -= mins * 60000;
-        int secs = (int)(completedIn / 1000); completedIn -= secs * 1000;
-
-        System.out.println(String.format("%d:%d:%d.%d", hours, mins, secs, completedIn));
-    }
-
-
-    public void testTransferWeights() {
-		/* idea: travel from C to F
-		 * If starting at the right time, one could take the red line to G and travel back with blue to F.
-		 * If one doesn't want to switch lines, one could take the blue line from C to F directly.
-		 * Using the red line (dep *:00, change at G *:09/*:12) results in an arrival time of *:19,
-		 * using the blue line only (dep *:02) results in an arrival time of *:23. So the line switch
-		 * cost must be larger than 4 minutes to have an effect.
-		 */
-
-        travelDisutility.config.setUtilityOfLineSwitch_utl(0);
-
-        TransitRouter router = connectionScanRouter;
-        List<Leg> legs = router.calcRoute(new FakeFacility(new Coord((double) 11900, (double) 5100)),
-                new FakeFacility(new Coord((double) 24100, (double) 4950)),
-                6.0*3600 /*- 5.0*60*/, null);
-        assertEquals(5, legs.size());
-        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
-        assertEquals(TransportMode.pt, legs.get(1).getMode());
-        assertEquals(f.redLine.getId(), ((ExperimentalTransitRoute) legs.get(1).getRoute()).getLineId());
-        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
-        assertEquals(TransportMode.pt, legs.get(3).getMode());
-        assertEquals(f.blueLine.getId(), ((ExperimentalTransitRoute) legs.get(3).getRoute()).getLineId());
-        assertEquals(TransportMode.transit_walk, legs.get(4).getMode());
-
-        travelDisutility.config.setUtilityOfLineSwitch_utl(
-                300.0 * travelDisutility.config.getMarginalUtilityOfTravelTimePt_utl_s()); // corresponds to 5 minutes transit travel time
-        legs = router.calcRoute(new FakeFacility(new Coord((double) 11900, (double) 5100)),
-                new FakeFacility(new Coord((double) 24100, (double) 4950)),
-                6.0*3600 - 5.0*60, null);
-        assertEquals(3, legs.size());
-        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
-        assertEquals(TransportMode.pt, legs.get(1).getMode());
-        assertEquals(f.blueLine.getId(), ((ExperimentalTransitRoute) legs.get(1).getRoute()).getLineId());
-        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
-    }
-
-    public void testTransferTime() {
-		/* idea: travel from C to F
-		 * If starting at the right time, one could take the red line to G and travel back with blue to F.
-		 * If one doesn't want to switch lines, one could take the blue line from C to F directly.
-		 * Using the red line (dep *:00, change at G *:09/*:12) results in an arrival time of *:19,
-		 * using the blue line only (dep *:02) results in an arrival time of *:23.
-		 * For the line switch at G, 3 minutes are available. If the additional "savety" time is larger than
-		 * that, the direct connection should be taken.
-		 */
-        travelDisutility.config.setUtilityOfLineSwitch_utl(0);
-        assertEquals(0, travelDisutility.config.getAdditionalTransferTime(), 1e-8);
-        TransitRouter router = transitRouterImpl;
-        List<Leg> legs = router.calcRoute(new FakeFacility(new Coord((double) 11900, (double) 5100)), new FakeFacility(new Coord((double) 24100, (double) 4950)), 6.0*3600 - 5.0*60, null);
-        assertEquals(5, legs.size());
-        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
-        assertEquals(TransportMode.pt, legs.get(1).getMode());
-        assertEquals(f.redLine.getId(), ((ExperimentalTransitRoute) legs.get(1).getRoute()).getLineId());
-        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
-        assertEquals(TransportMode.pt, legs.get(3).getMode());
-        assertEquals(f.blueLine.getId(), ((ExperimentalTransitRoute) legs.get(3).getRoute()).getLineId());
-        assertEquals(TransportMode.transit_walk, legs.get(4).getMode());
-
-        travelDisutility.config.setAdditionalTransferTime(3.0*60); // 3 mins already enough, as there is a small distance to walk anyway which adds some time
-        router = transitRouterImpl; // this is necessary to update the router for any change in config. At least raptor transit router fails without this. Amit Sep'17.
-        legs = router.calcRoute(new FakeFacility(new Coord((double) 11900, (double) 5100)), new FakeFacility(new Coord((double) 24100, (double) 4950)), 6.0*3600 - 5.0*60, null);
-        assertEquals(3, legs.size());
-        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
-        assertEquals(TransportMode.pt, legs.get(1).getMode());
-        assertEquals(f.blueLine.getId(), ((ExperimentalTransitRoute) legs.get(1).getRoute()).getLineId());
-        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
-    }
+//    public void testTransferTime() {
+//		/* idea: travel from C to F
+//		 * If starting at the right time, one could take the red line to G and travel back with blue to F.
+//		 * If one doesn't want to switch lines, one could take the blue line from C to F directly.
+//		 * Using the red line (dep *:00, change at G *:09/*:12) results in an arrival time of *:19,
+//		 * using the blue line only (dep *:02) results in an arrival time of *:23.
+//		 * For the line switch at G, 3 minutes are available. If the additional "savety" time is larger than
+//		 * that, the direct connection should be taken.
+//		 */
+//        travelDisutility.config.setUtilityOfLineSwitch_utl(0);
+//        assertEquals(0, travelDisutility.config.getAdditionalTransferTime(), 1e-8);
+//        TransitRouter router = connectionScanRouter;
+//        List<Leg> legs = router.calcRoute(new FakeFacility(new Coord((double) 11900, (double) 5100)), new FakeFacility(new Coord((double) 24100, (double) 4950)), 6.0*3600 - 5.0*60, null);
+//        assertEquals(5, legs.size());
+//        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
+//        assertEquals(TransportMode.pt, legs.get(1).getMode());
+//        assertEquals(f.redLine.getId(), ((ExperimentalTransitRoute) legs.get(1).getRoute()).getLineId());
+//        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
+//        assertEquals(TransportMode.pt, legs.get(3).getMode());
+//        assertEquals(f.blueLine.getId(), ((ExperimentalTransitRoute) legs.get(3).getRoute()).getLineId());
+//        assertEquals(TransportMode.transit_walk, legs.get(4).getMode());
+//
+//        travelDisutility.config.setAdditionalTransferTime(3.0*60); // 3 mins already enough, as there is a small distance to walk anyway which adds some time
+//        router = connectionScanRouter; // this is necessary to update the router for any change in config. At least raptor transit router fails without this. Amit Sep'17.
+//        legs = router.calcRoute(new FakeFacility(new Coord((double) 11900, (double) 5100)), new FakeFacility(new Coord((double) 24100, (double) 4950)), 6.0*3600 - 5.0*60, null);
+//        assertEquals(3, legs.size());
+//        assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
+//        assertEquals(TransportMode.pt, legs.get(1).getMode());
+//        assertEquals(f.blueLine.getId(), ((ExperimentalTransitRoute) legs.get(1).getRoute()).getLineId());
+//        assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
+//    }
 
     public void testAfterMidnight() {
 
@@ -381,6 +380,8 @@ public class ConnectionScanRouterTest extends TestCase {
         assertEquals(f.blueLine.getId(), ptRoute.getLineId());
         assertEquals(Id.create("blue A > I", TransitRoute.class), ptRoute.getRouteId());
     }
+
+
 
 
 
