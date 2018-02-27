@@ -27,7 +27,8 @@ public class TransitPassengerRouteConverter {
         this.mappingHandler = mappingHandler;
     }
 
-    public TransitPassengerRoute createTransitPassengerRoute(double lastArrivalTime, List<Connection> connections) {
+    public TransitPassengerRoute createTransitPassengerRoute(double lastArrivalTime, List<Connection> connections,
+                                                             double initialAccessTime, double initialEgressTime) {
 
         double cost = 0;
 //        double lastArrivalTime = timeInSecondsFromMidnight(departure);
@@ -79,6 +80,8 @@ public class TransitPassengerRouteConverter {
         }
         if (storedRouteSegment != null)
             routeSegments.add(storedRouteSegment);
+
+        cost += initialAccessTime + initialEgressTime;
 
         if (routeSegments.size()==0) return null;
         else return new TransitPassengerRoute(cost, routeSegments);
