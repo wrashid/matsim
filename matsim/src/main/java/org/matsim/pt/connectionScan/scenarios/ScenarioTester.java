@@ -1,10 +1,11 @@
-package org.matsim.pt.connectionScan;
+package org.matsim.pt.connectionScan.scenarios;
 
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.pt.connectionScan.ConnectionScanTransitRouterProvider;
 import org.matsim.pt.router.TransitRouter;
 
 import java.io.File;
