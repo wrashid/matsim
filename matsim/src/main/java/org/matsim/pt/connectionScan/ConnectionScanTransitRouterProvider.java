@@ -3,6 +3,7 @@ package org.matsim.pt.connectionScan;
 import com.google.inject.Singleton;
 import org.matsim.core.config.Config;
 import org.matsim.pt.router.*;
+import org.matsim.pt.transitSchedule.api.Transit;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
 
 import javax.inject.Inject;
@@ -17,7 +18,7 @@ public class ConnectionScanTransitRouterProvider implements Provider<TransitRout
     private final TransitRouterConfig transitRouterConfig;
 
     @Inject
-    ConnectionScanTransitRouterProvider(final TransitSchedule schedule, final Config config) {
+    public ConnectionScanTransitRouterProvider(final TransitSchedule schedule, final Config config) {
 
         this.schedule = schedule;
 
@@ -30,9 +31,18 @@ public class ConnectionScanTransitRouterProvider implements Provider<TransitRout
         travelDisutility = new TransitRouterNetworkTravelTimeAndDisutility(transitRouterConfig, preparedTransitSchedule);
     }
 
+    public ConnectionScanTransitRouterProvider(final TransitSchedule schedule, final TransitRouterConfig transitRouterConfig) {
+
+        this.schedule = schedule;
+        this.transitRouterConfig = transitRouterConfig;
+
+        PreparedTransitSchedule preparedTransitSchedule = new PreparedTransitSchedule(this.schedule);
+        travelDisutility = new TransitRouterNetworkTravelTimeAndDisutility(transitRouterConfig, preparedTransitSchedule);
+    }
+
     @Override
     public TransitRouter get() {
-        return new ConnectionScanRouter(transitRouterConfig, this.schedule);
+        return new ConnectionScanRouter(transitRouterConfig, this.travelDisutility, this.schedule);
     }
 }
 
