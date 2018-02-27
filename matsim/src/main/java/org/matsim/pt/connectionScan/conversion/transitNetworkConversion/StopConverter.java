@@ -107,7 +107,8 @@ class StopConverter {
         double walkTime = costFunction.getWalkTravelTime(null,
                 CoordinateUtils.convert2Coord(stop1.coordinate()),
                 CoordinateUtils.convert2Coord(stop2.coordinate()));
-        return RelativeTime.of((long)walkTime, ChronoUnit.SECONDS);
+        RelativeTime of = RelativeTime.of((long) (walkTime * Math.pow(10, 9)), ChronoUnit.NANOS);
+        return of;
     }
 
     public Collection<Stop> getNearestNodes(final Point2D coord, final double distance) {
