@@ -39,19 +39,21 @@ import org.xml.sax.Attributes;
  */
 public final class CarrierVehicleTypeReader extends MatsimXmlParser{
 
-	private final static String CARRIER_VEHICLE_TYPE_V1 = "carrierVehicleType_v1.dtd";		//TODO: Create v1.dtd
-	private final static String CARRIER_VEHICLE_TYPE_V2 = "carrierVehicleType_v2.dtd";		//TODO: Create v1.dtd
+	private final static String CARRIER_VEHICLE_TYPE_V1 = "carrierVehicleType_v1.dtd";	
+	//	private final static String CARRIER_VEHICLE_TYPE_V2 = "carrierVehicleType_v2.dtd";		//TODO: Create v1.dtd
 
 	private MatsimXmlParser delegate = null;
 	
 	private CarrierVehicleTypes carrierVehicleTypes;
+	private String carrierVehicleTypesFile;
 
 	private static final Logger log = Logger.getLogger(CarrierVehicleTypeReader.class);
 	
 
-	public CarrierVehicleTypeReader(CarrierVehicleTypes carrierVehicleTypes) {
+	public CarrierVehicleTypeReader(CarrierVehicleTypes carrierVehicleTypes, String carrierVehicleTypesFile) {
 		super();
 		this.carrierVehicleTypes = carrierVehicleTypes;
+		this.carrierVehicleTypesFile = carrierVehicleTypesFile;
 	}
 
 	@Override
@@ -82,8 +84,7 @@ public final class CarrierVehicleTypeReader extends MatsimXmlParser{
 			log.info("using carrierVehicleTypeV1-reader.");
 			break;
 		default:
-			this.delegate =
-				new CarrierVehicleTypeReaderV1(this.carrierVehicleTypes); 				//TODO: Übergabewert setzen, prüfen.
+			this.delegate = new CarrierVehicleTypeReaderV1(carrierVehicleTypes);
 			log.warn("No carrierVehicleType reader available for doctype \"" + doctype + "\" ... using carrierVehicleTypeV1-reader.");
 		}
 
