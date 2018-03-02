@@ -21,7 +21,7 @@ public class CarrierVehicleTypeReaderWithDtdV1Test extends MatsimTestCase{
 		super.setUp();
 		types = new CarrierVehicleTypes();
 	//	new CarrierVehicleTypeReaderV1(types).readFile(getClassInputDirectory() + "vehicleTypes.xml"); // geht
-		CarrierVehicleTypeReader vehicleTypeReader = new CarrierVehicleTypeReader(types, getClassInputDirectory() + "vehicleTypes.xml");
+		CarrierVehicleTypeReader vehicleTypeReader = new CarrierVehicleTypeReader(types);
 		vehicleTypeReader.readFile(getClassInputDirectory() + "vehicleTypes.xml");
 	}
 	

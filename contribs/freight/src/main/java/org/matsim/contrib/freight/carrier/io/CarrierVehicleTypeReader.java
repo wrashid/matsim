@@ -50,7 +50,7 @@ public final class CarrierVehicleTypeReader extends MatsimXmlParser{
 	private static final Logger log = Logger.getLogger(CarrierVehicleTypeReader.class);
 	
 
-	public CarrierVehicleTypeReader(CarrierVehicleTypes carrierVehicleTypes, String carrierVehicleTypesFile) {
+	public CarrierVehicleTypeReader(CarrierVehicleTypes carrierVehicleTypes) {
 		super();
 		this.carrierVehicleTypes = carrierVehicleTypes;
 		this.carrierVehicleTypesFile = carrierVehicleTypesFile;
