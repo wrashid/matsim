@@ -6,7 +6,8 @@ import org.matsim.testcases.MatsimTestCase;
 import org.matsim.vehicles.VehicleType;
 
 /**
- * Tests for the new construction of reading the vehicleTypes with using carrierVehicleType_v1.dtd
+ * Tests for the new version-specific CarrierVehicleTypes-reader
+ * Here: Using carrierVehicleType_v1.dtd
  * TODO: Move dtd to matsim.org/files/dtd and refactor path in vehicleTypes.xml
  * 
  * @author kturner
@@ -20,8 +21,7 @@ public class CarrierVehicleTypeReaderWithDtdV1Test extends MatsimTestCase{
 	public void setUp() throws Exception{
 		super.setUp();
 		types = new CarrierVehicleTypes();
-	//	new CarrierVehicleTypeReaderV1(types).readFile(getClassInputDirectory() + "vehicleTypes.xml"); // geht
-		CarrierVehicleTypeReader vehicleTypeReader = new CarrierVehicleTypeReader(types);
+		CarrierVehicleTypeReader vehicleTypeReader = new CarrierVehicleTypeReader(types); //TODO: shorten it and use import after going investigations are done succesfully ;) kmt feb/18
 		vehicleTypeReader.readFile(getClassInputDirectory() + "vehicleTypes.xml");
 	}
 	
