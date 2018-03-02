@@ -30,9 +30,9 @@ import org.xml.sax.Attributes;
  * A CarrierVehicleTypes reader that reads the MATSim format. This reader recognizes the format of the CarrierVehicleTypes-file and uses
  * the correct reader for the specific CarrierVehicleTypes-version, without manual setting.
  * 
- * Current status Feb/18: Calls the "old" reader.
+ * Current status Feb/18: calles a Copy of the "old" reader - named as V1.
  * 
- * TODO: define .dtd-files, create a v2-reader, adapt CarrierVehicleTypes and other stuff...
+ * TODO: create a v2-reader, move dtd to matsim.org/files/dtd, adapt CarrierVehicleTypes and other stuff...
  * 
  * @author kturner
  *
@@ -40,12 +40,11 @@ import org.xml.sax.Attributes;
 public final class CarrierVehicleTypeReader extends MatsimXmlParser{
 
 	private final static String CARRIER_VEHICLE_TYPE_V1 = "carrierVehicleType_v1.dtd";	
-	//	private final static String CARRIER_VEHICLE_TYPE_V2 = "carrierVehicleType_v2.dtd";		//TODO: Create v1.dtd
+	//	private final static String CARRIER_VEHICLE_TYPE_V2 = "carrierVehicleType_v2.dtd";		//TODO: Create v2.dtd
 
 	private MatsimXmlParser delegate = null;
 	
 	private CarrierVehicleTypes carrierVehicleTypes;
-	private String carrierVehicleTypesFile;
 
 	private static final Logger log = Logger.getLogger(CarrierVehicleTypeReader.class);
 	
@@ -53,7 +52,6 @@ public final class CarrierVehicleTypeReader extends MatsimXmlParser{
 	public CarrierVehicleTypeReader(CarrierVehicleTypes carrierVehicleTypes) {
 		super();
 		this.carrierVehicleTypes = carrierVehicleTypes;
-		this.carrierVehicleTypesFile = carrierVehicleTypesFile;
 	}
 
 	@Override
