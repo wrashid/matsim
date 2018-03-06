@@ -75,27 +75,40 @@ public class CarrierVehicleTypeReaderWithDtdV1Test extends MatsimTestCase{
 	
 	
 	
-////	### And now the same for type Light ####
-//	public void test_whenReadingTypeLight_itReadsDescriptionCorrectly(){
-//		CarrierVehicleType light = types.getVehicleTypes().get(Id.create("light", VehicleType.class));
-//		assertEquals("Light Vehicle", light.getDescription());
+//	### And now the same for type Light ####
+	public void test_whenReadingTypeLight_itReadsDescriptionCorrectly(){
+		CarrierVehicleType light = types.getVehicleTypes().get(Id.create("light", VehicleType.class));
+		assertEquals("Light Vehicle", light.getDescription());
+	}
+	
+//	//--> allowableWeight is not implemented kmt mrz/18
+//	@Ignore 
+//	public void test_whenReadingTypeMedium_itAllowableWeightCorrectly(){
+//		CarrierVehicleType medium = types.getVehicleTypes().get(Id.create("light", VehicleType.class));
+//		assertEquals(8, light.);
 //	}
-//	
-//	public void test_whenReadingTypeLight_itReadsCapacityCorrectly(){
-//		CarrierVehicleType Light = types.getVehicleTypes().get(Id.create("Light", VehicleType.class));
-//		assertEquals(15, Light.getCarrierVehicleCapacity());
-//	}
-//	
-//	public void test_whenReadingTypeLight_itReadsCostInfoCorrectly(){
-//		CarrierVehicleType Light = types.getVehicleTypes().get(Id.create("Light", VehicleType.class));
-//		assertEquals(20.0, Light.getVehicleCostInformation().fix,0.01);
-//		assertEquals(0.35, Light.getVehicleCostInformation().perDistanceUnit,0.01);
-//		assertEquals(25.0, Light.getVehicleCostInformation().perTimeUnit,0.01);
-//	}
-//	
-//	public void test_whenReadingTypeLight_itReadsEngineInfoCorrectly(){
-//		CarrierVehicleType Light = types.getVehicleTypes().get(Id.create("Light", VehicleType.class));
-//		assertEquals(0.01, Light.getEngineInformation().getGasConsumption(),0.001);
-//		assertEquals(FuelType.diesel, Light.getEngineInformation().getFuelType().toString());
-//	}
+	
+	public void test_whenReadingTypeLight_itReadsCapacityCorrectly(){
+		CarrierVehicleType Light = types.getVehicleTypes().get(Id.create("light", VehicleType.class));
+		assertEquals(15, Light.getCarrierVehicleCapacity());
+	}
+	
+	public void test_whenReadingTypeLight_itReadsCostInfoCorrectly(){
+		CarrierVehicleType Light = types.getVehicleTypes().get(Id.create("light", VehicleType.class));
+		assertEquals(20.0, Light.getVehicleCostInformation().fix,0.01);
+		assertEquals(0.35, Light.getVehicleCostInformation().perDistanceUnit,0.01);
+		assertEquals(25.0, Light.getVehicleCostInformation().perTimeUnit,0.01);
+	}
+	
+	public void test_whenReadingTypeLight_itReadsEngineInfoCorrectly(){
+		CarrierVehicleType Light = types.getVehicleTypes().get(Id.create("light", VehicleType.class));
+		assertEquals(0.01, Light.getEngineInformation().getGasConsumption(),0.001);
+		assertEquals(FuelType.diesel, Light.getEngineInformation().getFuelType());
+	}
+	
+	public void test_whenReadingTypeLight_itReadsMaxVelocityCorrectly(){
+		CarrierVehicleType light = types.getVehicleTypes().get(Id.create("light", VehicleType.class));
+		assertEquals(10.0, light.getMaximumVelocity());
+	}
+	
 }
