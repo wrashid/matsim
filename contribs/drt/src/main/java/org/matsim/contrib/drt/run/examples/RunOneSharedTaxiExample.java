@@ -3,7 +3,7 @@
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2015 by the members listed in the COPYING,        *
+ * copyright       : (C) 2017 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -17,36 +17,29 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.contrib.minibus.performance.raptor;
+package org.matsim.contrib.drt.run.examples;
 
-import java.util.List;
+import org.matsim.contrib.drt.run.DrtConfigGroup;
+import org.matsim.contrib.drt.run.DrtControlerCreator;
+import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.vis.otfvis.OTFVisConfigGroup;
 
 /**
- * 
- * @author aneumann
- *
+ * @author michalm
  */
-public class RaptorRoute {
+public class RunOneSharedTaxiExample {
+	private static final String CONFIG_FILE = "one_shared_taxi/one_shared_taxi_config.xml";
 
-	private final double cost;
-	private final List<RouteSegment> route;
-
-	public RaptorRoute(double cost, List<RouteSegment> leastCostRoute) {
-		this.cost = cost;
-		this.route = leastCostRoute;
-		
+	public static void run(boolean otfvis, int lastIteration) {
+		Config config = ConfigUtils.loadConfig(CONFIG_FILE, new DrtConfigGroup(), new DvrpConfigGroup(),
+				new OTFVisConfigGroup());
+		config.controler().setLastIteration(lastIteration);
+		DrtControlerCreator.createControler(config, otfvis).run();
 	}
 
-	public double getTravelCost() {
-		return this.cost;
-	}
-	
-	public List<RouteSegment> getRoute() {
-		return this.route;
-	}
-
-	@Override
-	public String toString() {
-		return "Cost: " + this.cost + " via " + this.route;
+	public static void main(String[] args) {
+		run(false, 0); // switch to 'true' to turn on visualisation
 	}
 }

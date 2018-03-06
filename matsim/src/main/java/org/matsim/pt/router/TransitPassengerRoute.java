@@ -3,7 +3,7 @@
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2017 by the members listed in the COPYING,        *
+ * copyright       : (C) 2015 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -17,33 +17,36 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.contrib.drt.run;
+package org.matsim.pt.router;
 
-import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
-import org.matsim.core.config.*;
-import org.matsim.core.config.groups.QSimConfigGroup;
-import org.matsim.vis.otfvis.OTFVisConfigGroup;
+import java.util.List;
 
 /**
- * @author jbischoff
+ * 
+ * @author aneumann
+ *
  */
-public class RunDrtExample {
-	
-	
-	public static void run(Config config, boolean otfvis) {
-		config.addConfigConsistencyChecker(new DrtConfigConsistencyChecker());
-		config.checkConsistency();
-		DrtControlerCreator.createControler(config, otfvis).run();;
+public class TransitPassengerRoute {
+
+	private final double cost;
+	private final List<RouteSegment> route;
+
+	public TransitPassengerRoute(double cost, List<RouteSegment> leastCostRoute) {
+		this.cost = cost;
+		this.route = leastCostRoute;
+		
 	}
 
+	public double getTravelCost() {
+		return this.cost;
+	}
 	
+	public List<RouteSegment> getRoute() {
+		return this.route;
+	}
 
-	public static void main(String[] args) {
-		
-		Config config = ConfigUtils.loadConfig("drt_example/drtconfig.xml", new DrtConfigGroup(), new DvrpConfigGroup(), new OTFVisConfigGroup());
-		config.qsim().setTrafficDynamics(QSimConfigGroup.TrafficDynamics.kinematicWaves);
-		config.qsim().setSnapshotStyle(QSimConfigGroup.SnapshotStyle.kinematicWaves);
-		run(config,true);
-
+	@Override
+	public String toString() {
+		return "Cost: " + this.cost + " via " + this.route;
 	}
 }

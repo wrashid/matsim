@@ -1,9 +1,8 @@
 /* *********************************************************************** *
  * project: org.matsim.*
- *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2015 by the members listed in the COPYING,        *
+ * copyright       : (C) 2018 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -17,37 +16,17 @@
  *                                                                         *
  * *********************************************************************** */
 
-package org.matsim.contrib.minibus.performance.raptor;
+package org.matsim.contrib.drt.run.example;
 
-import org.matsim.api.core.v01.Id;
-import org.matsim.pt.transitSchedule.api.TransitLine;
-import org.matsim.pt.transitSchedule.api.TransitRoute;
-import org.matsim.pt.transitSchedule.api.TransitStopFacility;
+import org.junit.Test;
+import org.matsim.contrib.drt.run.examples.RunOneSharedTaxiExample;
 
 /**
- * 
- * @author aneumann
- *
+ * @author michalm
  */
-public class RouteSegment {
-	
-	final TransitStopFacility fromStop;
-	final TransitStopFacility toStop;
-	final double travelTime;
-	final Id<TransitLine> lineTaken;
-	final Id<TransitRoute> routeTaken;
-	
-	public RouteSegment(TransitStopFacility fromStop, TransitStopFacility toStop, double travelTime, Id<TransitLine> lineTaken, Id<TransitRoute> routeTaken) {
-		this.fromStop = fromStop;
-		this.toStop = toStop;
-		this.travelTime = travelTime;
-		this.lineTaken = lineTaken;
-		this.routeTaken = routeTaken;
+public class RunOneSharedTaxiExampleIT {
+	@Test
+	public void testRun() {
+		RunOneSharedTaxiExample.run(false, 2);
 	}
-	
-	@Override
-	public String toString() {
-		return "From: " + fromStop.getId() + " to " + toStop.getId() + " in " + travelTime + "s via " + routeTaken;
-	}
-
 }
