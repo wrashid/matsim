@@ -8,7 +8,7 @@ first try to create a dtd-file for freight-contrib-->
 <!-- ============================================================ -->
 
 <!ELEMENT vehicleTypes	(vehicleType)*> 
-<!ELEMENT vehicleType	(description?,allowableWeight?,capacity,engineInformation?,costInformation)>
+<!ELEMENT vehicleType	(description?,allowableWeight?,capacity,engineInformation?,costInformation,maxVelocity?)>
 <!ATTLIST vehicleType 
 		id		ID #REQUIRED	>
 
@@ -33,6 +33,8 @@ first try to create a dtd-file for freight-contrib-->
         perMeter		CDATA #REQUIRED
         perSecond	CDATA #REQUIRED>
         
+<!ELEMENT maxVelocity    (#PCDATA)>
+        
 <!-- ============================================================ -->
          
 <!-- ATTRIBUTE id is required and needs to be unique. They may include:
@@ -50,5 +52,7 @@ first try to create a dtd-file for freight-contrib-->
 	Spaces are NOT allowed. -->     
 	
 <!-- ============================================================ -->	
-<!-- Further documentation.. needs to be inserted.	     -->
+<!-- ELEMENT allowableWeight is NOT implemented until now. -> Values are NOT read in anyways!  -->
 
+<!-- ============================================================ -->	
+<!-- Further documentation.. needs to be inserted.	     -->
