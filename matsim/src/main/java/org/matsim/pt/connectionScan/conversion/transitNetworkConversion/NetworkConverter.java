@@ -65,7 +65,7 @@ public class NetworkConverter {
         return transitNetwork;
     }
 
-    private void createDay() { this.day = new Time(LocalDateTime.of(2017, 3, 14, 0, 0));}
+    private void createDay() { this.day = new Time(LocalDateTime.of(2017, 3, 14, 0, 0));} //TODO make constant
 
     public Time getDay() {
         return day;
