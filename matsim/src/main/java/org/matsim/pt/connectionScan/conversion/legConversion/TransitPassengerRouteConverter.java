@@ -47,15 +47,30 @@ public class TransitPassengerRouteConverter {
             lastArrivalTime = timeInSecondsFromMidnight(connection.arrival());
 
             if (connection.id() == -1) {
-                if (storedRouteSegment != null) routeSegments.add(storedRouteSegment);
-                routeSegments.add(new RouteSegment(fromFacility, toFacility,
-                        travelTime, null, null));
-                storedRouteSegment = null;
+                if (storedRouteSegment != null) {
+                    if (storedRouteSegment.getRouteTaken() == null) {
+                        // then join these two route segments
+
+                        storedRouteSegment = new RouteSegment(storedRouteSegment.getFromStop(), toFacility,
+                                travelTime + storedRouteSegment.getTravelTime(),
+                                null,null);
+                    } else {
+                        routeSegments.add(storedRouteSegment);
+                        storedRouteSegment = new RouteSegment(fromFacility, toFacility,
+                                travelTime, null, null);
+                    }
+                } else {
+                    storedRouteSegment = new RouteSegment(fromFacility, toFacility,
+                            travelTime, null, null);
+                }
             } else {
+
                 Id[] lineAndRouteId = mappingHandler.getConnectionId2LineAndRouteId().get(connection.id());
 
                 if (storedRouteSegment != null) {
-                    if (storedRouteSegment.getRouteTaken().equals(lineAndRouteId[1])) {
+                    if (storedRouteSegment.getRouteTaken() != null &&
+                            storedRouteSegment.getRouteTaken().equals(lineAndRouteId[1])) {
+                        // then join these two route segments
 
                         storedRouteSegment = new RouteSegment(storedRouteSegment.getFromStop(), toFacility,
                                 travelTime + storedRouteSegment.getTravelTime(),
