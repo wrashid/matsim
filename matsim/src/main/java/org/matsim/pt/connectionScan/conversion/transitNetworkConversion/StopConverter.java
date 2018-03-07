@@ -51,6 +51,7 @@ class StopConverter {
      * Thereby the method creates a idMap which points from newly for the connection-scan created ids
      *  to the old matsim-ids.
      */
+    @Deprecated
     void convert() {
 
         for (TransitStopFacility matsimStop : matsimStops.values()) {
@@ -89,7 +90,7 @@ class StopConverter {
         this.qtStops = quadTree;
     }
 
-    private void addNeighbours() {
+    public void addNeighbours() {
 
         buildQuadTree();
         for (Stop stop : connectionScanStops) {
@@ -115,9 +116,10 @@ class StopConverter {
         return this.qtStops.getDisk(coord.getX(), coord.getY(), distance);
     }
 
-    private void convertAndAddStop(TransitStopFacility matsimStop) {
+    public Stop convertAndAddStop(TransitStopFacility matsimStop) {
         Stop stop = convertStop(matsimStop);
         this.connectionScanStops.add(stop);
+        return stop;
     }
 
     /**

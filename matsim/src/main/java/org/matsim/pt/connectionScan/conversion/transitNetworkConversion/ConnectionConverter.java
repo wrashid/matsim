@@ -14,6 +14,7 @@ import java.util.Map;
 
 class ConnectionConverter {
 
+    private StopConverter stopConverter;
     private Map<Id<TransitLine>, TransitLine> transitLines;
     private Connections connections = new Connections();
     private MappingHandler idAndMappingHandler;
@@ -23,9 +24,10 @@ class ConnectionConverter {
     //TODO
     private final int CAPACITY = 2000000000;
 
-    ConnectionConverter(Map<Id<TransitLine>, TransitLine> transitLines,
+    ConnectionConverter(StopConverter stopConverter, Map<Id<TransitLine>, TransitLine> transitLines,
                         MappingHandler idAndMappingHandler, Time day) {
 
+        this.stopConverter = stopConverter;
         this.transitLines = transitLines;
         this.idAndMappingHandler = idAndMappingHandler;
         this.day = day;
@@ -39,6 +41,7 @@ class ConnectionConverter {
                 this.connections.addAll(newConnections);
             }
         }
+        stopConverter.addNeighbours();
     }
 
     private Connections convertConnections(TransitRoute transitRoute, Id<TransitLine> lineId) {
@@ -46,7 +49,10 @@ class ConnectionConverter {
         List<StopWithMatsimOffsets> stops = new ArrayList<>();
         for (TransitRouteStop transitRouteStop : transitRoute.getStops()) {
 
-            Stop currentStop = idAndMappingHandler.getMatsimId2Stop().get(transitRouteStop.getStopFacility().getId());
+
+//            Stop currentStop = idAndMappingHandler.getMatsimId2Stop().get(transitRouteStop.getStopFacility().getId());
+            Stop currentStop = stopConverter.convertAndAddStop(transitRouteStop.getStopFacility());
+
             stops.add(StopWithMatsimOffsets.from(currentStop, transitRouteStop.getArrivalOffset(),
                     transitRouteStop.getDepartureOffset()));
         }

@@ -49,16 +49,17 @@ public class NetworkConverter {
 
         StopConverter stopConverter = new StopConverter(transitSchedule.getFacilities(), idAndMappingHandler,
                 config.getBeelineWalkConnectionDistance(), costFunction);
-        stopConverter.convert();
-        this.stops = stopConverter.getConnectionScanStops();
+//        stopConverter.convert();
 
-        ConnectionConverter connectionConverter = new ConnectionConverter(transitSchedule.getTransitLines(),
+        ConnectionConverter connectionConverter = new ConnectionConverter(stopConverter,
+                transitSchedule.getTransitLines(),
                 idAndMappingHandler, getDay());
         connectionConverter.convert();
+        this.stops = stopConverter.getConnectionScanStops();
         this.connections = connectionConverter.getConnections();
 
         //TODO on or off?
-        LoopFinder.hasLoop(this.connections);
+//        LoopFinder.hasLoop(this.connections);
 
         TransitNetwork transitNetwork = TransitNetwork.createOf(stops, connections);
         log.info("Finished converting TransitNetwork");
