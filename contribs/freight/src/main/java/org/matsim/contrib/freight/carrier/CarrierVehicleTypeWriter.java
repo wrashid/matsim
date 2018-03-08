@@ -14,6 +14,9 @@ import org.matsim.vehicles.EngineInformation;
  * @author sschroeder
  *
  */
+
+//TODO: Adapt to new xml-schemes (e.g. add DOCTYPE)
+//TODO: Adapt new Fields for CostInformation.
 public class CarrierVehicleTypeWriter extends MatsimXmlWriter {
 
 	private static Logger logger = Logger.getLogger(CarrierVehicleTypeWriter.class);
