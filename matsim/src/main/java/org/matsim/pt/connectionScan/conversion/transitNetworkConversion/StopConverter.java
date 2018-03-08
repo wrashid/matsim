@@ -8,11 +8,12 @@ import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.pt.connectionScan.utils.CoordinateUtils;
+import org.matsim.pt.connectionScan.utils.TransitNetworkUtils;
+import org.matsim.pt.router.TransitRouterConfig;
 import org.matsim.pt.router.TransitTravelDisutility;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 
 import java.awt.geom.Point2D;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,6 +32,7 @@ class StopConverter {
     private final double maxBeelineWalkConnectionDistance;
     private TransitTravelDisutility costFunction;
     private QuadTree<Stop> qtStops = null;
+    private TransitRouterConfig trConfig;
 
     /**
      * TODO
@@ -38,12 +40,13 @@ class StopConverter {
      * @param costFunction
      */
     StopConverter(Map<Id<TransitStopFacility>, TransitStopFacility> matsimStops, MappingHandler mappingHandler,
-                  double maxBeelineWalkConnectionDistance, TransitTravelDisutility costFunction) {
+                  double maxBeelineWalkConnectionDistance, TransitTravelDisutility costFunction, TransitRouterConfig trConfig) {
 
         this.matsimStops = matsimStops;
         this.mappingHandler = mappingHandler;
         this.maxBeelineWalkConnectionDistance = maxBeelineWalkConnectionDistance;
         this.costFunction = costFunction;
+        this.trConfig = trConfig;
     }
 
     /**
@@ -97,18 +100,19 @@ class StopConverter {
             for (Stop nearStop : getNearestNodes(stop.coordinate(), maxBeelineWalkConnectionDistance)) {
                 if ((stop != nearStop)) {
                     if (stop.station() != nearStop.station()) {
-                        stop.addNeighbour(nearStop, calcWalkTime(stop, nearStop));
+                        stop.addNeighbour(nearStop, calcTransferWalkTime(stop, nearStop));
                     }
                 }
             }
         }
     }
 
-    private RelativeTime calcWalkTime(Stop stop1, Stop stop2) {
+    private RelativeTime calcTransferWalkTime(Stop stop1, Stop stop2) {
         double walkTime = costFunction.getWalkTravelTime(null,
                 CoordinateUtils.convert2Coord(stop1.coordinate()),
                 CoordinateUtils.convert2Coord(stop2.coordinate()));
-        RelativeTime of = RelativeTime.of((long) (walkTime * Math.pow(10, 9)), ChronoUnit.NANOS);
+        walkTime += trConfig.getAdditionalTransferTime();
+        RelativeTime of = TransitNetworkUtils.convertTime(walkTime);
         return of;
     }
 

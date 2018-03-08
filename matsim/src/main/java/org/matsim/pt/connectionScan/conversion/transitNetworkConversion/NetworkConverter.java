@@ -48,7 +48,7 @@ public class NetworkConverter {
         log.info("Start converting TransitNetwork");
 
         StopConverter stopConverter = new StopConverter(transitSchedule.getFacilities(), idAndMappingHandler,
-                config.getBeelineWalkConnectionDistance(), costFunction);
+                config.getBeelineWalkConnectionDistance(), costFunction, config);
 //        stopConverter.convert();
 
         ConnectionConverter connectionConverter = new ConnectionConverter(stopConverter,

@@ -1,12 +1,10 @@
 package org.matsim.pt.router;
 
+import edu.kit.ifv.mobitopp.publictransport.connectionscan.DefaultStopPaths;
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.PublicTransportRoute;
-import edu.kit.ifv.mobitopp.publictransport.model.FootJourney;
-import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
-import edu.kit.ifv.mobitopp.publictransport.model.Stop;
-import edu.kit.ifv.mobitopp.publictransport.model.Time;
+import edu.kit.ifv.mobitopp.publictransport.connectionscan.StopPaths;
+import edu.kit.ifv.mobitopp.publictransport.model.*;
 import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.facilities.Facility;
@@ -33,6 +31,7 @@ public class ConnectionScanRouter extends AbstractTransitRouter implements Trans
     private edu.kit.ifv.mobitopp.publictransport.connectionscan.ConnectionScan connectionScan;
     private MappingHandler mappingHandler;
     private TransitPassengerRouteConverter transitPassengerRouteConverter;
+    private TransitRouterConfig trConfig;
 
     public ConnectionScanRouter(TransitRouterConfig config, TransitTravelDisutility travelDisutility,
                                 TransitSchedule transitSchedule) {
@@ -41,6 +40,7 @@ public class ConnectionScanRouter extends AbstractTransitRouter implements Trans
     }
 
     private void init(TransitRouterConfig config, TransitSchedule transitSchedule) {
+        trConfig = config;
         NetworkConverter networkConverter = new NetworkConverter(transitSchedule, config, getTravelDisutility());
         this.connectionScan = new edu.kit.ifv.mobitopp.publictransport.connectionscan.ConnectionScan(networkConverter.convert());
         this.mappingHandler = networkConverter.getMappingHandler();
@@ -51,21 +51,32 @@ public class ConnectionScanRouter extends AbstractTransitRouter implements Trans
     @Override
     public List<Leg> calcRoute(Facility<?> fromFacility, Facility<?> toFacility, double departureTime, Person person) {
 
-        StopAndInitialData from = findNextStop(fromFacility);
-        StopAndInitialData to = findNextStop(toFacility);
+        departureTime = normalize(departureTime);
+//        StopAndInitialData from = findNextStop(fromFacility);
+//        StopAndInitialData to = findNextStop(toFacility);
+        List<StopAndInitialData> from = findNextStops(fromFacility);
+        List<StopAndInitialData> to = findNextStops(toFacility);
 
-        if (from == null || to == null) {
+//        if (from == null || to == null) {
+        if (from.size() == 0 || to.size() == 0) {
             return this.createDirectWalkLegList(null, fromFacility.getCoord(), toFacility.getCoord());
         }
-        double initialAccessTime = getWalkTime(person, fromFacility.getCoord(), CoordinateUtils.convert2Coord(from.getStop().coordinate()));
-        from.setInitialTime(initialAccessTime);
-        double initialEgressTime = getWalkTime(person, CoordinateUtils.convert2Coord(to.getStop().coordinate()), toFacility.getCoord());
-        to.setInitialTime(initialEgressTime);
 
-        double ptDeparture = normalize(departureTime + initialAccessTime);
-        Time departure = convertDeparture(ptDeparture);
+        for (StopAndInitialData currentStop : from) {
+            double initialAccessTime = getWalkTime(person, fromFacility.getCoord(), CoordinateUtils.convert2Coord(currentStop.getStop().coordinate()));
+            currentStop.setInitialTime(initialAccessTime);
+        }
+        for (StopAndInitialData currentStop : to) {
+            double initialEgressTime = getWalkTime(person, CoordinateUtils.convert2Coord(currentStop.getStop().coordinate()), toFacility.getCoord());
+            currentStop.setInitialTime(initialEgressTime);
+        }
 
-        PublicTransportRoute route = calcRouteFrom(from.getStop(), to.getStop(), departure);
+//        double ptDeparture = normalize(departureTime + initialAccessTime);
+//        Time departure = convertDeparture(ptDeparture);
+
+        Time departure = convertDeparture(departureTime);
+
+        PublicTransportRoute route = calcRouteFrom(convertStops(from), convertStops(to), departure);
 
         if (route == null) {
             return this.createDirectWalkLegList(null, fromFacility.getCoord(), toFacility.getCoord());
@@ -74,8 +85,23 @@ public class ConnectionScanRouter extends AbstractTransitRouter implements Trans
             // then the two stops must be neighbours and its allways better to take the direct walk
             return this.createDirectWalkLegList(person, fromFacility.getCoord(), toFacility.getCoord());
         }
-        TransitPassengerRoute transitPassengerRoute = transitPassengerRouteConverter.createTransitPassengerRoute(ptDeparture, route.connections(),
-                from.getInitialTime(), to.getInitialTime());
+//        TransitPassengerRoute transitPassengerRoute = transitPassengerRouteConverter.createTransitPassengerRoute(ptDeparture, route.connections(),
+//                from.getInitialTime(), to.getInitialTime());
+
+//        double initialAccessTime = route.connections().get(0).
+//        double initialEgressTime =
+//        double ptDeparture = normalize(departureTime + initialAccessTime);
+
+        double accessArrivalTime = -1;
+        for (StopAndInitialData currentStop : from) {
+            if (currentStop.getStop().equals(route.start())) {
+                accessArrivalTime = departureTime + currentStop.getInitialTime();
+            }
+        }
+
+        TransitPassengerRoute transitPassengerRoute = transitPassengerRouteConverter.createTransitPassengerRoute(
+                accessArrivalTime, route.connections(),
+                0,0);
 
         double pathTime = transitPassengerRoute.getTravelCost();
         double directWalkTime = getWalkTime(person, fromFacility.getCoord(), toFacility.getCoord());
@@ -87,13 +113,26 @@ public class ConnectionScanRouter extends AbstractTransitRouter implements Trans
         return convertPassengerRouteToLegList(departureTime, transitPassengerRoute, fromFacility.getCoord(), toFacility.getCoord(), person);
     }
 
+    @Deprecated //extension radius is not working correctly, but do we even need this method?
     private StopAndInitialData findNextStop(Facility<?> facility) {
-        return TransitNetworkUtils.getNearestStop(new ArrayList(mappingHandler.getMatsimId2Stop().values()), facility, 1000);
+        return TransitNetworkUtils.getNearestStop(new ArrayList(mappingHandler.getMatsimId2Stop().values()), facility, trConfig.getSearchRadius());
+    }
+
+    private List<StopAndInitialData> findNextStops(Facility<?> facility) {
+
+        List<StopAndInitialData> nearestStops = new ArrayList<>();
+        int i = 0;
+        while(nearestStops.size() == 0) {
+            nearestStops = TransitNetworkUtils.getNearestStops(
+                    new ArrayList(mappingHandler.getMatsimId2Stop().values()), facility,
+                    trConfig.getSearchRadius() + (trConfig.getExtensionRadius() * i++));
+        }
+        return nearestStops;
     }
 
     private Time convertDeparture(double departure) {
-        Time day = new Time(LocalDateTime.of(2017, 3, 14, 0, 0));
-        return day.add(RelativeTime.of((long) departure, ChronoUnit.SECONDS));
+        Time day = new Time(LocalDateTime.of(2017, 3, 14, 0, 0)); //TODO make constant
+        return day.add(TransitNetworkUtils.convertTime(departure));
     }
 
     private double normalize(double relativeTime) {
@@ -103,7 +142,20 @@ public class ConnectionScanRouter extends AbstractTransitRouter implements Trans
         return relativeTime;
     }
 
+    private StopPaths convertStops(List<StopAndInitialData> stops) {
+        List<StopPath> convertedStops = new ArrayList<>();
+        for (StopAndInitialData currentStop : stops) {
+            convertedStops.add(new StopPath(currentStop.getStop(), TransitNetworkUtils.convertTime(currentStop.getInitialTime())));
+        }
+        return DefaultStopPaths.from(convertedStops);
+    }
+
     private PublicTransportRoute calcRouteFrom(Stop from, Stop to, Time departure) {
+        Optional<PublicTransportRoute> potentialRoute = connectionScan.findRoute(from, to, departure);
+        return potentialRoute.orElse(null);
+    }
+
+    private PublicTransportRoute calcRouteFrom(StopPaths from, StopPaths to, Time departure) {
         Optional<PublicTransportRoute> potentialRoute = connectionScan.findRoute(from, to, departure);
         return potentialRoute.orElse(null);
     }

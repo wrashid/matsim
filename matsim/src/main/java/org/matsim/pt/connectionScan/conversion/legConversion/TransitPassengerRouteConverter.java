@@ -8,6 +8,7 @@ import edu.kit.ifv.mobitopp.publictransport.model.TransportSystem;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.MappingHandler;
+import org.matsim.pt.connectionScan.utils.TransitNetworkUtils;
 import org.matsim.pt.router.RouteSegment;
 import org.matsim.pt.router.TransitPassengerRoute;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
@@ -40,11 +41,12 @@ public class TransitPassengerRouteConverter {
             Connection connection = connections.get(i);
             TransitStopFacility fromFacility = mappingHandler.getStopId2TransitStopFacility().get(connection.start().id());
             TransitStopFacility toFacility = mappingHandler.getStopId2TransitStopFacility().get(connection.end().id());
-            double travelTime = connection.duration().seconds();
+            RelativeTime duration = connection.duration();
+            double travelTime = TransitNetworkUtils.convertTime(duration);
 
-            double departureOffset = timeInSecondsFromMidnight(connection.departure()) - lastArrivalTime;
+            double departureOffset = TransitNetworkUtils.convertTime(connection.departure()) - lastArrivalTime;
             travelTime += departureOffset;
-            lastArrivalTime = timeInSecondsFromMidnight(connection.arrival());
+            lastArrivalTime = TransitNetworkUtils.convertTime(connection.arrival());
 
             if (connection.id() == -1) {
                 if (storedRouteSegment != null) {
@@ -110,7 +112,7 @@ public class TransitPassengerRouteConverter {
                 firstDeparture = currentConnection.departure();
         }
 
-        return timeInSecondsFromMidnight(firstDeparture);
+        return TransitNetworkUtils.convertTime(firstDeparture);
     }
 
     private double getTravalTimeOf(List<Connection> connections) {
@@ -123,6 +125,7 @@ public class TransitPassengerRouteConverter {
         return duration.seconds();
     }
 
+    @Deprecated //in favor of TransitNetworkUtils.convertTime(Time time)
     private double timeInSecondsFromMidnight(Time time) {
         LocalDateTime localDateTime = time.time();
         double result = localDateTime.getHour()*60*60 + localDateTime.getMinute()*60 + localDateTime.getSecond();
