@@ -30,7 +30,7 @@ import org.xml.sax.Attributes;
  * A CarrierVehicleTypes reader that reads the MATSim format. This reader recognizes the format of the CarrierVehicleTypes-file and uses
  * the correct reader for the specific CarrierVehicleTypes-version, without manual setting.
  * 
- * Important: Make sure, you have specified a DOCTYPE in your carrierVehicleType.xml -file!
+ * Important: Make sure, you have specified a valid DOCTYPE in your carrierVehicleType.xml -file!
  * 
  * TODO: create a v2-reader, move dtd to matsim.org/files/dtd, adapt CarrierVehicleTypes and other stuff...
  * 

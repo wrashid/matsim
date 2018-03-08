@@ -18,6 +18,14 @@ import org.xml.sax.Attributes;
  * @author sschroeder
  *
  */
+
+/**
+ * @deprecated 
+ * Please use org.matsim.contrib.freight.carrier.io.CarrierVehicleTypeReader instead. 
+ * The new reader works with version-depending xml-schemes to validate the input read.
+ * It will also offer some new functionality according to newer jsprit versions which were not implemented here.
+ */
+@Deprecated
 public class CarrierVehicleTypeReader extends MatsimXmlParser {
 	
 	private static Logger logger = Logger.getLogger(CarrierVehicleTypeReader.class);
