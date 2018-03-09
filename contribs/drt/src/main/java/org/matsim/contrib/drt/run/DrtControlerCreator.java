@@ -22,8 +22,6 @@
  */
 package org.matsim.contrib.drt.run;
 
-import java.util.function.Function;
-
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -69,19 +67,19 @@ public final class DrtControlerCreator {
 	public static Controler createControler(Config config, boolean otfvis) {
 		adjustConfig(config);
 		Scenario scenario = ScenarioUtils.loadScenario(config);
-		return adjustControler(otfvis, scenario);
+		return createControlerImpl(otfvis, scenario);
 	}
 
 	public static Controler createControler(Scenario scenario, boolean otfvis) {
 		// yy I know that this one breaks the sequential loading of the building blocks, but I would like to be able
 		// to modify the scenario before I pass it to the controler. kai, oct'17
 		adjustConfig(scenario.getConfig());
-		return adjustControler(otfvis, scenario);
+		return createControlerImpl(otfvis, scenario);
 	}
 
-	private static Controler adjustControler(boolean otfvis, Scenario scenario) {
+	private static Controler createControlerImpl(boolean otfvis, Scenario scenario) {
 		Controler controler = new Controler(scenario);
-		controler.addOverridingModule(new DvrpModule(createModuleCreatorForQSimPlugin(), DrtOptimizer.class,
+		controler.addOverridingModule(new DvrpModule(DrtControlerCreator::createModuleForQSimPlugin, DrtOptimizer.class,
 				DefaultUnplannedRequestInserter.class, ParallelPathDataProvider.class));
 		controler.addOverridingModule(new DrtModule());
 		controler.addOverridingModule(new DrtAnalysisModule());
@@ -94,14 +92,12 @@ public final class DrtControlerCreator {
 
 	private static void adjustConfig(Config config) {
 		DrtConfigGroup drtCfg = DrtConfigGroup.get(config);
-		config.addConfigConsistencyChecker(new DrtConfigConsistencyChecker());
-		config.checkConsistency();
-		if (drtCfg.getOperationalScheme().equals(DrtConfigGroup.OperationalScheme.stationbased)) {
-			ActivityParams params = config.planCalcScore().getActivityParams(DrtStageActivityType.DRT_STAGE_ACTIVITY);
-			if (params == null) {
-				params = new ActivityParams(DrtStageActivityType.DRT_STAGE_ACTIVITY);
+		if (drtCfg.getOperationalScheme().equals(DrtConfigGroup.OperationalScheme.stopbased)) {
+			if (config.planCalcScore().getActivityParams(DrtStageActivityType.DRT_STAGE_ACTIVITY) == null) {
+				ActivityParams params = new ActivityParams(DrtStageActivityType.DRT_STAGE_ACTIVITY);
 				params.setTypicalDuration(1);
 				params.setScoringThisActivityAtAll(false);
+				config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k->k.addActivityParams(params));
 				config.planCalcScore().addActivityParams(params);
 				Logger.getLogger(DrtControlerCreator.class).info(
 						"drt interaction scoring parameters not set. Adding default values (activity will not be scored).");
@@ -113,14 +109,18 @@ public final class DrtControlerCreator {
 				drtWalk.setMarginalUtilityOfDistance(walk.getMarginalUtilityOfDistance());
 				drtWalk.setMarginalUtilityOfTraveling(walk.getMarginalUtilityOfTraveling());
 				drtWalk.setMonetaryDistanceRate(walk.getMonetaryDistanceRate());
+				config.planCalcScore().getScoringParametersPerSubpopulation().values().forEach(k->k.addModeParams(drtWalk));
 				Logger.getLogger(DrtControlerCreator.class)
 						.info("drt_walk scoring parameters not set. Adding default values (same as for walk mode).");
 			}
 		}
+
+		config.addConfigConsistencyChecker(new DrtConfigConsistencyChecker());
+		config.checkConsistency();
 	}
 
-	public static Function<Config, com.google.inject.Module> createModuleCreatorForQSimPlugin() {
-		return config -> new com.google.inject.AbstractModule() {
+	public static com.google.inject.Module createModuleForQSimPlugin(Config config) {
+		return new com.google.inject.AbstractModule() {
 			@Override
 			protected void configure() {
 				bind(DrtOptimizer.class).to(DefaultDrtOptimizer.class).asEagerSingleton();
