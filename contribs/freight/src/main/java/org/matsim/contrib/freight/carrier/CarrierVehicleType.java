@@ -212,12 +212,16 @@ public class CarrierVehicleType extends ForwardingVehicleType {
         
 
 		/**
-		 * The old constructor: Costs perWaitingTimeUnit and perServiceTimeUnit were set to 0.0
+		 *  Costs perWaitingTimeUnit and perServiceTimeUnit were set to 0.0
+		 * 
+		 * @deprecated Use VehicleCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) instead.
+		 * In this "old" version there are only costsPerTimeUnit and no separation for the different values of time dependent costs. // Adaption to jsprit 1.7.x. KMT mar/18
 		 * 
 		 * @param fix
 		 * @param perDistanceUnit
 		 * @param perTimeUnit
 		 */
+        @Deprecated
 		public VehicleCostInformation(double fix, double perDistanceUnit, double perTimeUnit) {
 			super();
 			this.fix = fix;
@@ -230,7 +234,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		
 		
 		/**
-		 * The new (mar/18) Constructor including the new setting for the time dependend costs
+		 * The new (mar/18) Constructor including the new setting for the time dependent costs
 		 * @param fix
 		 * @param perDistanceUnit
 		 * @param perTimeUnit
