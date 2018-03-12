@@ -153,17 +153,45 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		}
 	}
 	
+
 	public static class VehicleCostInformation {
 
 		public final double fix;
-		public final double perDistanceUnit;
-		public final double perTimeUnit;
 
+		public final double perDistanceUnit;
+		@Deprecated
+		public final double perTimeUnit;
+		public final double perTransportTimeUnit;
+        public final double perWaitingTimeUnit;
+        public final double perServiceTimeUnit;
+        
+
+		/**
+		 * The old constructor: Costs perWaitingTimeUnit and perServiceTimeUnit were set to 0.0
+		 * 
+		 * @param fix
+		 * @param perDistanceUnit
+		 * @param perTimeUnit
+		 */
 		public VehicleCostInformation(double fix, double perDistanceUnit, double perTimeUnit) {
 			super();
 			this.fix = fix;
 			this.perDistanceUnit = perDistanceUnit;
 			this.perTimeUnit = perTimeUnit;
+			this.perTransportTimeUnit = perTimeUnit;
+			this.perWaitingTimeUnit = 0.0;
+			this.perServiceTimeUnit = 0.0;
+		}
+		
+		public VehicleCostInformation(double fix, double perDistanceUnit, double perTimeUnit,
+				double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) {
+			super();
+			this.fix = fix;
+			this.perDistanceUnit = perDistanceUnit;
+			this.perTimeUnit = perTimeUnit;
+			this.perTransportTimeUnit = perTransportTimeUnit;
+			this.perWaitingTimeUnit = perWaitingTimeUnit;
+			this.perServiceTimeUnit = perServiceTimeUnit;
 		}
 
 	}
