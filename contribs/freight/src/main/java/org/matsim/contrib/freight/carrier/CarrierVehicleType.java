@@ -39,7 +39,11 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		private Id<VehicleType> typeId;
 		private double fix = 0.0;
 		private double perDistanceUnit = 1.0;
+		@Deprecated
 		private double perTimeUnit = 0.0;
+		private double perTransportTimeUnit = 0.0;
+        private double perWaitingTimeUnit = 0.0;
+        private double perServiceTimeUnit = 0.0;
 		private String description;
 		private EngineInformation engineInfo;
 		private int capacity = 0;
@@ -79,12 +83,53 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		 * Sets costs per time-unit.
 		 * 
 		 * <p>By default it is 0.
+		 * @deprecated Use setCostsPerTransportTimeUnit and if wanted setCostsperWaitingTimeUnit and setCostsperServiceTimeUnit instead
 		 * 
 		 * @param perTimeUnit
 		 * @return
 		 */
+		@Deprecated
 		public Builder setCostPerTimeUnit(double perTimeUnit){
 			this.perTimeUnit = perTimeUnit;
+			return this;
+		}
+		
+		/**
+		 * Sets costs per time-unit during transport.
+		 * 
+		 * <p>By default it is 0.
+		 * 
+		 * @param perTransportTimeUnit
+		 * @return
+		 */
+		public Builder setCostPerTransportTimeUnit(double perTransportTimeUnit){
+			this.perTransportTimeUnit = perTransportTimeUnit;
+			return this;
+		}
+		
+		/**
+		 * Sets costs per time-unit for the time the vehicle waits until performing a service activity.
+		 * 
+		 * <p>By default it is 0.
+		 * 
+		 * @param perWaitingTimeUnit)
+		 * @return
+		 */
+		public Builder setCostPerWaitingTimeUnit(double perWaitingTimeUnit){
+			this.perWaitingTimeUnit = perWaitingTimeUnit;
+			return this;
+		}
+		
+		/**
+		 * Sets costs per time-unit for the time performing a service.
+		 * 
+		 * <p>By default it is 0.
+		 * 
+		 * @param perServiceTimeUnit
+		 * @return
+		 */
+		public Builder setCostPerServiceTimeUnit(double perServiceTimeUnit){
+			this.perServiceTimeUnit = perServiceTimeUnit;
 			return this;
 		}
 		
@@ -183,12 +228,21 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 			this.perServiceTimeUnit = 0.0;
 		}
 		
-		public VehicleCostInformation(double fix, double perDistanceUnit, double perTimeUnit,
-				double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) {
+		
+		/**
+		 * The new (mar/18) Constructor including the new setting for the time dependend costs
+		 * @param fix
+		 * @param perDistanceUnit
+		 * @param perTimeUnit
+		 * @param perTransportTimeUnit
+		 * @param perWaitingTimeUnit
+		 * @param perServiceTimeUnit
+		 */
+		public VehicleCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) {
 			super();
 			this.fix = fix;
 			this.perDistanceUnit = perDistanceUnit;
-			this.perTimeUnit = perTimeUnit;
+			this.perTimeUnit = Double.NEGATIVE_INFINITY;  //TODO: in this Verison it schould not been used any more Negative_Infinity or 0.0 ?? kmt mar/18
 			this.perTransportTimeUnit = perTransportTimeUnit;
 			this.perWaitingTimeUnit = perWaitingTimeUnit;
 			this.perServiceTimeUnit = perServiceTimeUnit;
@@ -202,7 +256,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 	
 	private CarrierVehicleType(Builder builder){
 		super(new VehicleTypeImpl(builder.typeId));
-		this.vehicleCostInformation = new VehicleCostInformation(builder.fix, builder.perDistanceUnit, builder.perTimeUnit);
+		this.vehicleCostInformation = new VehicleCostInformation(builder.fix, builder.perDistanceUnit, builder.perTransportTimeUnit, builder.perWaitingTimeUnit, builder.perServiceTimeUnit);
 		if(builder.engineInfo != null) super.setEngineInformation(builder.engineInfo);
 		if(builder.description != null) super.setDescription(builder.description);
 		capacity = builder.capacity;
