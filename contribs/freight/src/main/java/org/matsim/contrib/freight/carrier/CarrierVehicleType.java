@@ -27,7 +27,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		/**
 		 * Returns a new instance of builder initialized with the typeId.
 		 * 
-		 * The defaults are [fix=0.0][perDistanceUnit=1.0][perTimeUnit=0.0].
+		 * The defaults are [fix=0.0][perDistanceUnit=1.0][perTransportTimeUnit=0.0][perWaitingTimeUnit=0.0][perServiceTimeUnit=0.0].
 		 * 
 		 * @param typeId
 		 * @return a type builder
@@ -270,7 +270,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 	/**
 	 * Returns the cost values for this vehicleType.
 	 * 
-	 * If cost values are not explicitly set, the defaults are [fix=0.0][perDistanceUnit=1.0][perTimeUnit=0.0].
+	 * If cost values are not explicitly set, the defaults are [fix=0.0][perDistanceUnit=1.0][perTransportTimeUnit=0.0][perWaitingTimeUnit=0.0][perServiceTimeUnit=0.0].
 	 * 
 	 * @return vehicleCostInformation
 	 */
