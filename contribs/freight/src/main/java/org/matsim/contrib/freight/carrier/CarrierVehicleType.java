@@ -169,7 +169,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		/**
 		 * Sets {@link VehicleCostInformation}
 		 * 
-		 * <p>The defaults are [fix=0.0][perDistanceUnit=1.0][perTimeUnit=0.0].
+		 * <p>The defaults are [fix=0.0][perDistanceUnit=1.0][perTransportTimeUnit=0.0][perWaitingTimeUnit=0.0][perServiceTimeUnit=0.0].
 		 * 
 		 * @param info
 		 * @return this builder
@@ -178,6 +178,9 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 			fix = info.fix;
 			perDistanceUnit = info.perDistanceUnit;
 			perTimeUnit = info.perTimeUnit;
+			perTransportTimeUnit = info.perTransportTimeUnit;
+			perWaitingTimeUnit = info.perWaitingTimeUnit;
+			perServiceTimeUnit = info.perServiceTimeUnit;
 			return this;
 		}
 
@@ -246,7 +249,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 			super();
 			this.fix = fix;
 			this.perDistanceUnit = perDistanceUnit;
-			this.perTimeUnit = Double.NEGATIVE_INFINITY;  //TODO: in this Verison it schould not been used any more Negative_Infinity or 0.0 ?? kmt mar/18
+			this.perTimeUnit = Double.NEGATIVE_INFINITY;  //TODO: in this version it should not been used any more --> Negative_Infinity or 0.0 ?? kmt mar/18
 			this.perTransportTimeUnit = perTransportTimeUnit;
 			this.perWaitingTimeUnit = perWaitingTimeUnit;
 			this.perServiceTimeUnit = perServiceTimeUnit;

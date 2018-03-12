@@ -158,7 +158,10 @@ public class MatsimJspritFactory {
 	static CarrierVehicleType createCarrierVehicleType(VehicleType type){
 		CarrierVehicleType.Builder typeBuilder = CarrierVehicleType.Builder.newInstance(Id.create(type.getTypeId(), org.matsim.vehicles.VehicleType.class));
 		typeBuilder.setCapacity(type.getCapacityDimensions().get(0));
-		typeBuilder.setCostPerDistanceUnit(type.getVehicleCostParams().perDistanceUnit).setCostPerTimeUnit(type.getVehicleCostParams().perTransportTimeUnit)
+		typeBuilder.setCostPerDistanceUnit(type.getVehicleCostParams().perDistanceUnit)
+		.setCostPerTransportTimeUnit(type.getVehicleCostParams().perTransportTimeUnit)
+		.setCostPerWaitingTimeUnit(type.getVehicleCostParams().perWaitingTimeUnit)
+		.setCostPerServiceTimeUnit(type.getVehicleCostParams().perServiceTimeUnit)
 		.setFixCost(type.getVehicleCostParams().fix);
 		typeBuilder.setMaxVelocity(type.getMaxVelocity());
 		return typeBuilder.build();
@@ -173,7 +176,9 @@ public class MatsimJspritFactory {
 		VehicleTypeImpl.Builder typeBuilder = VehicleTypeImpl.Builder.newInstance(carrierVehicleType.getId().toString());
 		typeBuilder.addCapacityDimension(0, carrierVehicleType.getCarrierVehicleCapacity());
 		typeBuilder.setCostPerDistance(carrierVehicleType.getVehicleCostInformation().perDistanceUnit);
-		typeBuilder.setCostPerTransportTime(carrierVehicleType.getVehicleCostInformation().perTimeUnit);
+		typeBuilder.setCostPerTransportTime(carrierVehicleType.getVehicleCostInformation().perTransportTimeUnit)
+		.setCostPerWaitingTime(carrierVehicleType.getVehicleCostInformation().perWaitingTimeUnit)
+		.setCostPerServiceTime(carrierVehicleType.getVehicleCostInformation().perServiceTimeUnit);
 		typeBuilder.setFixedCost(carrierVehicleType.getVehicleCostInformation().fix);
 		typeBuilder.setMaxVelocity(carrierVehicleType.getMaximumVelocity());
 		return typeBuilder.build();
