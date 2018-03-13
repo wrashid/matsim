@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE vehicleTypes SYSTEM "/Users/kturner/git-and-svn/matsim/contribs/freight/input/carrierVehicleType_v1.dtd">
+<!DOCTYPE vehicleTypes SYSTEM "http://www.matsim.org/files/dtd/carrierVehicleType_v1.dtd">
 	<vehicleTypes>
 		<vehicleType id="medium">
 			<description>Medium Vehicle</description>
