@@ -23,7 +23,7 @@ public class WobScenario {
         Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.loadConfig(config));
 
         scenario.getConfig().controler().setLastIteration(0);
-//        scenario.getConfig().plansCalcRoute().getOrCreateModeRoutingParams("walk").setTeleportedModeSpeed(100d);
+        scenario.getConfig().controler().setOutputDirectory("WobCSA");
 
         Controler controler = new Controler(scenario);
         controler.addOverridingModule(new AbstractModule() {
