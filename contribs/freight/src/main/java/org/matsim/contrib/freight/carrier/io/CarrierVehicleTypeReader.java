@@ -39,8 +39,8 @@ import org.xml.sax.Attributes;
  */
 public final class CarrierVehicleTypeReader extends MatsimXmlParser{
 
-	private final static String CARRIER_VEHICLE_TYPE_V1 = "carrierVehicleType_v1.dtd";	
-	//	private final static String CARRIER_VEHICLE_TYPE_V2 = "carrierVehicleType_v2.dtd";		//TODO: Create v2.dtd
+	private final static String CARRIER_VEHICLE_TYPE_V1 = "carrierVehicleTypes_v1.dtd";	
+	//	private final static String CARRIER_VEHICLE_TYPE_V2 = "carrierVehicleTypes_v2.dtd";		//TODO: Create v2.dtd
 
 	private MatsimXmlParser delegate = null;
 	
