@@ -47,7 +47,7 @@ public class TestMatsimTransformer {
 		assertEquals("myType",matsimType.getId().toString());
 		assertEquals(50, matsimType.getCarrierVehicleCapacity());
 		assertEquals(10.0, matsimType.getVehicleCostInformation().perDistanceUnit, 0.01);
-		assertEquals(5.0, matsimType.getVehicleCostInformation().perTimeUnit, 0.01);
+		assertEquals(5.0, matsimType.getVehicleCostInformation().perTransportTimeUnit, 0.01);
 		assertEquals(100.0, matsimType.getVehicleCostInformation().fix, 0.01);
 	}
 	
@@ -290,7 +290,7 @@ public class TestMatsimTransformer {
 	}
 
 	private CarrierVehicleType getMatsimVehicleType() {
-		CarrierVehicleType matsimType = CarrierVehicleType.Builder.newInstance(Id.create("matsimType", org.matsim.vehicles.VehicleType.class)).setCapacity(50).setCostPerDistanceUnit(10.0).setCostPerTimeUnit(5.0)
+		CarrierVehicleType matsimType = CarrierVehicleType.Builder.newInstance(Id.create("matsimType", org.matsim.vehicles.VehicleType.class)).setCapacity(50).setCostPerDistanceUnit(10.0).setCostPerTransportTimeUnit(5.0)
 				.setFixCost(100.0).build();
 		return matsimType;
 	}
