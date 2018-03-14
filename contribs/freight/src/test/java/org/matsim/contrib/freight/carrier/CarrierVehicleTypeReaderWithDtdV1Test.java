@@ -1,6 +1,5 @@
 package org.matsim.contrib.freight.carrier;
 
-import org.junit.Ignore;
 import org.matsim.api.core.v01.Id;
 import org.matsim.contrib.freight.carrier.io.CarrierVehicleTypeReader;
 import org.matsim.testcases.MatsimTestCase;

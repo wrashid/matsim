@@ -21,7 +21,7 @@ import org.matsim.contrib.freight.carrier.CarrierPlan;
 import org.matsim.contrib.freight.carrier.CarrierService;
 import org.matsim.contrib.freight.carrier.CarrierVehicle;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypeLoader;
-import org.matsim.contrib.freight.carrier.CarrierVehicleTypeReader;
+import org.matsim.contrib.freight.carrier.io.CarrierVehicleTypeReader;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
 import org.matsim.contrib.freight.carrier.Carriers;
 import org.matsim.contrib.freight.carrier.TimeWindow;

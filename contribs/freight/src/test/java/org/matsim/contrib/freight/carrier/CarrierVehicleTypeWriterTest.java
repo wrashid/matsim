@@ -1,6 +1,7 @@
 package org.matsim.contrib.freight.carrier;
 
 import org.matsim.testcases.MatsimTestCase;
+import org.matsim.contrib.freight.carrier.io.CarrierVehicleTypeReader;
 
 public class CarrierVehicleTypeWriterTest extends MatsimTestCase{
 	
