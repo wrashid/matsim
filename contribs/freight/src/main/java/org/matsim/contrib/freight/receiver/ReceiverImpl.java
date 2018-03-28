@@ -41,7 +41,7 @@ public class ReceiverImpl implements Receiver {
 
 	@Override
 	public boolean addPlan(ReceiverOrder order) {
-		throw new RuntimeException("not implemented.");
+		throw new RuntimeException("not implemented");
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public class ReceiverImpl implements Receiver {
 			double time = order.getServiceDuration();
 			orders.add(Order.newInstance(orderId, receiver, product, time));
 		}
-		ReceiverOrder copiedOrder = new ReceiverOrder(orderToCopy.getReceiver(), orders);
+		ReceiverOrder copiedOrder = new ReceiverOrder(orderToCopy.getReceiver(), orders, orderToCopy.getOrderCarrier());
 		double cost = orderToCopy.getScore();
 		copiedOrder.setScore(cost);
 		return copiedOrder;

@@ -5,6 +5,7 @@ package org.matsim.contrib.freight.receiver;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.core.utils.misc.Time;
 
 /**
  * A concrete assignment of a receiver product, order quantity, delivery time windows, delivery service time and delivery location.
@@ -207,7 +208,7 @@ public class Order {
 	 */
 	@Override
 	public String toString(){
-		return "[id=" + orderId + "][locationId=" + receiver.getReceiverCharacteristics().getLocation() + "][capacityDemand=" + orderQuantity + "][serviceDuration=" + serviceTime + "][earliestStart="+ receiver.getReceiverCharacteristics().getTimeWindowStart() + "][latestEnd="+ receiver.getReceiverCharacteristics().getTimeWindowEnd() + "]";
+		return "[id=" + orderId + "][locationId=" + receiver.getReceiverCharacteristics().getLocation() + "][capacityDemand=" + orderQuantity + "][serviceDuration=" + Time.writeTime(serviceTime) + "][earliestStart="+ Time.writeTime(receiver.getReceiverCharacteristics().getTimeWindowStart()) + "][latestEnd="+ Time.writeTime(receiver.getReceiverCharacteristics().getTimeWindowEnd()) + "]";
 	}
 
 }

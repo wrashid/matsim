@@ -6,11 +6,11 @@ import org.matsim.contrib.freight.scoring.CarrierScoringFunctionFactory;
 import org.matsim.contrib.freight.usecases.chessboard.CarrierScoringFunctionFactoryImpl;
 import org.matsim.core.scoring.ScoringFunction;
 
-public class MyScoringFunctionFactory implements CarrierScoringFunctionFactory {
+public class MyCarrierScoringFunctionFactoryImpl implements CarrierScoringFunctionFactory {
 	
 	private Network network;
 	
-	public MyScoringFunctionFactory(Network network) {
+	public MyCarrierScoringFunctionFactoryImpl(Network network) {
 		this.network = network;
 	}
 

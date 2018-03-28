@@ -39,9 +39,12 @@ import org.matsim.contrib.freight.receiver.ProductTypeImpl;
 import org.matsim.contrib.freight.receiver.Receiver;
 import org.matsim.contrib.freight.receiver.ReceiverCharacteristics;
 import org.matsim.contrib.freight.receiver.ReceiverImpl;
+import org.matsim.contrib.freight.receiver.ReceiverModule;
 import org.matsim.contrib.freight.receiver.ReceiverOrder;
+import org.matsim.contrib.freight.receiver.ReceiverOrderStrategyManagerFactory;
 import org.matsim.contrib.freight.receiver.ReceiverProduct;
 import org.matsim.contrib.freight.receiver.ReceiverProductType;
+import org.matsim.contrib.freight.receiver.ReceiverScoringFunctionFactory;
 import org.matsim.contrib.freight.receiver.Receivers;
 import org.matsim.contrib.freight.replanning.CarrierPlanStrategyManagerFactory;
 import org.matsim.contrib.freight.replanning.modules.ReRouteVehicles;
@@ -66,6 +69,8 @@ import org.matsim.core.replanning.selectors.KeepSelected;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.io.MatsimXmlWriter;
+import org.matsim.core.utils.misc.Time;
 import org.matsim.vehicles.VehicleType;
 
 import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
@@ -120,6 +125,7 @@ public class RunChessboardWithReceiver {
 			config.controler().setMobsim("qsim");
 			config.controler().setWriteSnapshotsInterval(1);
 			config.global().setRandomSeed(seed);
+			config.network().setInputFile(directory + "Input/grid9x9.xml");
 										
 			/*
 			 * Sets the output directory.
@@ -138,7 +144,7 @@ public class RunChessboardWithReceiver {
 			 * Create the receiver containter.
 			 */
 			
-			final Receivers receivers = new Receivers();
+			Receivers receivers = new Receivers();
 				
 			
 			/*
@@ -146,28 +152,22 @@ public class RunChessboardWithReceiver {
 			 */
 				//Receiver 1
 			Id<Link> receiverLocation1 = selectRandomLink(scReceiver.getNetwork());
-				ReceiverCharacteristics newreceiverChar1 = createReceiver(receiverLocation1, 10.00*3600, 14.00*3600);
+				ReceiverCharacteristics newreceiverChar1 = createReceiver(receiverLocation1, Time.parseTime("10:00"), Time.parseTime("14:00"));
 				Receiver newreceiver1 = null;
 				newreceiver1 = ReceiverImpl.newInstance(Id.create("Receiver", Receiver.class));
 				newreceiver1.setReceiverCharacteristics(newreceiverChar1);
-				System.out.println("Created receiver " + newreceiver1.getId() + " at location " + newreceiver1.getReceiverCharacteristics().getLocation() + " with a delivery time window start time " + newreceiver1.getReceiverCharacteristics().getTimeWindowStart() + " and delivery time window end " + newreceiver1.getReceiverCharacteristics().getTimeWindowEnd() + " .");
+				System.out.println("Created receiver " + newreceiver1.getId() + " at location " + newreceiver1.getReceiverCharacteristics().getLocation() + " with a delivery time window start time " + Time.writeTime(newreceiver1.getReceiverCharacteristics().getTimeWindowStart()) + " and delivery time window end " + Time.writeTime(newreceiver1.getReceiverCharacteristics().getTimeWindowEnd()) + " .");
 								
 				
 				//Receiver 2
 				Id<Link> receiverLocation2 = selectRandomLink(scReceiver.getNetwork());
-				ReceiverCharacteristics newreceiverChar2 = createReceiver(receiverLocation2, 8.00*3600, 12.00*3600);
+				ReceiverCharacteristics newreceiverChar2 = createReceiver(receiverLocation2, Time.parseTime("8:00"), Time.parseTime("12:00"));
 				Receiver newreceiver2 = null;
 				newreceiver2 = ReceiverImpl.newInstance(Id.create("Receiver", Receiver.class));
 				newreceiver2.setReceiverCharacteristics(newreceiverChar2);
-				System.out.println("Created receiver " + newreceiver2.getId() + " at location " + newreceiver2.getReceiverCharacteristics().getLocation() + " with a delivery time window start time " + newreceiver2.getReceiverCharacteristics().getTimeWindowStart() + " and delivery time window end " + newreceiver2.getReceiverCharacteristics().getTimeWindowEnd() + " .");
-				
-				
-			/*
-			* Add new receivers to the container.
-			*/
-			receivers.addReceiver(newreceiver1);
-			receivers.addReceiver(newreceiver2);
-			
+				System.out.println("Created receiver " + newreceiver2.getId() + " at location " + newreceiver2.getReceiverCharacteristics().getLocation() + " with a delivery time window start time " + Time.writeTime(newreceiver2.getReceiverCharacteristics().getTimeWindowStart()) + " and delivery time window end " + Time.writeTime(newreceiver2.getReceiverCharacteristics().getTimeWindowEnd()) + " .");
+					
+
 			
 			/*
 			 * Creating generic product types.
@@ -179,39 +179,34 @@ public class RunChessboardWithReceiver {
 			/*
 			 * Creating product types ordered by a specific receivers.
 			 */
-			
-				//Receiver 1.
-				ReceiverProductType r1producttype1 = createReceiverProductType(productType1);
-				ReceiverProductType r1producttype2 = createReceiverProductType(productType2);
+
+				ReceiverProductType rProductType1 = createReceiverProductType(productType1);
+				ReceiverProductType rProductType2 = createReceiverProductType(productType2);
 				
-				//Receiver 2.
-				ReceiverProductType r2producttype1 = createReceiverProductType(productType1);
-				ReceiverProductType r2producttype2 = createReceiverProductType(productType2);
-					
 				
 			/*
 			 * Creating receiver specific products with allocated delivery locations and order policy parameters.
 			 */
 			
 				//Receiver 1.
-				ReceiverProduct r1product1 = createReceiverProduct(receiverLocation1, r1producttype1, 1000, 200);
-				ReceiverProduct r1product2 = createReceiverProduct(receiverLocation1, r1producttype2, 2000, 800);
+				ReceiverProduct r1product1 = createReceiverProduct(receiverLocation1, rProductType1, 1000, 200);
+				ReceiverProduct r1product2 = createReceiverProduct(receiverLocation1, rProductType2, 2000, 800);
 				
 				//Receiver 2.
-				ReceiverProduct r2product1 = createReceiverProduct(receiverLocation2, r2producttype1, 800, 200);
-				ReceiverProduct r2product2 = createReceiverProduct(receiverLocation2, r2producttype2, 1500, 600);
+				ReceiverProduct r2product1 = createReceiverProduct(receiverLocation2, rProductType1, 800, 200);
+				ReceiverProduct r2product2 = createReceiverProduct(receiverLocation2, rProductType2, 1500, 600);
 			
 			/*
 			 * Creating orders for each receiver product.
 			 */
 			
 				//Receiver 1.
-				Order r1order1 = createProductOrder(Id.create("Order1",  Order.class), newreceiver1, r1product1, 0.5*3600);
-				Order r1order2 = createProductOrder(Id.create("Order2",  Order.class), newreceiver1, r1product2, 0.5*3600);
+				Order r1order1 = createProductOrder(Id.create("Order1",  Order.class), newreceiver1, r1product1, Time.parseTime("00:30:00"));
+				Order r1order2 = createProductOrder(Id.create("Order2",  Order.class), newreceiver1, r1product2, Time.parseTime("00:30:00"));
 				
 				//Receiver 2.
-				Order r2order1 = createProductOrder(Id.create("Order3",  Order.class), newreceiver2, r2product1, 1.0*3600);
-				Order r2order2 = createProductOrder(Id.create("Order4",  Order.class), newreceiver2, r2product2, 1.0*3600);
+				Order r2order1 = createProductOrder(Id.create("Order3",  Order.class), newreceiver2, r2product1, Time.parseTime("01:00:00"));
+				Order r2order2 = createProductOrder(Id.create("Order4",  Order.class), newreceiver2, r2product2, Time.parseTime("01:00:00"));
 			
 			/*
 			 * Creating a single collection of orders.
@@ -226,20 +221,8 @@ public class RunChessboardWithReceiver {
 				Collection<Order> r2orders = new ArrayList<Order>();
 				r2orders.add(r2order1);
 				r2orders.add(r2order2);
-						
-			/*
-			 * Creating a single order for each receiver.
-			 */
-			
-				//Receiver 1.
-				ReceiverOrder receiver1order = new ReceiverOrder(newreceiver1, r1orders);
 				
-				//Receiver 2.
-				ReceiverOrder receiver2order = new ReceiverOrder(newreceiver2, r2orders);
-			
-			//System.out.println(receiver1order.getScore());			
-			//System.out.println(receiver1order.getReceiverOrders());
-			
+		
 			/**
 			 * Creates a carrier xml file with the receiver order.
 			 */
@@ -249,8 +232,7 @@ public class RunChessboardWithReceiver {
 				 */
 				
 				Carriers carriers = new Carriers();
-				//new CarrierPlanXmlReaderV2(carriers).readFile(directory + "/input/carrierFile.xml");
-				
+	
 				Id<Link> carrierLocation = selectRandomLink(scReceiver.getNetwork());
 				
 				/*
@@ -258,13 +240,14 @@ public class RunChessboardWithReceiver {
 				 */
 				
 				Carrier carrier = CarrierImpl.newInstance(Id.create("Carrier1",Carrier.class));
+				Id<Carrier> index = carrier.getId();
 				
 				org.matsim.contrib.freight.carrier.CarrierCapabilities.Builder capBuilder = CarrierCapabilities.Builder.newInstance();
 				
 				CarrierCapabilities carrierCap = capBuilder.setFleetSize(FleetSize.INFINITE).build();
 				
 				carrier.setCarrierCapabilities(carrierCap);						
-				
+				System.out.println("Created a carrier with capabilities.");	
 						
 				/*
 				 * Create the carrier vehicle types.
@@ -301,7 +284,28 @@ public class RunChessboardWithReceiver {
 					
 				carrier.getCarrierCapabilities().getCarrierVehicles().add(heavy);
 				
-				carrier.getCarrierCapabilities().getCarrierVehicles().add(light);					
+				carrier.getCarrierCapabilities().getCarrierVehicles().add(light);	
+				
+				System.out.println("Added different vehicle types to the carrier.");	
+				
+				/*
+				 * Creating a single order for each receiver.
+				 */
+				
+					//Receiver 1.
+					ReceiverOrder receiver1order = new ReceiverOrder(newreceiver1, r1orders, carrier);
+					
+					//Receiver 2.
+					ReceiverOrder receiver2order = new ReceiverOrder(newreceiver2, r2orders, carrier);
+						
+					newreceiver1.setSelectedPlan(receiver1order);
+					newreceiver2.setSelectedPlan(receiver2order);
+										
+				/*
+				* Add new receivers to the container.
+				*/
+				receivers.addReceiver(newreceiver1);
+				receivers.addReceiver(newreceiver2);
 					
 									
 				/*
@@ -314,7 +318,7 @@ public class RunChessboardWithReceiver {
 				
 					org.matsim.contrib.freight.carrier.CarrierService.Builder serBuilder = CarrierService.Builder.newInstance(Id.create(order.GetId(),CarrierService.class), order.getOrderDeliveryLocation());
 					CarrierService newService = serBuilder.setCapacityDemand(order.getOrderQuantity()).setServiceStartTimeWindow(TimeWindow.newInstance(order.getOrderTimeWindowStart(), order.getOrderTimeWindowEnd())).setServiceDuration(order.getServiceDuration()).build();
-					carrier.getServices().add(newService);		
+					receiver1order.getOrderCarrier().getServices().add(newService);		
 					}	
 				
 				//Receiver 2.
@@ -323,7 +327,7 @@ public class RunChessboardWithReceiver {
 				
 					org.matsim.contrib.freight.carrier.CarrierService.Builder serBuilder = CarrierService.Builder.newInstance(Id.create(order.GetId(),CarrierService.class), order.getOrderDeliveryLocation());
 					CarrierService newService = serBuilder.setCapacityDemand(order.getOrderQuantity()).setServiceStartTimeWindow(TimeWindow.newInstance(order.getOrderTimeWindowStart(), order.getOrderTimeWindowEnd())).setServiceDuration(order.getServiceDuration()).build();
-					carrier.getServices().add(newService);		
+					receiver2order.getOrderCarrier().getServices().add(newService);		
 					}
 				
 					
@@ -342,7 +346,7 @@ public class RunChessboardWithReceiver {
 				
 				
 			/**
-			 * 	Generate an initial carrier plan to delivery receiver orders.			
+			 * 	Generate an initial carrier plan to deliver receiver orders.			
 			 */
 				CarrierVehicleTypes types = CarrierVehicleTypes.getVehicleTypes(carriers);
 				new CarrierVehicleTypeWriter(types).write(directory + "/input/vehicleTypes.xml");
@@ -367,27 +371,51 @@ public class RunChessboardWithReceiver {
 				new CarrierVehicleTypeLoader(finalCarriers).loadVehicleTypes(types2);
 				
 				
-				//CarrierPlanStrategyManagerFactory stratManFac = createCarrierPlanStrategyManagerFactory(scReceiver.getNetwork(), types, controler);
-				final CarrierScoringFunctionFactory scorFuncFac = new MyScoringFunctionFactory(scReceiver.getNetwork());
-				final CarrierPlanStrategyManagerFactory stratManFac = new MyCarrierPlanStrategyManagerFactory(types2, scReceiver.getNetwork(), controler);
-				//final CarrierPlanStrategyManagerFactory stratManFac = new MyCarrierPlanStrategyManagerFactory(types2);
+				/*
+				 * Create a new instance of a carrier scoring function factory.
+				 */
 				
-				/*controler.addOverridingModule(new AbstractModule() {
-					@Override
-					public void install() {
-						CarrierModule carrierModule = new CarrierModule(finalCarriers);
-						carrierModule.setPhysicallyEnforceTimeWindowBeginnings(true);
-						//install(carrierModule);
-						bind(CarrierPlanStrategyManagerFactory.class).toInstance(stratManFac);
-						bind(CarrierScoringFunctionFactory.class).toInstance(scorFuncFac);
-					}
-				});*/
+				final CarrierScoringFunctionFactory cScorFuncFac = new MyCarrierScoringFunctionFactoryImpl(scReceiver.getNetwork());
 				
-				CarrierModule carrierControler = new CarrierModule(finalCarriers, stratManFac, scorFuncFac);
+				/*
+				 * Create a new instance of a carrier plan strategy manager factory.
+				 */
+				final CarrierPlanStrategyManagerFactory cStratManFac = new MyCarrierPlanStrategyManagerFactoryImpl(types2, scReceiver.getNetwork(), controler);
+										
+				CarrierModule carrierControler = new CarrierModule(finalCarriers, cStratManFac, cScorFuncFac);
 				carrierControler.setPhysicallyEnforceTimeWindowBeginnings(true);
-				//controler.addOverridingModule(carrierControler);
+				controler.addOverridingModule(carrierControler);
+				
+				/*
+				 * Create final receiver orders with new planned carrier.
+				 */
+				
+				receiver1order.setOrderCarrier(finalCarriers.getCarriers().get(index));
+				receiver2order.setOrderCarrier(finalCarriers.getCarriers().get(index));
+				
+				final Receivers finalReceivers = new Receivers();
+				finalReceivers.addReceiver(newreceiver1);
+				finalReceivers.addReceiver(newreceiver2);
+				
+				
+				/*
+				 * Create a new instance of a receiver scoring function factory.
+				 */
+				
+				
+				final ReceiverScoringFunctionFactory rScorFuncFac = new MyReceiverScoringFunctionFactoryImpl();
+				
+				/*
+				 * Create a new instance of a receiver plan strategy manager factory.
+				 */
+				
+				final ReceiverOrderStrategyManagerFactory rStratManFac = new MyReceiverOrderStrategyManagerFactorImpl();
+				
+				ReceiverModule receiverControler = new ReceiverModule(finalReceivers, rScorFuncFac, rStratManFac);
+				
+				controler.addOverridingModule(receiverControler);
 
-				prepareFreightOutputDataAndStats(controler, finalCarriers, outputDir);
+				prepareFreightOutputDataAndStats(controler, finalCarriers, outputDir, finalReceivers);
 								
 				controler.run();					
 			
@@ -396,7 +424,7 @@ public class RunChessboardWithReceiver {
 		
 		}
 	
-	private static class MyCarrierPlanStrategyManagerFactory implements CarrierPlanStrategyManagerFactory {
+	private static class MyCarrierPlanStrategyManagerFactoryImpl implements CarrierPlanStrategyManagerFactory {
 
 		/*
 		 * Adapted from RunChessboard.java by sschroeder and gliedtke.
@@ -406,7 +434,7 @@ public class RunChessboardWithReceiver {
 		private MatsimServices controler;
 		private CarrierVehicleTypes types;
 
-		public MyCarrierPlanStrategyManagerFactory(final CarrierVehicleTypes types, final Network network, final MatsimServices controler) {
+		public MyCarrierPlanStrategyManagerFactoryImpl(final CarrierVehicleTypes types, final Network network, final MatsimServices controler) {
 			this.types = types;
 			this.network = network;
 			this.controler= controler;
@@ -570,7 +598,7 @@ public class RunChessboardWithReceiver {
 	private static Order createProductOrder(Id<Order> number, Receiver receiver, ReceiverProduct receiverProduct, double serviceTime) {
 		Order.Builder builder = Order.Builder.newInstance(number, receiver, receiverProduct, serviceTime);
 		Order order = builder.setServiceTime(serviceTime).build();
-		System.out.println("Created an order of type " + order.getOrderName() + " for receiver " + order.getReceiver().getId() + " with order quantity of " + order.getOrderQuantity() + " tonnes, to " + order.getOrderDeliveryLocation() + ", and service duaration of " + order.getServiceDuration() + ".");
+		System.out.println("Created an order of type " + order.getOrderName() + " for receiver " + order.getReceiver().getId() + " with order quantity of " + order.getOrderQuantity() + " tonnes, to " + order.getOrderDeliveryLocation() + ", and service duaration of " + Time.writeTime(order.getServiceDuration()) + ".");
 		return order;
 	}
 
@@ -609,19 +637,22 @@ public class RunChessboardWithReceiver {
 		
 	}
 	
-    private static void prepareFreightOutputDataAndStats(MatsimServices controler, final Carriers carriers, String outputDir) {
+    private static void prepareFreightOutputDataAndStats(MatsimServices controler, final Carriers carriers, String outputDir, final Receivers receivers) {
     	/*
     	 * Adapted from RunChessboard.java by sshroeder and gliedtke.
     	 */
       final int statInterval = 1;
       final LegHistogram freightOnly = new LegHistogram(20);
-      //freightOnly.setPopulation(controler.getScenario().getPopulation());
-      freightOnly.setInclPop(false);
+      
+     // freightOnly.setPopulation(controler.getScenario().getPopulation());
+      //freightOnly.setInclPop(false);
      
       CarrierScoreStats scoreStats = new CarrierScoreStats(carriers, outputDir + "/carrier_scores", true);
+      ReceiverScoreStats rScoreStats = new ReceiverScoreStats(receivers, outputDir + "/receiver_scores", true);
       
 		controler.getEvents().addHandler(freightOnly);
 		controler.addControlerListener(scoreStats);
+		controler.addControlerListener(rScoreStats);
 		controler.addControlerListener(new IterationEndsListener() {
 
 			@Override

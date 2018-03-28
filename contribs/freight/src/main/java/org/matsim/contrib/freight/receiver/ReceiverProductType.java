@@ -15,7 +15,7 @@ import org.matsim.api.core.v01.Id;
 public class ReceiverProductType implements ProductType{
 	
 	/**
-	 * Builds a new receiver product type with typeId. The default required capacity information is10kg per item.
+	 * Builds a new receiver product type with typeId. The default required capacity information is 10kg per item.
 	 *
 	 */
 	

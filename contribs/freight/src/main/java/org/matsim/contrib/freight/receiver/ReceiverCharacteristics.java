@@ -10,9 +10,12 @@ import java.util.Set;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.core.utils.misc.Time;
 
 /**
  * This contains relevant characteristics of the receiver. Such as product types, specific receiver product instances, prescribed delivery time windows, etc.
+ * 
+ * Default time window start and end times are 06:00 and 18:00 respectively. Default link id = "1".
  * 
  * @author wlbean
  *
@@ -34,11 +37,11 @@ public class ReceiverCharacteristics {
 		
 		private Set<Id<ProductType>> productTypeIds = new HashSet<>();
 		
-		private double timeWindowStart;
+		private double timeWindowStart = Time.parseTime("06:00:00");
 		
-		private double timeWindowEnd;
+		private double timeWindowEnd = Time.parseTime("18:00:00");
 		
-		private Id<Link> location;
+		private Id<Link> location = Id.createLinkId("1");
 		
 		public Builder addProductType(ReceiverProductType productType){
 			if(!productTypeIds.contains(productType.getId())){
