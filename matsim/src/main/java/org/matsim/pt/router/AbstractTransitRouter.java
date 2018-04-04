@@ -106,7 +106,7 @@ public class AbstractTransitRouter {
 
 		// egress leg
 		Leg egressLeg;
-		// check if first leg extends walking distance
+		// check if last leg extends walking distance
 		if (p.getRoute().get(p.getRoute().size() - 1).getRouteTaken() == null) {
 			// route starts with transfer - extend initial walk to that stop
 //			egressLeg = createTransitWalkLeg(p.getRoute().get(p.getRoute().size() - 1).getFromStop().getCoord(), toCoord);
