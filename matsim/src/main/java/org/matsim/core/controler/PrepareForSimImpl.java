@@ -30,6 +30,7 @@ import org.matsim.core.router.PlanRouter;
 import org.matsim.core.router.TripRouter;
 import org.matsim.core.scenario.Lockable;
 import org.matsim.facilities.ActivityFacilities;
+import org.matsim.facilities.ActivityFacility;
 import org.matsim.facilities.FacilitiesFromPopulation;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
@@ -93,6 +94,8 @@ class PrepareForSimImpl implements PrepareForSim {
 			case fromFile:
 			case setInScenario:
 				Gbl.assertIf(! this.activityFacilities.getFacilities().isEmpty() );
+				// fail if any facility does not contain coordinate.
+				Gbl.assertIf(! this.activityFacilities.getFacilities().values().stream().anyMatch(f->((ActivityFacility) f).getCoord()==null) );
 				break;
 			case onePerActivityLocationInPlansFile:
 				FacilitiesFromPopulation facilitiesFromPopulation = new FacilitiesFromPopulation(activityFacilities, facilitiesConfigGroup);
