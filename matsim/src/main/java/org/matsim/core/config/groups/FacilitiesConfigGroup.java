@@ -60,6 +60,10 @@ public final class FacilitiesConfigGroup extends ReflectiveConfigGroup {
 	private static final String ASSIGNING_OPENING_TIME = "assigningOpeningTime";
 	private static final String ASSIGNING_LINKS_TO_FACILITIES_IF_MISSING="assigningLinksToFacilitiesIfMissing";
 
+	//
+	private boolean assigningCoordsToFacilitiesIfMissing = true;
+	private static final String ASSIGNING_COORDS_TO_FACILITIES_IF_MISSING="assigningCoordsToFacilitiesIfMissing";
+
 	public FacilitiesConfigGroup() {
 		super(GROUP_NAME);
 	}
@@ -96,6 +100,11 @@ public final class FacilitiesConfigGroup extends ReflectiveConfigGroup {
 		comments.put(ASSIGNING_LINKS_TO_FACILITIES_IF_MISSING, "Default is 'true'. In the case that a facility has no link assigned, the ActivityFacility can be assigned to the closest link." +
 				" If there should be only one ActivityFacility per link and if no link-assignment should be done, set to 'false'." +
 				"This will create a new ActivityFacility at the coordinate and the facility will not be assigned to a link.");
+
+		comments.put(ASSIGNING_COORDS_TO_FACILITIES_IF_MISSING, "This switch is applicable if facility source is"+ FacilitiesSource.setInScenario.toString()+" and default is set to true."+
+				"A facility requires a coordinate. If coordinate is not provided, this switch determines if assigned link can be used to get the coordinate for facility." +
+				"An exception will be thrown for other facility sources if facility does not have coordinate.");
+
 		return comments;
 	}
 
@@ -202,5 +211,16 @@ public final class FacilitiesConfigGroup extends ReflectiveConfigGroup {
 	@StringSetter(ADD_EMPTY_ACTIVITY_OPTIONS)
 	public void setAddEmptyActivityOption(boolean addEmptyActivityOption) {
 		this.addEmptyActivityOption = addEmptyActivityOption;
+	}
+
+	//
+	@StringGetter(ASSIGNING_COORDS_TO_FACILITIES_IF_MISSING)
+	public boolean isAssigningCoordsToFacilitiesIfMissing() {
+		return assigningCoordsToFacilitiesIfMissing;
+	}
+
+	@StringSetter(ASSIGNING_COORDS_TO_FACILITIES_IF_MISSING)
+	public void setAssigningCoordsToFacilitiesIfMissing(boolean assigningCoordsToFacilitiesIfMissing) {
+		this.assigningCoordsToFacilitiesIfMissing = assigningCoordsToFacilitiesIfMissing;
 	}
 }

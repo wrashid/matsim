@@ -36,6 +36,7 @@ import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.groups.FacilitiesConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
+import org.matsim.core.gbl.Gbl;
 import org.matsim.core.network.NetworkUtils;
 
 /**
@@ -59,6 +60,8 @@ public class FacilitiesFromPopulation {
 	private boolean removeLinksAndCoordinates = true;
 	private PlanCalcScoreConfigGroup planCalcScoreConfigGroup = null;
 	private boolean addEmptyActivityOptions = false;
+
+	private int missingCoordWarnCount =0;
 
 	public FacilitiesFromPopulation(final ActivityFacilities facilities) {
 		this.facilities = facilities;
@@ -146,6 +149,22 @@ public class FacilitiesFromPopulation {
 
 						Coord c = a.getCoord();
 						Id<Link> linkId = a.getLinkId();
+
+						if (c==null){
+							if (linkId==null) {
+								throw new RuntimeException("Neither coordinate nor link id is attached to the activity. Aborting...");
+							} else if (this.network==null){
+								throw new RuntimeException("A coordinate is not attached to activity which is essential. This can be obtained from linkId, however, network is not available. Aborting...");
+							}
+
+							if (missingCoordWarnCount==0){
+								log.warn("To generate a facility, a coordinate is required. However, activity does not have a coordinate. Taking toNodeCoord of the link on which activity is located.");
+								log.warn(Gbl.ONLYONCE);
+								missingCoordWarnCount++;
+							}
+							c = this.network.getLinks().get(linkId).getToNode().getCoord();
+						}
+
 						ActivityFacility facility = null;
 
 						if (linkId == null && this.network != null) {
@@ -207,5 +226,15 @@ public class FacilitiesFromPopulation {
 
 	public void setAddEmptyActivityOptions(boolean addEmptyActivityOptions) {
 		this.addEmptyActivityOptions = addEmptyActivityOptions;
+	}
+
+	/**
+	 * A network is required to get the coordinate for the activityLinkId
+	 * and this coordinate is assigned to facility if not provided already.
+	 *
+	 * @param network
+	 */
+	public void setAssignCoordsToFacilitiesIfMissing(Network network) {
+		this.network = network;
 	}
 }

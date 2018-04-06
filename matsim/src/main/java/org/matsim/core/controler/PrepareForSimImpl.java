@@ -101,6 +101,7 @@ class PrepareForSimImpl implements PrepareForSim {
 				FacilitiesFromPopulation facilitiesFromPopulation = new FacilitiesFromPopulation(activityFacilities, facilitiesConfigGroup);
 				facilitiesFromPopulation.setAssignLinksToFacilitiesIfMissing(facilitiesConfigGroup.isAssigningLinksToFacilitiesIfMissing(), network);
 				facilitiesFromPopulation.assignOpeningTimes(facilitiesConfigGroup.isAssigningOpeningTime(), scenario.getConfig().planCalcScore());
+				if (facilitiesConfigGroup.isAssigningCoordsToFacilitiesIfMissing()) facilitiesFromPopulation.setAssignCoordsToFacilitiesIfMissing(network);
 				facilitiesFromPopulation.run(population);
 				break;
 			default:
