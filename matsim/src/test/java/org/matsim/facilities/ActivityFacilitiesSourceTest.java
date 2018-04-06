@@ -110,10 +110,10 @@ public class ActivityFacilitiesSourceTest {
                         null));
             } else {
                 facilities.addActivityFacility(factory.createActivityFacility(Id.create("1", ActivityFacility.class),
-                        null,
+                        new Coord(-25000.0, 0.),
                         Id.createLinkId("1")));
                 facilities.addActivityFacility(factory.createActivityFacility(Id.create("2", ActivityFacility.class),
-                        null,
+                        new Coord(10000.0, 0.0),
                         Id.createLinkId("20")));
             }
         }
