@@ -15,7 +15,7 @@ import org.matsim.vehicles.VehicleType;
 import org.xml.sax.Attributes;
 
 /**
- * Reader reading carrierVehicleTypes from an xml-file.
+ * Reader reading carrierVehicleTypes from an xml-file according to <code>network_v1.dtd</code>.
  * 
  * This is the original version from sschroeder. Only moved to .io package and renamed to V1. kturner feb/18
  * 

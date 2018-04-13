@@ -8,9 +8,7 @@ import org.matsim.vehicles.VehicleType;
 
 /**
  * Tests for the new version-specific CarrierVehicleTypes-reader
- * Here: Using carrierVehicleType_v1.dtd
- * TODO: Move dtd to matsim.org/files/dtd and refactor path in vehicleTypes.xml
- * 
+ * Here: Using carrierVehicleType_v1.dtd 
  * 
  * @author kturner
  *
