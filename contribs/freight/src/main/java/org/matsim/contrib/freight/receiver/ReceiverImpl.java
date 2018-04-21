@@ -4,39 +4,52 @@
 package org.matsim.contrib.freight.receiver;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.contrib.freight.carrier.TimeWindow;
+import org.matsim.utils.objectattributes.attributable.Attributes;
 
 /**
  * This returns a receiver that has characteristics and orders.
  * 
- * @author wlbean
+ * @author wlbean, jwjoubert
  *
  */
 public class ReceiverImpl implements Receiver {
-
+	final private Logger log = Logger.getLogger(Receiver.class);
+	
+	private Attributes attributes = new Attributes();
+	private Id<Link> location;
+	private List<TimeWindow> timeWindows = new ArrayList<>();
+	
+	
+	
 	/*
 	 * Create a new instance of a receiver.
 	 */
-	
-	public static Receiver newInstance(Id<Receiver> id){
+	public static ReceiverImpl newInstance(Id<Receiver> id){
 		return new ReceiverImpl(id);
 	}
 	
 	private final Id<Receiver> id;
 	private final List<ReceiverOrder> orders;
 	private final List<ReceiverProduct> products;
-	private ReceiverCharacteristics receiverCharacteristics;
 	private ReceiverOrder selectedOrder;
 	
 	private ReceiverImpl(final Id<Receiver> id){
-		super();
+//		super();
 		this.id = id;
 		this.orders = new ArrayList<ReceiverOrder>();
 		this.products = new ArrayList<ReceiverProduct>();
-		this.receiverCharacteristics = ReceiverCharacteristics.newInstance();		
 	}
+	
+	
+	
+	
 	
 
 	@Override
@@ -46,30 +59,12 @@ public class ReceiverImpl implements Receiver {
 
 	@Override
 	public ReceiverOrder createCopyOfSelectedPlanAndMakeSelected() {
-		ReceiverOrder order = ReceiverImpl.copyOrder(this.selectedOrder);
+		ReceiverOrder order = selectedOrder.createCopy();
 		this.setSelectedPlan(order);
 		return order;
 	}
 	
-	/*
-	 * Copies a receiver order and the order cost.
-	 */
 
-	private static ReceiverOrder copyOrder(ReceiverOrder orderToCopy) {
-		List<Order> orders = new ArrayList<Order>();
-		for(Order order : orderToCopy.getReceiverOrders()){
-			Id<Order> orderId = order.GetId();
-			Receiver receiver = order.getReceiver();
-			ReceiverProduct product = order.getProduct();
-			double time = order.getServiceDuration();
-			orders.add(Order.newInstance(orderId, receiver, product, time));
-		}
-		ReceiverOrder copiedOrder = new ReceiverOrder(orderToCopy.getReceiver(), orders, orderToCopy.getOrderCarrier());
-		double cost = orderToCopy.getScore();
-		copiedOrder.setScore(cost);
-		return copiedOrder;
-	}
-	
 	/*
 	 * Removes an order from the receiver's list of orders.
 	 */
@@ -111,10 +106,6 @@ public class ReceiverImpl implements Receiver {
 		return selectedOrder;
 	}
 	
-	@Override
-	public ReceiverCharacteristics getReceiverCharacteristics() {
-		return receiverCharacteristics;
-	}
 	
 	/**
 	 * Sets the selected receiver plan.
@@ -132,9 +123,88 @@ public class ReceiverImpl implements Receiver {
 	 * @param receiverCharacteristics
 	 */
 	
+
 	@Override
-	public void setReceiverCharacteristics(ReceiverCharacteristics receiverCharacteristics) {
-		this.receiverCharacteristics = receiverCharacteristics;		
+	public Attributes getAttributes() {
+		return this.attributes;
+	}
+
+	
+	public Receiver setLocation(Id<Link> linkId) {
+		this.location = linkId;
+		return this;
+	}
+	
+	/**
+	 * Returns the link from which the receiver is accessed.
+	 * TODO One may consider changing this so that it is a list of links.
+	 */
+	@Override
+	public Id<Link> getLinkId() {
+		return this.location;
+	}
+
+	
+	@Override
+	public Receiver addTimeWindow(TimeWindow window) {
+		/*TODO May want to check/consolidate time windows. */
+		this.timeWindows.add(window);
+		return this;
+	}
+	
+	
+	/**
+	 * Checks if a given time is within the allowable time window(s).
+	 * 
+	 * @return true if the time is within at leats one of the set time 
+	 * window(s), or <i>if no time windows are set</i>.
+	 */
+	@Override
+	public boolean isInTimeWindow(double time) {
+		if(this.timeWindows.isEmpty()) {
+			log.warn("No time windows are set! Assuming any time is uitable.");
+			return true;
+		}
+		
+		boolean inTimeWindow = false;
+		Iterator<TimeWindow> iterator = this.timeWindows.iterator();
+		
+		while(!inTimeWindow & iterator.hasNext()) {
+			TimeWindow tw = iterator.next();
+			if(time >= tw.getStart() && time <= tw.getEnd()) {
+				inTimeWindow = true;
+			}
+		}
+		return false;
+	}
+	
+	
+	public List<TimeWindow> getTimeWindows(){
+		return this.timeWindows;
+	}
+
+	
+	@Override
+	public Receiver setLinkId(Id<Link> linkId) {
+		this.location = linkId;
+		return this;
+	}
+
+	@Override
+	public ReceiverProduct getProduct(Id<ProductType> productType) {
+		ReceiverProduct product = null;
+		Iterator<ReceiverProduct> iterator = this.products.iterator();
+		while(product == null & iterator.hasNext()) {
+			ReceiverProduct thisProduct = iterator.next();
+			if(thisProduct.getProductTypeId().equals(productType)) {
+				product = thisProduct;
+			}
+		}
+		if(product == null) {
+			log.warn("Receiver \"" + this.id.toString() 
+			+ "\" does not have the requested product type \"" + productType.toString() + "\". Returning null.");
+		}
+		return product;
 	}
 
 }

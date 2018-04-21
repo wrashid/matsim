@@ -3,16 +3,15 @@
  */
 package org.matsim.contrib.freight.receiver;
 
-import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Identifiable;
+import org.matsim.utils.objectattributes.attributable.Attributable;
 
 /**
- * This is a product type.
+ * General interface for different product types.
  * 
- * @author wlbean
- *
+ * @author wlbean, jwjoubert
  */
-public interface ProductType {	
-	
+public interface ProductType extends Identifiable<ProductType>, Attributable{	
 	
 	public void setProductDescription(String description);
 
@@ -22,6 +21,5 @@ public interface ProductType {
 
 	public double getRequiredCapacity();
 
-	public Id<ProductType> getId();
 
 }

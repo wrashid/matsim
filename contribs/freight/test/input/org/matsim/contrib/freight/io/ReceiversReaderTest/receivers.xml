@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE freightReceivers SYSTEM "http://matsim.org/files/dtd/freightReceivers_v1.dtd">
+
+<freightReceivers desc="Chessboard">
+	<attributes>
+		<attribute name="date" class="java.lang.String" >2018/04/20</attribute>
+	</attributes>
+
+	<productTypes>
+		<productType id="P1" descr="Product 1" weight="5.0"/>
+		<productType id="P2" descr="Product 2" weight="10.0"/>
+	</productTypes>
+
+	<!-- =========================================================================================== -->
+
+	<receiver id="1" linkId="j(4,5)R">
+		<timeWindow start="10:00:00" end="14:00:00"/>
+		<product id="P1" onHand="0.00">
+			<reorderPolicy name="(s,S)">
+				<attributes>
+					<attribute name="S" class="java.lang.Double" >1000.0</attribute>
+					<attribute name="s" class="java.lang.Double" >200.0</attribute>
+				</attributes>
+			</reorderPolicy>
+		</product>
+		<product id="P2" onHand="0.00">
+			<reorderPolicy name="(s,S)">
+				<attributes>
+					<attribute name="S" class="java.lang.Double" >2000.0</attribute>
+					<attribute name="s" class="java.lang.Double" >800.0</attribute>
+				</attributes>
+			</reorderPolicy>
+		</product>
+		<orders>
+			<order carrierId="Carrier1">
+				<item id="Order1" name="service" productId="P1" quantity="1000" serviceTime="00:30:00"/>
+				<item id="Order2" name="service" productId="P2" quantity="2000" serviceTime="00:30:00"/>
+			</order>
+		</orders>
+	</receiver>
+
+	<!-- =========================================================================================== -->
+
+	<receiver id="2" linkId="j(2,8)R">
+		<timeWindow start="08:00:00" end="12:00:00"/>
+		<product id="P1" onHand="0.00">
+			<reorderPolicy name="(s,S)">
+				<attributes>
+					<attribute name="S" class="java.lang.Double" >800.0</attribute>
+					<attribute name="s" class="java.lang.Double" >200.0</attribute>
+				</attributes>
+			</reorderPolicy>
+		</product>
+		<product id="P2" onHand="0.00">
+			<reorderPolicy name="(s,S)">
+				<attributes>
+					<attribute name="S" class="java.lang.Double" >1500.0</attribute>
+					<attribute name="s" class="java.lang.Double" >600.0</attribute>
+				</attributes>
+			</reorderPolicy>
+		</product>
+		<orders>
+			<order carrierId="Carrier1">
+				<item id="Order3" name="service" productId="P1" quantity="800" serviceTime="01:00:00"/>
+				<item id="Order4" name="service" productId="P2" quantity="1500" serviceTime="01:00:00"/>
+			</order>
+		</orders>
+	</receiver>
+
+	<!-- =========================================================================================== -->
+
+</freightReceivers>

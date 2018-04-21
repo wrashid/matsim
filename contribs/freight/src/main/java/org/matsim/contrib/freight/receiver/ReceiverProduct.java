@@ -4,7 +4,8 @@
 package org.matsim.contrib.freight.receiver;
 
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.network.Link;
+import org.matsim.contrib.freight.receiver.reorderPolicy.ReorderPolicy;
+import org.matsim.contrib.freight.receiver.reorderPolicy.SSReorderPolicy;
 
 /**
  * Returns a new instance of a receiver product with associated information, such as location, order policy parameters (min and max levels) and possibly demand rate (to be included later).
@@ -20,115 +21,26 @@ public class ReceiverProduct {
 		return new ReceiverProduct();		
 	}
 	
-	/** 
-	 * A builder that is used to build the product instance for the receiver.]
-	 */
-	public static class Builder {
-		
-		/**
-		 * This returns a builder with locationId.
-		 */
-		
-		public static Builder newInstance(){
-			return new Builder();
-		}
-		
-		//private Id<Link> locationId;
-		private ReceiverProductType productType;
-		//private Id<ProductType> typeId = productType.getId();
-		private int maxLevel = 500000;
-		private int minLevel = 100000;
-		//private double reqCap = productType.getRequiredCapacity();
-		//private String descr = productType.getDescription();
-		
-		//public Builder(Id<Link> locationId){
-		//	this.locationId = locationId;
-		//}
-		
-		/**
-		 * Set relevant receiver product types.
-		 * @param productType
-		 * @return 
-		 */
-		
-		public Builder setProductType(ReceiverProductType productType){
-			this.productType = productType;
-			return this;
-		}
-		
-		/**
-		 * Set relevant product type id.
-		 * @param typeId
-		 * @return
-		 */
-		
-		//public Builder setProductTypeId(Id<ProductType> typeId){
-		//	this.typeId = typeId;
-		//	return this;
-		//}
-		
-		/**
-		 * Set the maximum inventory level of the receiver (assuming that the receiver employs a min-max inventory management policy).
-		 * @param maxLevel
-		 * @return
-		 */
-		
-		public Builder setMaxLevel(int maxLevel){
-			this.maxLevel = maxLevel;
-			return this;
-		}
-		
-		/**
-		 * Set the minimum inventory level (or reorder point) of the receiver (assuming that the receiver employs a min-max inventory management policy).
-		 * @param minLevel
-		 * @return
-		 */
-		
-		public Builder setMinLevel(int minLevel){
-			this.minLevel = minLevel;
-			return this;
-		}
-		
-		public ReceiverProduct build(){
-			return new ReceiverProduct(this);
-		}
-	}
-	
-	
+	private ReorderPolicy policy = new SSReorderPolicy(100000.0, 500000.0);
+	private double stockOnHand = 0.0;
 	//private final Id<Link> locationId;
 	//private Id<ProductType> typeId;
-	private ReceiverProductType productType;
-	private int maxLevel;
-	private int minLevel;
+	private ProductType productType;
 	//private double reqCap;
 	//private String descr;
-	private ReceiverCharacteristics receiverChar;
 	
-	private ReceiverProduct(){
+	ReceiverProduct(){
 		super();
-		//this.locationId = location;
-		maxLevel = 500000;
-		minLevel = 100000;
 	}
 	
 	private ReceiverProduct(Builder builder){
 		//this.locationId = builder.locationId;
 		this.productType = builder.productType;
 		//this.typeId = builder.typeId;
-		this.maxLevel = builder.maxLevel;
-		this.minLevel = builder.minLevel;	
+		this.policy = builder.policy;
 		//this.descr = builder.descr;
 		//this.reqCap = builder.reqCap;
-	}
-	
-	/** 
-	 * Returns receiver product location.
-	 * 
-	 */
-	
-	public Id<Link> getLocation(){
-		return receiverChar.getLocation();
-	//	return locationId;
+		this.stockOnHand = builder.onHand;
 	}
 	
 
@@ -136,7 +48,7 @@ public class ReceiverProduct {
 	 * Returns receiver product type.
 	 */
 	
-	public ReceiverProductType getProductType(){
+	public ProductType getProductType(){
 		return productType;
 	}
 	
@@ -148,21 +60,19 @@ public class ReceiverProduct {
 		return productType.getId();
 	}
 	
-	/**
-	 * Returns the maximum inventory level of the receiver (assuming that the receiver employs a min-max inventory management policy).
-	 */
 	
-	public int getMaxLevel(){
-		return maxLevel;
+	public ReorderPolicy getReorderPolicy() {
+		return this.policy;
 	}
 	
-	/**
-	 * Returns the minimum inventory level (or reorder point) of the receiver (assuming that the receiver employs a min-max inventory management policy).
-	 */
-	
-	public int getMinLevel(){
-		return minLevel;
+	public double getStockOnHand() {
+		return stockOnHand;
 	}
+	
+	public void setStockOnHand(double stockOnHand) {
+		this.stockOnHand = stockOnHand;
+	}
+	
 	
 	/**
 	 * Returns the description of the product type of this particular receiver product.
@@ -178,6 +88,81 @@ public class ReceiverProduct {
 	
 	public double getRequiredCapacity(){
 		return productType.getRequiredCapacity();
+	}
+
+	/** 
+	 * A builder that is used to build the product instance for the receiver.
+	 * 
+	 * FIXME There are multiple ways to create/set things. And, reading from the
+	 * XML file means that you must read the ReceiverProduct first, BEFORE you 
+	 * get to the ReorderPolicy. 
+	 */
+	public static class Builder {
+		
+		/**
+		 * This returns a builder with locationId.
+		 */
+		
+		public static Builder newInstance(){
+			return new Builder();
+		}
+		
+		private ReorderPolicy policy = new SSReorderPolicy(100000.0, 500000.0);
+		private double onHand = 0.0;
+		//private Id<Link> locationId;
+		private ProductType productType;
+		//private Id<ProductType> typeId = productType.getId();
+		//private double reqCap = productType.getRequiredCapacity();
+		//private String descr = productType.getDescription();
+		
+		//public Builder(Id<Link> locationId){
+		//	this.locationId = locationId;
+		//}
+		
+		/**
+		 * Set relevant receiver product types.
+		 * @param productType2
+		 * @return 
+		 */
+		
+		public Builder setProductType(ProductType productType2){
+			this.productType = productType2;
+			return this;
+		}
+		
+		/**
+		 * Set relevant product type id.
+		 * @param typeId
+		 * @return
+		 */
+		
+		//public Builder setProductTypeId(Id<ProductType> typeId){
+		//	this.typeId = typeId;
+		//	return this;
+		//}
+		
+		public Builder setReorderingPolicy(ReorderPolicy policy) {
+			this.policy = policy;
+			return this;
+		}
+		
+		
+		/**
+		 * Set the current (opening) inventory for the product at the receiver. Defaults to 0 units on hand.
+		 * @param onHand
+		 * @return
+		 */
+		public Builder setQuantityOnHand(double onHand) {
+			this.onHand = onHand;
+			return this;
+		}
+		
+		
+		public ReceiverProduct build(){
+			return new ReceiverProduct(this);
+		}
+		
+		
 	}
 	
 

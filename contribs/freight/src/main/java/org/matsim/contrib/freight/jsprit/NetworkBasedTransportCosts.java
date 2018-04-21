@@ -255,7 +255,6 @@ public class NetworkBasedTransportCosts implements VehicleRoutingTransportCosts{
 			}
 			return minDisutility;
 		}
-		
 	}
 	
 	private static class VehicleTypeVarCosts {
