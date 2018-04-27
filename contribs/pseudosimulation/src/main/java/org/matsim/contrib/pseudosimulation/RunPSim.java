@@ -98,7 +98,7 @@ public class RunPSim {
 
 		LinkUsageListener linkUsageListener = new LinkUsageListener(new TimeDiscretization(0, 3600, 24));
 		LinkUsageAnalyzer linkUsageAnalyzer = new LinkUsageAnalyzer(linkUsageListener,
-				new ConstantReplanningParameters(0.1, 1.0));
+				new ConstantReplanningParameters(0.1, 1.0), LinkUsageAnalyzer.newUniformLinkWeights(scenario.getNetwork()));
 		matsimControler.getEvents().addHandler(linkUsageListener);
 		matsimControler.addControlerListener(linkUsageAnalyzer);
 
