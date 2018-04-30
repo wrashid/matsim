@@ -24,7 +24,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
  * @author Gunnar Flötteröd
  *
  */
-public interface ReplanningParameterProvider {
+public interface ReplanningParameterContainer {
 
 	public double getMeanLambda(int iteration);
 

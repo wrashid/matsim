@@ -21,8 +21,9 @@ package org.matsim.contrib.pseudosimulation.searchacceleration.datastructures;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
+
+import org.matsim.contrib.pseudosimulation.searchacceleration.LinkWeightContainer;
 
 import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
@@ -38,12 +39,12 @@ public class CountIndicatorUtils {
 	}
 
 	public static <L> DynamicData<L> newWeightedCounts(final TimeDiscretization timeDiscr,
-			final Collection<SpaceTimeIndicators<L>> allIndicators, final Map<L, Double> weights) {
+			final Collection<SpaceTimeIndicators<L>> allIndicators, final LinkWeightContainer weights) {
 		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
 		for (SpaceTimeIndicators<L> indicators : allIndicators) {
 			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
 				for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
-					result.add(locObj, bin, weights.get(locObj));
+					result.add(locObj, bin, weights.getWeight(locObj));
 				}
 			}
 		}

@@ -16,44 +16,34 @@
  *
  * contact: gunnar.flotterod@gmail.com
  *
- */ 
-package org.matsim.contrib.pseudosimulation.searchacceleration.examples.matsimdummy;
+ */
+package org.matsim.contrib.pseudosimulation.searchacceleration;
 
 import org.matsim.api.core.v01.population.HasPlansAndId;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
-import org.matsim.contrib.pseudosimulation.searchacceleration.LinkUsageAnalyzer;
 import org.matsim.core.replanning.PlanStrategy;
 import org.matsim.core.replanning.ReplanningContext;
 
-
 /**
- * This plan strategy does not perform actual re-planning. It only asks, for
- * every re-planning person, the {@link LinkUsageAnalyzer} (i) if the person is
- * allowed to re-plan and (ii) what new plan to assign to a re-planning person.
  * 
  * @author Gunnar Flötteröd
  *
  */
-public class DummyPlanStrategy implements PlanStrategy {
+public class CloneHypotheticalReplanningStrategy implements PlanStrategy {
 
-	private final LinkUsageAnalyzer linkUsageAnalyzer;
+	public static final String NAME = "CloneHypotheticalReplanning";
 
-	public DummyPlanStrategy(final LinkUsageAnalyzer linkUsageAnalyzer) {
-		this.linkUsageAnalyzer = linkUsageAnalyzer;
+	private final SearchAccelerator searchAccelerator;
+	
+	public CloneHypotheticalReplanningStrategy(final SearchAccelerator searchAccelerator) {
+		this.searchAccelerator = searchAccelerator;
 	}
-
+	
 	@Override
-	public void run(final HasPlansAndId<Plan, Person> hasPlanAndId) {
-		if (this.linkUsageAnalyzer.isAllowedToReplan(hasPlanAndId.getId())) {
-			final Plan newPlan = this.linkUsageAnalyzer.getNewPlan(hasPlanAndId.getId());
-			/*
-			 * TODO Do everything that happens in the "regular" MATSim
-			 * re-planning: Add newPlan to the choice set (if it is not yet
-			 * already in there), make sure that the choice set does not exceed
-			 * its maximum size, set newPlan as selected, ...
-			 */
-		}
+	public void run(HasPlansAndId<Plan, Person> person) {
+		// TODO Just testing. Need to get rid of this cast.
+		this.searchAccelerator.replan((Person) person);
 	}
 
 	@Override

@@ -24,7 +24,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
  * @author Gunnar Flötteröd
  *
  */
-public class ConstantReplanningParameters implements ReplanningParameterProvider {
+public class ConstantReplanningParameters implements ReplanningParameterContainer {
 
 	private final double meanLambda;
 
