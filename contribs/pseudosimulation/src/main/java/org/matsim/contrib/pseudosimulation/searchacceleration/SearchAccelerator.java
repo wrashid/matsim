@@ -19,7 +19,6 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -138,46 +137,6 @@ public class SearchAccelerator
 	@Override
 	public void notifyStartup(final StartupEvent event) {
 		this.physicalMobsimUsageListener = new LinkUsageListener(this.timeDiscr);
-	}
-
-	// --------------- IMPLEMENTATION OF IterationStartsListener ---------------
-
-	public void notifyIterationStartsTEST(IterationStartsEvent event) {
-
-		log("iteration starts", false);
-
-		log("services = " + services, false);
-		log("population = " + population, false);
-		log("replanningContext = " + replanningContext, false);
-		log("strategyManager = " + services.getStrategyManager(), false);
-		log("scenario = " + scenario, false);
-		log("config = " + config, false);
-		log("network = " + network, false);
-
-		log("starting to replan", false);
-		PopulationState popState = new PopulationState(this.population); // memorize
-		this.services.getStrategyManager().run(this.population, this.replanningContext);
-		popState.set(this.population); // undo the re-planning
-		log("replanning done", false);
-
-		log("preparing the plan catcher", false);
-		final PlanCatcher planCatcher = new PlanCatcher(); // or injection
-		for (Person person : this.population.getPersons().values()) {
-			planCatcher.addPlansForPsim(person.getSelectedPlan());
-		}
-		log("plan catcher ready", false);
-
-		LinkUsageListener listener = new LinkUsageListener(new TimeDiscretization(0, 3600, 24));
-		EventsManager eventsManager = new EventsManagerImpl();
-		eventsManager.addHandler(listener);
-
-		log("running the psim", false);
-		PSim pSim = new PSim(this.scenario, eventsManager, planCatcher.getPlansForPSim(),
-				this.services.getLinkTravelTimes());
-		pSim.run();
-		log("psim done", false);
-
-		log("so far so good", true);
 	}
 
 	// --------------- IMPLEMENTATION OF IterationEndsListener ---------------
