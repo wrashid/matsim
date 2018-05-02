@@ -54,7 +54,7 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 
 	private final Map<Id<Vehicle>, Id<Person>> vehicleId2driverId = new LinkedHashMap<>();
 
-	private final Map<Id<Vehicle>, SpaceTimeIndicators<Id<Link>>> vehicleId2indicators = new LinkedHashMap<>();
+	private final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2indicators = new LinkedHashMap<>();
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -65,17 +65,22 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 	// -------------------- INTERNALS --------------------
 
 	private void registerLinkEntry(final Id<Link> linkId, final Id<Vehicle> vehicleId, final double time_s,
-			final Id<Person> driverId) {
+			Id<Person> driverId) {
 		if (driverId != null) {
 			// Added even if currently outside of the time window because later
 			// link entries may be within the time window.
 			this.vehicleId2driverId.put(vehicleId, driverId);
+		} else {
+			driverId = this.vehicleId2driverId.get(vehicleId);
+			if (driverId == null) {
+				throw new RuntimeException("Driver of vehicle " + vehicleId + " is unknown.");
+			}
 		}
 		if ((time_s >= this.timeDiscretization.getStartTime_s()) && (time_s < this.timeDiscretization.getEndTime_s())) {
-			SpaceTimeIndicators<Id<Link>> indicators = this.vehicleId2indicators.get(vehicleId);
+			SpaceTimeIndicators<Id<Link>> indicators = this.driverId2indicators.get(driverId);
 			if (indicators == null) {
 				indicators = new SpaceTimeIndicators<Id<Link>>(this.timeDiscretization.getBinCnt());
-				this.vehicleId2indicators.put(vehicleId, indicators);
+				this.driverId2indicators.put(driverId, indicators);
 			}
 			indicators.visit(linkId, this.timeDiscretization.getBin(time_s));
 		}
@@ -87,15 +92,17 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 		return this.timeDiscretization;
 	}
 
-	Map<Id<Vehicle>, Id<Person>> getAndClearDrivers() {
-		final Map<Id<Vehicle>, Id<Person>> result = new LinkedHashMap<>(this.vehicleId2driverId);
-		this.vehicleId2driverId.clear();
-		return result;
-	}
+	// Map<Id<Vehicle>, Id<Person>> getAndClearDrivers() {
+	// final Map<Id<Vehicle>, Id<Person>> result = new
+	// LinkedHashMap<>(this.vehicleId2driverId);
+	// this.vehicleId2driverId.clear();
+	// return result;
+	// }
 
-	Map<Id<Vehicle>, SpaceTimeIndicators<Id<Link>>> getAndClearIndicators() {
-		final Map<Id<Vehicle>, SpaceTimeIndicators<Id<Link>>> result = new LinkedHashMap<>(this.vehicleId2indicators);
-		this.vehicleId2indicators.clear();
+	Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> getAndClearIndicators() {
+		final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> result = new LinkedHashMap<>(this.driverId2indicators);
+		this.vehicleId2driverId.clear();
+		this.driverId2indicators.clear();
 		return result;
 	}
 
@@ -103,7 +110,7 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 
 	@Override
 	public void reset(int iteration) {
-		if (this.vehicleId2indicators.size() > 0) {
+		if (this.driverId2indicators.size() > 0) {
 			throw new RuntimeException("veh2indicators should be empty");
 		}
 		if (this.vehicleId2driverId.size() > 0) {

@@ -19,12 +19,16 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
 
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
@@ -49,16 +53,14 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.controler.events.IterationEndsEvent;
-import org.matsim.core.controler.events.IterationStartsEvent;
 import org.matsim.core.controler.events.StartupEvent;
 import org.matsim.core.controler.listener.IterationEndsListener;
 import org.matsim.core.controler.listener.StartupListener;
-import org.matsim.core.events.EventsManagerImpl;
+import org.matsim.core.events.EventsUtils;
 import org.matsim.core.replanning.GenericPlanStrategy;
 import org.matsim.core.replanning.ReplanningContext;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.vehicles.Vehicle;
 
 import com.google.inject.Inject;
 
@@ -105,6 +107,9 @@ public class SearchAccelerator
 
 	// -------------------- NON-INJECTED MEMBERS --------------------
 
+	private final String prefix = "[Acceleration] ";
+	private final Logger log = Logger.getLogger(Controler.class);
+
 	private Set<Id<Person>> replanners;
 
 	private boolean firstCall = true;
@@ -144,15 +149,23 @@ public class SearchAccelerator
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
 
+		this.log.info(this.prefix + " iteration " + event.getIteration() + " ends");
+
 		/*
 		 * OBTAIN DATA FROM MOST RECENT PHYSICAL NETWORK LOADING
 		 * 
 		 * Receive information about what happened in the network during the
 		 * most recent real network loading.
 		 */
-		final Map<Id<Vehicle>, SpaceTimeIndicators<Id<Link>>> vehicleId2physicalLinkUsage = this.physicalMobsimUsageListener
+		final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalLinkUsage = this.physicalMobsimUsageListener
 				.getAndClearIndicators();
-		final Map<Id<Vehicle>, Id<Person>> vehicleId2personId = this.physicalMobsimUsageListener.getAndClearDrivers();
+		this.log.info(this.prefix + "observed " + driverId2physicalLinkUsage.size() + " drivers in physical mobsim");
+
+		// final Map<Id<Vehicle>, Id<Person>> vehicleId2personIdPhysical =
+		// this.physicalMobsimUsageListener
+		// .getAndClearDrivers();
+		// this.log.info(this.prefix + "identified " +
+		// vehicleId2personIdPhysical.size() + " drivers in physical mobsim");
 
 		/*
 		 * HYPOTHETICAL REPLANNING
@@ -163,6 +176,7 @@ public class SearchAccelerator
 		 * state once the re-planning has been implemented.
 		 */
 
+		this.log.info(this.prefix + "hyothetical replanning...");
 		final PopulationState originalPopulationState = new PopulationState(this.population);
 		this.setWeightOfHypotheticalReplanning(0.0);
 		this.services.getStrategyManager().run(this.population, this.replanningContext);
@@ -176,18 +190,36 @@ public class SearchAccelerator
 		 * Execute all new plans in the pSim.
 		 */
 
-		final PlanCatcher planCatcher = new PlanCatcher();
+		this.log.info(prefix + "psim");
+
+		final PlanCatcher planCatcher = new PlanCatcher(); // replace this by
+															// just filling a
+															// set?
 		for (Id<Person> personId : this.population.getPersons().keySet()) {
 			planCatcher.addPlansForPsim(this.hypotheticalPopulationState.getSelectedPlan(personId));
 		}
+		this.log.info(prefix + "plans in planCatcher = " + planCatcher.getPlansForPSim().size());
+
 		final LinkUsageListener pSimLinkUsageListener = new LinkUsageListener(this.timeDiscr);
-		final EventsManager eventsManager = new EventsManagerImpl();
+		final EventsManager eventsManager = EventsUtils.createEventsManager();
 		eventsManager.addHandler(pSimLinkUsageListener);
+
 		final PSim pSim = new PSim(this.scenario, eventsManager, planCatcher.getPlansForPSim(),
 				this.services.getLinkTravelTimes());
 		pSim.run();
-		final Map<Id<Vehicle>, SpaceTimeIndicators<Id<Link>>> vehicleId2pSimLinkUsage = pSimLinkUsageListener
+		final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pSimLinkUsage = pSimLinkUsageListener
 				.getAndClearIndicators();
+		this.log.info(prefix + "identified " + driverId2pSimLinkUsage.size() + " drivers in pSim");
+		// final Map<Id<Vehicle>, Id<Person>> vehicleId2personIdpSim =
+		// pSimLinkUsageListener.getAndClearDrivers();
+		// this.log.info(this.prefix + "identified " +
+		// vehicleId2personIdpSim.size() + " drivers in pSim");
+
+		// Check that drivers in physical simulation and pSim were the same.
+		if ((!driverId2physicalLinkUsage.keySet().containsAll(driverId2pSimLinkUsage.keySet()))
+				|| (driverId2physicalLinkUsage.keySet().size() != driverId2pSimLinkUsage.keySet().size())) {
+			throw new RuntimeException("Different drivers in physical simulation and in pSim.");
+		}
 
 		/*
 		 * DECIDE WHO GETS TO RE-PLAN.
@@ -211,10 +243,10 @@ public class SearchAccelerator
 		final double delta = this.replanningParameters.getDelta(event.getIteration());
 
 		final DynamicData<Id<Link>> currentWeightedCounts = CountIndicatorUtils.newWeightedCounts(
-				this.physicalMobsimUsageListener.getTimeDiscretization(), vehicleId2physicalLinkUsage.values(),
+				this.physicalMobsimUsageListener.getTimeDiscretization(), driverId2physicalLinkUsage.values(),
 				this.linkWeights);
 		final DynamicData<Id<Link>> upcomingWeightedCounts = CountIndicatorUtils.newWeightedCounts(
-				pSimLinkUsageListener.getTimeDiscretization(), vehicleId2pSimLinkUsage.values(), this.linkWeights);
+				pSimLinkUsageListener.getTimeDiscretization(), driverId2pSimLinkUsage.values(), this.linkWeights);
 
 		final double sumOfCurrentWeightedCounts2 = CountIndicatorUtils.sumOfEntries2(currentWeightedCounts);
 		if (sumOfCurrentWeightedCounts2 < 1e-6) {
@@ -240,33 +272,57 @@ public class SearchAccelerator
 
 		// Go through all vehicles and decide which driver gets to re-plan.
 
-		final Set<Id<Vehicle>> allVehicleIds = new LinkedHashSet<>(vehicleId2physicalLinkUsage.keySet());
-		allVehicleIds.addAll(vehicleId2pSimLinkUsage.keySet());
+		this.log.info(prefix + "identify replanners");
+
+		// final Set<Id<Vehicle>> allVehicleIds = new
+		// LinkedHashSet<>(vehicleId2physicalLinkUsage.keySet());
+		// allVehicleIds.addAll(vehicleId2pSimLinkUsage.keySet());
+
 		this.replanners = new LinkedHashSet<>();
+		double totalScoreChange = 0.0;
 
-		for (Id<Vehicle> vehId : allVehicleIds) {
+		final List<Id<Person>> allPersonIdsShuffled = new ArrayList<>(driverId2physicalLinkUsage.keySet());
+		Collections.shuffle(allPersonIdsShuffled);
 
-			final Id<Person> driverId = vehicleId2personId.get(vehId);
-			if (driverId == null) {
-				throw new RuntimeException("Vehicle " + vehId + " has no (null) driver!");
-			}
+		for (Id<Person> driverId : allPersonIdsShuffled) {
 
-			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(vehicleId2physicalLinkUsage.get(vehId),
-					vehicleId2pSimLinkUsage.get(vehId), meanLambda, currentWeightedCounts, sumOfCurrentWeightedCounts2,
-					w, delta, interactionResiduals, inertiaResiduals, regularizationResidual, this.linkWeights);
+			// final Id<Person> driverId = vehicleId2personId.get(vehId);
+			// if (driverId == null) {
+			// throw new RuntimeException("Vehicle " + vehId + " has no (null)
+			// driver!");
+			// }
+			this.log.info(this.prefix + "  driver " + driverId);
+
+			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(driverId2physicalLinkUsage.get(driverId),
+					driverId2pSimLinkUsage.get(driverId), meanLambda, currentWeightedCounts,
+					sumOfCurrentWeightedCounts2, w, delta, interactionResiduals, inertiaResiduals,
+					regularizationResidual, this.linkWeights);
+
+			this.log.info(
+					this.prefix + "  scoreChange if one  = " + (totalScoreChange + scoreUpdater.getScoreChangeIfOne()));
+			this.log.info(this.prefix + "  scoreChange if zero = "
+					+ (totalScoreChange + scoreUpdater.getScoreChangeIfZero()));
 
 			final double newLambda;
 			if (scoreUpdater.getScoreChangeIfOne() < scoreUpdater.getScoreChangeIfZero()) {
 				newLambda = 1.0;
 				this.replanners.add(driverId);
+				this.log.info(this.prefix + "  => is a replanner");
+				totalScoreChange += scoreUpdater.getScoreChangeIfOne();
 			} else {
 				newLambda = 0.0;
+				this.log.info(this.prefix + "  => is NOT a replanner");
+				totalScoreChange += scoreUpdater.getScoreChangeIfZero();
 			}
+			this.log.info(this.prefix + "  totalScoreChange = " + totalScoreChange);
 
 			scoreUpdater.updateResiduals(newLambda);
 			// Interaction- and inertiaResiduals are updated by reference.
 			regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();
 		}
+
+		this.log.info(this.prefix + "Effective replanning rate = "
+				+ (int) (((double) 100 * this.replanners.size()) / this.population.getPersons().size()) + " percent");
 	}
 
 	// -------------------- REPLANNING FUNCTIONALITY --------------------
@@ -292,7 +348,7 @@ public class SearchAccelerator
 			if (strategy instanceof CloneHypotheticalReplanningStrategy) {
 				strategyManager.changeWeightOfStrategy(strategy, null, weight);
 			}
-		}		
+		}
 	}
 
 	// -------------------- MAIN-FUNCTION, ONLY FOR TESTING --------------------
@@ -300,8 +356,15 @@ public class SearchAccelerator
 	public static void main(String[] args) {
 		System.out.println("STARTED..");
 
-		Config config = ConfigUtils
-				.loadConfig("C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil/config.xml");
+		// TODO: Careful with what strategy modules are commented out of the config.xml
+		final Config config = ConfigUtils
+				.loadConfig("C:/Nobackup/Profilen/git-2018/vsp-playgrounds/gunnar/"
+						+ "testdata/berlin_2014-08-01_car_1pct/config.xml");
+		// Config config = ConfigUtils
+		// .loadConfig("C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil/config.xml");
+		config.qsim().setEndTime(24 * 3600); // TODO seems as if the pSim does
+												// not interpret 00:00:00 right
+
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 
 		StrategySettings stratSets = new StrategySettings();
@@ -314,7 +377,7 @@ public class SearchAccelerator
 		Controler controler = new Controler(scenario);
 
 		final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
-		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.1, 1.0);
+		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 1.0);
 		final LinkWeightContainer linkWeightProvider = LinkWeightContainer
 				.newOneOverCapacityLinkWeights(scenario.getNetwork());
 		controler.addOverridingModule(
