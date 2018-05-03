@@ -84,10 +84,12 @@ public class RunPSim {
 			public void install() {
 				bind(MobSimSwitcher.class).toInstance(mobSimSwitcher);
 				bindMobsim().toProvider(SwitchingMobsimProvider.class);
-				bind(WaitTimeCalculator.class).to(PSimWaitTimeCalculator.class);
-				bind(WaitTime.class).toProvider(PSimWaitTimeCalculator.class);
-				bind(StopStopTimeCalculator.class).to(PSimStopStopTimeCalculator.class);
-				bind(StopStopTime.class).toProvider(PSimStopStopTimeCalculator.class);
+				if(config.transit().isUseTransit()) {
+					bind(WaitTimeCalculator.class).to(PSimWaitTimeCalculator.class);
+					bind(WaitTime.class).toProvider(PSimWaitTimeCalculator.class);
+					bind(StopStopTimeCalculator.class).to(PSimStopStopTimeCalculator.class);
+					bind(StopStopTime.class).toProvider(PSimStopStopTimeCalculator.class);
+				}
 				bind(TravelTimeCalculator.class).to(PSimTravelTimeCalculator.class);
 				bind(TravelTime.class).toProvider(PSimTravelTimeCalculator.class);
 				bind(TransitRouter.class).toProvider(TransitRouterEventsWSFactory.class);
