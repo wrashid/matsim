@@ -32,11 +32,15 @@ import floetteroed.utilities.TimeDiscretization;
  */
 public class SearchAcceleratorModule extends AbstractModule {
 
+	// -------------------- MEMBERS --------------------
+
 	private final TimeDiscretization timeDiscr;
 
 	private final ReplanningParameterContainer replanningParameterProvider;
 
 	private final LinkWeightContainer linkWeightProvider;
+
+	// -------------------- CONSTRUCTION --------------------
 
 	public SearchAcceleratorModule(final TimeDiscretization timeDiscr,
 			final ReplanningParameterContainer replanningParameterProvider,
@@ -46,10 +50,11 @@ public class SearchAcceleratorModule extends AbstractModule {
 		this.linkWeightProvider = linkWeightProvider;
 	}
 
+	// -------------------- OVERRIDING OF AbstractModule --------------------
+
 	@Override
 	public void install() {
 
-		// TODO To what extent may these instances interact with parallel code?
 		this.bind(TimeDiscretization.class).toInstance(this.timeDiscr);
 		this.bind(ReplanningParameterContainer.class).toInstance(this.replanningParameterProvider);
 		this.bind(LinkWeightContainer.class).toInstance(this.linkWeightProvider);
@@ -58,10 +63,7 @@ public class SearchAcceleratorModule extends AbstractModule {
 		this.addControlerListenerBinding().to(SearchAccelerator.class);
 		this.addEventHandlerBinding().to(SearchAccelerator.class);
 
-		
-		this.addPlanStrategyBinding(CloneHypotheticalReplanningStrategy.NAME)
-				.toProvider(CloneHypotheticalReplanningStragetyProvider.class);
-
+		this.addPlanStrategyBinding(AcceptIntendedReplanningStrategy.STRATEGY_NAME)
+				.toProvider(AcceptIntendedReplanningStragetyProvider.class);
 	}
-
 }

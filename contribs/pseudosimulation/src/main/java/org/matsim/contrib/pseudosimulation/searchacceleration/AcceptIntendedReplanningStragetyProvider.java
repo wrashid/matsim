@@ -19,38 +19,29 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
-import org.matsim.api.core.v01.population.HasPlansAndId;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
+import javax.inject.Provider;
+
 import org.matsim.core.replanning.PlanStrategy;
-import org.matsim.core.replanning.ReplanningContext;
+
+import com.google.inject.Inject;
 
 /**
  * 
  * @author Gunnar Flötteröd
  *
  */
-public class CloneHypotheticalReplanningStrategy implements PlanStrategy {
+public class AcceptIntendedReplanningStragetyProvider implements Provider<PlanStrategy> {
 
-	public static final String NAME = "CloneHypotheticalReplanning";
+	// -------------------- MEMBERS --------------------
 
-	private final SearchAccelerator searchAccelerator;
-	
-	public CloneHypotheticalReplanningStrategy(final SearchAccelerator searchAccelerator) {
-		this.searchAccelerator = searchAccelerator;
-	}
-	
-	@Override
-	public void run(HasPlansAndId<Plan, Person> person) {
-		// TODO Just testing. Need to get rid of this cast.
-		this.searchAccelerator.replan((Person) person);
-	}
+	@Inject
+	private SearchAccelerator searchAccelerator;
+
+	// -------------------- IMPLEMENTATION OF Provider --------------------
 
 	@Override
-	public void init(ReplanningContext replanningContext) {
+	public PlanStrategy get() {
+		return new AcceptIntendedReplanningStrategy(this.searchAccelerator);
 	}
 
-	@Override
-	public void finish() {
-	}
 }

@@ -36,10 +36,8 @@ import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
 import org.matsim.api.core.v01.events.handler.VehicleEntersTrafficEventHandler;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
-import org.matsim.api.core.v01.population.Population;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
@@ -48,7 +46,6 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.Spa
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
@@ -82,19 +79,7 @@ public class SearchAccelerator
 	private MatsimServices services;
 
 	@Inject
-	private Population population;
-
-	@Inject
 	private ReplanningContext replanningContext;
-
-	@Inject
-	private Scenario scenario;
-
-	@Inject
-	private Config config;
-
-	@Inject
-	private Network network;
 
 	@Inject
 	private TimeDiscretization timeDiscr;
@@ -110,11 +95,9 @@ public class SearchAccelerator
 	private final String prefix = "[Acceleration] ";
 	private final Logger log = Logger.getLogger(Controler.class);
 
-	private Set<Id<Person>> replanners;
+	private Set<Id<Person>> replanners = null;
 
-	private boolean firstCall = true;
-
-	// Delegating physical mobsim listening to this one. Created upon startup.
+	// Delegate for physical mobsim listening. Created upon startup.
 	private LinkUsageListener physicalMobsimUsageListener = null;
 
 	private PopulationState hypotheticalPopulationState = null;
@@ -177,12 +160,13 @@ public class SearchAccelerator
 		 */
 
 		this.log.info(this.prefix + "hyothetical replanning...");
-		final PopulationState originalPopulationState = new PopulationState(this.population);
+		final PopulationState originalPopulationState = new PopulationState(
+				this.services.getScenario().getPopulation());
 		this.setWeightOfHypotheticalReplanning(0.0);
-		this.services.getStrategyManager().run(this.population, this.replanningContext);
+		this.services.getStrategyManager().run(this.services.getScenario().getPopulation(), this.replanningContext);
 		this.setWeightOfHypotheticalReplanning(1e9);
-		this.hypotheticalPopulationState = new PopulationState(this.population);
-		originalPopulationState.set(this.population);
+		this.hypotheticalPopulationState = new PopulationState(this.services.getScenario().getPopulation());
+		originalPopulationState.set(this.services.getScenario().getPopulation());
 
 		/*
 		 * PSEUDOSIM
@@ -195,7 +179,7 @@ public class SearchAccelerator
 		final PlanCatcher planCatcher = new PlanCatcher(); // replace this by
 															// just filling a
 															// set?
-		for (Id<Person> personId : this.population.getPersons().keySet()) {
+		for (Id<Person> personId : this.services.getScenario().getPopulation().getPersons().keySet()) {
 			planCatcher.addPlansForPsim(this.hypotheticalPopulationState.getSelectedPlan(personId));
 		}
 		this.log.info(prefix + "plans in planCatcher = " + planCatcher.getPlansForPSim().size());
@@ -204,7 +188,7 @@ public class SearchAccelerator
 		final EventsManager eventsManager = EventsUtils.createEventsManager();
 		eventsManager.addHandler(pSimLinkUsageListener);
 
-		final PSim pSim = new PSim(this.scenario, eventsManager, planCatcher.getPlansForPSim(),
+		final PSim pSim = new PSim(this.services.getScenario(), eventsManager, planCatcher.getPlansForPSim(),
 				this.services.getLinkTravelTimes());
 		pSim.run();
 		final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pSimLinkUsage = pSimLinkUsageListener
@@ -272,11 +256,7 @@ public class SearchAccelerator
 
 		// Go through all vehicles and decide which driver gets to re-plan.
 
-		this.log.info(prefix + "identify replanners");
-
-		// final Set<Id<Vehicle>> allVehicleIds = new
-		// LinkedHashSet<>(vehicleId2physicalLinkUsage.keySet());
-		// allVehicleIds.addAll(vehicleId2pSimLinkUsage.keySet());
+		this.log.info(this.prefix + "identify replanners");
 
 		this.replanners = new LinkedHashSet<>();
 		double totalScoreChange = 0.0;
@@ -286,11 +266,6 @@ public class SearchAccelerator
 
 		for (Id<Person> driverId : allPersonIdsShuffled) {
 
-			// final Id<Person> driverId = vehicleId2personId.get(vehId);
-			// if (driverId == null) {
-			// throw new RuntimeException("Vehicle " + vehId + " has no (null)
-			// driver!");
-			// }
 			this.log.info(this.prefix + "  driver " + driverId);
 
 			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(driverId2physicalLinkUsage.get(driverId),
@@ -321,8 +296,8 @@ public class SearchAccelerator
 			regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();
 		}
 
-		this.log.info(this.prefix + "Effective replanning rate = "
-				+ (int) (((double) 100 * this.replanners.size()) / this.population.getPersons().size()) + " percent");
+		this.log.info(this.prefix + "Effective replanning rate = " + (int) (((double) 100 * this.replanners.size())
+				/ this.services.getScenario().getPopulation().getPersons().size()) + " percent");
 	}
 
 	// -------------------- REPLANNING FUNCTIONALITY --------------------
@@ -345,7 +320,7 @@ public class SearchAccelerator
 	private void setWeightOfHypotheticalReplanning(final double weight) {
 		final StrategyManager strategyManager = this.services.getStrategyManager();
 		for (GenericPlanStrategy<Plan, Person> strategy : strategyManager.getStrategies(null)) {
-			if (strategy instanceof CloneHypotheticalReplanningStrategy) {
+			if (strategy instanceof AcceptIntendedReplanningStrategy) {
 				strategyManager.changeWeightOfStrategy(strategy, null, weight);
 			}
 		}
@@ -354,32 +329,82 @@ public class SearchAccelerator
 	// -------------------- MAIN-FUNCTION, ONLY FOR TESTING --------------------
 
 	public static void main(String[] args) {
+
+		/*
+		 * TODO (general):
+		 * 
+		 * This interacts with the core re-planning, which appears to be
+		 * parallel code. Where does this need to be accounted for?
+		 * 
+		 * Instances of which strategy-related classes are persistent from one
+		 * iteration to the next, and which are created anew in each iteration?
+		 * Specifically, how to identify a concrete strategy at runtime, by
+		 * reference or by iterating through all available strategies and
+		 * checking "instanceof" or ... ?
+		 * 
+		 * SearchAccelerator operates on "Person", whereas general re-planning
+		 * operates on "HasPlansAndId<Plan, Person>". Switch to the latter
+		 * throughout.
+		 * 
+		 * Allow for parametrization through Config.
+		 */
+
 		System.out.println("STARTED..");
 
-		// TODO: Careful with what strategy modules are commented out of the config.xml
-		final Config config = ConfigUtils
-				.loadConfig("C:/Nobackup/Profilen/git-2018/vsp-playgrounds/gunnar/"
-						+ "testdata/berlin_2014-08-01_car_1pct/config.xml");
-		// Config config = ConfigUtils
-		// .loadConfig("C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil/config.xml");
-		config.qsim().setEndTime(24 * 3600); // TODO seems as if the pSim does
-												// not interpret 00:00:00 right
+		/*
+		 * Load a configuration. Strategies like "keep last selected plan" must
+		 * receive a zero weight because they will be dynamically assigned by
+		 * the search acceleration. Could do this dynamically by scanning the
+		 * Config.
+		 * 
+		 * Configuration for one further strategy that only clones previously
+		 * made hypothetical re-planning decisions (evaluated within the search
+		 * acceleration framework) is added. To switch it off/almost certainly
+		 * on, its weight is set to either zero or a very large number within
+		 * the accelerated simulation process.
+		 * 
+		 * TODO It seems as if the pSim does not interpret the simulation end
+		 * time "00:00:00" (which appears to indicate "run until everyone is
+		 * done") right.
+		 */
 
+		// final Config config =
+		// ConfigUtils.loadConfig("C:/Nobackup/Profilen/git-2018/vsp-playgrounds/gunnar/"
+		// + "testdata/berlin_2014-08-01_car_1pct/config.xml");
+		Config config = ConfigUtils
+				.loadConfig("C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil/config.xml");
+
+		AcceptIntendedReplanningStrategy.addStrategySettings(config);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
+		config.qsim().setEndTime(24 * 3600);
 
-		StrategySettings stratSets = new StrategySettings();
-		stratSets.setStrategyName(CloneHypotheticalReplanningStrategy.NAME);
-		stratSets.setWeight(1e3);
-		config.strategy().addStrategySettings(stratSets);
+		/*
+		 * Create scenario and controller as usually.
+		 */
 
-		Scenario scenario = ScenarioUtils.loadScenario(config);
+		final Scenario scenario = ScenarioUtils.loadScenario(config);
+		final Controler controler = new Controler(scenario);
 
-		Controler controler = new Controler(scenario);
+		/*
+		 * Install the search acceleration logic.
+		 * 
+		 * TimeDiscretization: Could either come from a new config module or be
+		 * derived from other MATSim parameters .
+		 * 
+		 * ReplanningParameterContainer: Should come from a new config module;
+		 * could come in parts from a (somewhat) involved analysis of otherwise
+		 * present strategy modules.
+		 * 
+		 * LinkWeightContainer: There probably is one superior setting that
+		 * needs to be experimentally identified (current guess is that
+		 * "one over capacity" will work best).
+		 */
 
 		final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
 		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 1.0);
 		final LinkWeightContainer linkWeightProvider = LinkWeightContainer
 				.newOneOverCapacityLinkWeights(scenario.getNetwork());
+
 		controler.addOverridingModule(
 				new SearchAcceleratorModule(timeDiscr, replanningParameterProvider, linkWeightProvider));
 
