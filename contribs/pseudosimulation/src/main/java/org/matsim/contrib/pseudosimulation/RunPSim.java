@@ -33,7 +33,6 @@ import org.matsim.contrib.pseudosimulation.mobsim.PSimProvider;
 import org.matsim.contrib.pseudosimulation.mobsim.SwitchingMobsimProvider;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.ConstantReplanningParameters;
-import org.matsim.contrib.pseudosimulation.searchacceleration.LinkUsageAnalyzer;
 import org.matsim.contrib.pseudosimulation.searchacceleration.LinkUsageListener;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
@@ -98,11 +97,11 @@ public class RunPSim {
 			}
 		});
 
-		LinkUsageListener linkUsageListener = new LinkUsageListener(new TimeDiscretization(0, 3600, 24));
-		LinkUsageAnalyzer linkUsageAnalyzer = new LinkUsageAnalyzer(linkUsageListener,
-				new ConstantReplanningParameters(0.1, 1.0));
-		matsimControler.getEvents().addHandler(linkUsageListener);
-		matsimControler.addControlerListener(linkUsageAnalyzer);
+//		LinkUsageListener linkUsageListener = new LinkUsageListener(new TimeDiscretization(0, 3600, 24));
+//		LinkUsageAnalyzer linkUsageAnalyzer = new LinkUsageAnalyzer(linkUsageListener,
+//				new ConstantReplanningParameters(0.1, 1.0), LinkUsageAnalyzer.newUniformLinkWeights(scenario.getNetwork()));
+//		matsimControler.getEvents().addHandler(linkUsageListener);
+//		matsimControler.addControlerListener(linkUsageAnalyzer);
 
 
 

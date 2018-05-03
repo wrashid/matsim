@@ -19,29 +19,29 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import javax.inject.Provider;
+
+import org.matsim.core.replanning.PlanStrategy;
+
+import com.google.inject.Inject;
+
 /**
  * 
  * @author Gunnar Flötteröd
  *
  */
-public class ConstantReplanningParameters implements ReplanningParameterContainer {
+public class AcceptIntendedReplanningStragetyProvider implements Provider<PlanStrategy> {
 
-	private final double meanLambda;
+	// -------------------- MEMBERS --------------------
 
-	private final double delta;
+	@Inject
+	private SearchAccelerator searchAccelerator;
 
-	public ConstantReplanningParameters(final double meanLambda, final double delta) {
-		this.meanLambda = meanLambda;
-		this.delta = delta;
-	}
+	// -------------------- IMPLEMENTATION OF Provider --------------------
 
 	@Override
-	public double getMeanLambda(final int iteration) {
-		return this.meanLambda;
+	public PlanStrategy get() {
+		return new AcceptIntendedReplanningStrategy(this.searchAccelerator);
 	}
 
-	@Override
-	public double getDelta(final int iteration) {
-		return this.delta;
-	}
 }
