@@ -22,7 +22,7 @@
 		<param name="eventsFileFormat" value="xml" />
 		<param name="outputDirectory" value="output/siouxfalls-2014"/>
 		<param name="firstIteration" value="0" />
-		<param name="lastIteration" value="3000" />
+		<param name="lastIteration" value="10" />
 		<param name="mobsim" value="qsim" />
 	</module>
  	
@@ -125,20 +125,17 @@
 	<module name="strategy">
 		<param name="maxAgentPlanMemorySize" value="6" /> <!-- 0 means unlimited -->
 		
-		<param name="ModuleProbability_1" value="0.7" />
+		<param name="ModuleProbability_1" value="0.8" />
 		<param name="Module_1" value="ChangeExpBeta" />
 		
-		<param name="ModuleProbability_2" value="0.01" />
+		<param name="ModuleProbability_2" value="0.1" />
 		<param name="Module_2" value="ReRoute" />
 		<param name="ModuleDisableAfterIteration_2" value="2900" />
 
-		<param name="ModuleProbability_3" value="0.01" />
- 		<param name="Module_3" value="SubtourModeChoice"/>
+		<param name="ModuleProbability_3" value="0.1" />
+ 		<param name="Module_3" value="TimeAllocationMutator"/>
 		<param name="ModuleDisableAfterIteration_3" value="2900" />
-	
-		<param name="ModuleProbability_4" value="0.01" />
-		<param name="Module_4" value="TimeAllocationMutator" />
-		<param name="ModuleDisableAfterIteration_4" value="2900" />
+
 	</module>
 	
 <!-- ====================================================================== -->
@@ -149,33 +146,7 @@
 
 <!-- ====================================================================== -->
 
-	<module name="transitRouter" >
 
-		<!-- additional time the router allocates when a line switch happens. Can be interpreted as a 'safety' time that agents need to safely transfer from one line to another -->
-		<param name="additionalTransferTime" value="0.0" />
-
-		<!-- step size to increase searchRadius if no stops are found -->
-		<param name="extensionRadius" value="500.0" />
-
-		<!-- maximum beeline distance between stops that agents could transfer to by walking -->
-		<param name="maxBeelineWalkConnectionDistance" value="300.0" />
-
-		<!-- the radius in which stop locations are searched, given a start or target coordinate -->
-		<param name="searchRadius" value="1500.0" />
-	</module>
-
-	
-	<module name="subtourModeChoice" >
-
-		<!-- Defines the chain-based modes, seperated by commas -->
-		<param name="chainBasedModes" value="car" />
-
-		<!-- Defines whether car availability must be considered or not. A agent has no car only if it has no license, or never access to a car -->
-		<param name="considerCarAvailability" value="true" />
-
-		<!-- Defines all the modes available, including chain-based modes, seperated by commas -->
-		<param name="modes" value="car,pt,walk" />
-	</module>
    
   	<module name="transit">
   	  	<param name="useTransit" value="true" />

@@ -19,25 +19,23 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.inject.Singleton;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
 import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
 import org.matsim.api.core.v01.events.handler.VehicleEntersTrafficEventHandler;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
@@ -163,7 +161,21 @@ public class SearchAccelerator
 		final PopulationState originalPopulationState = new PopulationState(
 				this.services.getScenario().getPopulation());
 		this.setWeightOfHypotheticalReplanning(0.0);
-		this.services.getStrategyManager().run(this.services.getScenario().getPopulation(), this.replanningContext);
+		for(int i=0;i<10; i++) {
+			this.services.getStrategyManager().run(this.services.getScenario().getPopulation(), this.replanningContext);
+			final PlanCatcher planCatcher = new PlanCatcher(); // replace this by
+			// just filling a
+			// set?
+			for (Id<Person> personId : this.services.getScenario().getPopulation().getPersons().keySet()) {
+				planCatcher.addPlansForPsim(this.services.getScenario().getPopulation().getPersons().get(personId).getSelectedPlan());
+			}
+			this.log.info(prefix + "plans in planCatcher = " + planCatcher.getPlansForPSim().size());
+
+			final EventsManager eventsManager = EventsUtils.createEventsManager();
+			final PSim pSim = new PSim(this.services.getScenario(), eventsManager, planCatcher.getPlansForPSim(),
+					this.services.getLinkTravelTimes());
+			pSim.run();
+		}
 		this.setWeightOfHypotheticalReplanning(1e9);
 		this.hypotheticalPopulationState = new PopulationState(this.services.getScenario().getPopulation());
 		originalPopulationState.set(this.services.getScenario().getPopulation());
@@ -372,7 +384,8 @@ public class SearchAccelerator
 		// ConfigUtils.loadConfig("C:/Nobackup/Profilen/git-2018/vsp-playgrounds/gunnar/"
 		// + "testdata/berlin_2014-08-01_car_1pct/config.xml");
 		Config config = ConfigUtils
-				.loadConfig("C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil/config.xml");
+				.loadConfig("examples/scenarios/siouxfalls-2014/config_default.xml");
+//				.loadConfig("examples/scenarios/equil/config.xml");
 
 		AcceptIntendedReplanningStrategy.addStrategySettings(config);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
@@ -383,6 +396,25 @@ public class SearchAccelerator
 		 */
 
 		final Scenario scenario = ScenarioUtils.loadScenario(config);
+		//yoyoyo turn off transit for now, and reset plans to a naive state
+		config.transit().setUseTransit(false);
+
+		for (Person person : scenario.getPopulation().getPersons().values()) {
+			for (Plan plan : person.getPlans()) {
+				Iterator<PlanElement> iterator = plan.getPlanElements().iterator();
+				while (iterator.hasNext()){
+					PlanElement planElement = iterator.next();
+					if(planElement instanceof Leg){
+						Leg leg = (Leg) planElement;
+						leg.setRoute(null);
+						leg.setMode(TransportMode.car);
+					}
+				}
+			}
+
+		}
+
+
 		final Controler controler = new Controler(scenario);
 
 		/*
