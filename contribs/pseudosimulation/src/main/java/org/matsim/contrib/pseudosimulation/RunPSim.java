@@ -23,6 +23,11 @@ package org.matsim.contrib.pseudosimulation;
 
 import floetteroed.utilities.TimeDiscretization;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.population.Leg;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.eventsBasedPTRouter.TransitRouterEventsWSFactory;
 import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTime;
 import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTimeCalculator;
@@ -47,6 +52,8 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
 import org.matsim.pt.router.TransitRouter;
+
+import java.util.Iterator;
 
 /**
  * @author pieterfourie
@@ -81,8 +88,25 @@ public class RunPSim {
 		MobSimSwitcher mobSimSwitcher = new MobSimSwitcher(pSimConfigGroup,scenario);
 		matsimControler.addControlerListener(mobSimSwitcher);
 
+		//yoyoyo this to ensure that a scenario  starts naive and transit-free
+		{
+			config.transit().setUseTransit(false);
 
+			for (Person person : scenario.getPopulation().getPersons().values()) {
+				for (Plan plan : person.getPlans()) {
+					Iterator<PlanElement> iterator = plan.getPlanElements().iterator();
+					while (iterator.hasNext()) {
+						PlanElement planElement = iterator.next();
+						if (planElement instanceof Leg) {
+							Leg leg = (Leg) planElement;
+							leg.setRoute(null);
+							leg.setMode(TransportMode.car);
+						}
+					}
+				}
 
+			}
+		}
 
 		final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
 		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 1.0);
