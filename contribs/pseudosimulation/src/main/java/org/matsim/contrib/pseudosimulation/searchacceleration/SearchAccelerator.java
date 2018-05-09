@@ -1,6 +1,6 @@
 /*
  * Copyright 2018 Gunnar Flötteröd
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -38,6 +38,7 @@ import org.matsim.api.core.v01.events.handler.VehicleEntersTrafficEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.contrib.pseudosimulation.MobSimSwitcher;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
@@ -50,8 +51,10 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.controler.events.IterationEndsEvent;
+import org.matsim.core.controler.events.IterationStartsEvent;
 import org.matsim.core.controler.events.StartupEvent;
 import org.matsim.core.controler.listener.IterationEndsListener;
+import org.matsim.core.controler.listener.IterationStartsListener;
 import org.matsim.core.controler.listener.StartupListener;
 import org.matsim.core.events.EventsUtils;
 import org.matsim.core.replanning.GenericPlanStrategy;
@@ -65,13 +68,11 @@ import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
 
 /**
- * 
  * @author Gunnar Flötteröd
- *
  */
 @Singleton
 public class SearchAccelerator
-		implements StartupListener, IterationEndsListener, LinkEnterEventHandler, VehicleEntersTrafficEventHandler {
+		implements StartupListener, IterationEndsListener, IterationStartsListener, LinkEnterEventHandler, VehicleEntersTrafficEventHandler {
 
 	// -------------------- INJECTED MEMBERS --------------------
 
@@ -90,6 +91,11 @@ public class SearchAccelerator
 	@Inject
 	private LinkWeightContainer linkWeights;
 
+	@Inject
+	private MobSimSwitcher mobSimSwitcher;
+
+	private boolean populationStateStored = false;
+
 	// -------------------- NON-INJECTED MEMBERS --------------------
 
 	private final String prefix = "[Acceleration] ";
@@ -101,6 +107,7 @@ public class SearchAccelerator
 	private LinkUsageListener physicalMobsimUsageListener = null;
 
 	private PopulationState hypotheticalPopulationState = null;
+	private PopulationState originalPopulationState;
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -131,12 +138,14 @@ public class SearchAccelerator
 
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
+		if (!mobSimSwitcher.isQSimIteration() || !populationStateStored)
+			return;
 
 		this.log.info(this.prefix + " iteration " + event.getIteration() + " ends");
 
 		/*
 		 * OBTAIN DATA FROM MOST RECENT PHYSICAL NETWORK LOADING
-		 * 
+		 *
 		 * Receive information about what happened in the network during the
 		 * most recent real network loading.
 		 */
@@ -152,17 +161,17 @@ public class SearchAccelerator
 
 		/*
 		 * HYPOTHETICAL REPLANNING
-		 * 
+		 *
 		 * Let every agent re-plan once. Memorize the new plans. Make sure that
 		 * the the actual choice sets and currently chosen plans are NOT
 		 * affected by this by immediately re-setting to the original population
 		 * state once the re-planning has been implemented.
 		 */
 
-		this.log.info(this.prefix + "hyothetical replanning...");
-		final PopulationState originalPopulationState = new PopulationState(
-				this.services.getScenario().getPopulation());
-		this.setWeightOfHypotheticalReplanning(0.0);
+//		this.log.info(this.prefix + "hyothetical replanning...");
+//		final PopulationState originalPopulationState = new PopulationState(
+//				this.services.getScenario().getPopulation());
+//		this.setWeightOfHypotheticalReplanning(0.0);
 		this.services.getStrategyManager().run(this.services.getScenario().getPopulation(), this.replanningContext);
 		this.setWeightOfHypotheticalReplanning(1e9);
 		this.hypotheticalPopulationState = new PopulationState(this.services.getScenario().getPopulation());
@@ -170,15 +179,15 @@ public class SearchAccelerator
 
 		/*
 		 * PSEUDOSIM
-		 * 
+		 *
 		 * Execute all new plans in the pSim.
 		 */
 
 		this.log.info(prefix + "psim");
 
 		final PlanCatcher planCatcher = new PlanCatcher(); // replace this by
-															// just filling a
-															// set?
+		// just filling a
+		// set?
 		for (Id<Person> personId : this.services.getScenario().getPopulation().getPersons().keySet()) {
 			planCatcher.addPlansForPsim(this.hypotheticalPopulationState.getSelectedPlan(personId));
 		}
@@ -207,18 +216,18 @@ public class SearchAccelerator
 
 		/*
 		 * DECIDE WHO GETS TO RE-PLAN.
-		 * 
+		 *
 		 * At this point, one has (i) the link usage statistics from the
 		 * previous MATSim network loading (vehId2physLinkUsage), and (ii) the
 		 * hypothetical link usage statistics that would result from a 100%
 		 * re-planning rate if network congestion did not change
 		 * (vehId2pSimLinkUsage).
-		 * 
+		 *
 		 * Now solve an optimization problem that aims at balancing simulation
 		 * advancement (changing link usage patterns) and simulation
 		 * stabilization (keeping link usage patterns as they are). Most of the
 		 * code below prepares the (heuristic) solution of this problem.
-		 * 
+		 *
 		 */
 
 		// Extract basic statistics.
@@ -298,11 +307,14 @@ public class SearchAccelerator
 
 		this.log.info(this.prefix + "Effective replanning rate = " + (int) (((double) 100 * this.replanners.size())
 				/ this.services.getScenario().getPopulation().getPersons().size()) + " percent");
+		populationStateStored = false;
 	}
 
 	// -------------------- REPLANNING FUNCTIONALITY --------------------
 
 	public void replan(final Person person) {
+		if(!mobSimSwitcher.isQSimIteration())
+			return;
 		if (this.replanners.contains(person.getId())) {
 			this.hypotheticalPopulationState.set(person);
 		}
@@ -332,20 +344,20 @@ public class SearchAccelerator
 
 		/*
 		 * TODO (general):
-		 * 
+		 *
 		 * This interacts with the core re-planning, which appears to be
 		 * parallel code. Where does this need to be accounted for?
-		 * 
+		 *
 		 * Instances of which strategy-related classes are persistent from one
 		 * iteration to the next, and which are created anew in each iteration?
 		 * Specifically, how to identify a concrete strategy at runtime, by
 		 * reference or by iterating through all available strategies and
 		 * checking "instanceof" or ... ?
-		 * 
+		 *
 		 * SearchAccelerator operates on "Person", whereas general re-planning
 		 * operates on "HasPlansAndId<Plan, Person>". Switch to the latter
 		 * throughout.
-		 * 
+		 *
 		 * Allow for parametrization through Config.
 		 */
 
@@ -356,13 +368,13 @@ public class SearchAccelerator
 		 * receive a zero weight because they will be dynamically assigned by
 		 * the search acceleration. Could do this dynamically by scanning the
 		 * Config.
-		 * 
+		 *
 		 * Configuration for one further strategy that only clones previously
 		 * made hypothetical re-planning decisions (evaluated within the search
 		 * acceleration framework) is added. To switch it off/almost certainly
 		 * on, its weight is set to either zero or a very large number within
 		 * the accelerated simulation process.
-		 * 
+		 *
 		 * TODO It seems as if the pSim does not interpret the simulation end
 		 * time "00:00:00" (which appears to indicate "run until everyone is
 		 * done") right.
@@ -372,7 +384,7 @@ public class SearchAccelerator
 		// ConfigUtils.loadConfig("C:/Nobackup/Profilen/git-2018/vsp-playgrounds/gunnar/"
 		// + "testdata/berlin_2014-08-01_car_1pct/config.xml");
 		Config config = ConfigUtils
-				.loadConfig("C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil/config.xml");
+				.loadConfig("examples/scenarios/equil/config.xml");
 
 		AcceptIntendedReplanningStrategy.addStrategySettings(config);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
@@ -387,14 +399,14 @@ public class SearchAccelerator
 
 		/*
 		 * Install the search acceleration logic.
-		 * 
+		 *
 		 * TimeDiscretization: Could either come from a new config module or be
 		 * derived from other MATSim parameters .
-		 * 
+		 *
 		 * ReplanningParameterContainer: Should come from a new config module;
 		 * could come in parts from a (somewhat) involved analysis of otherwise
 		 * present strategy modules.
-		 * 
+		 *
 		 * LinkWeightContainer: There probably is one superior setting that
 		 * needs to be experimentally identified (current guess is that
 		 * "one over capacity" will work best).
@@ -411,5 +423,18 @@ public class SearchAccelerator
 		controler.run();
 
 		System.out.println(".. DONE.");
+	}
+
+	@Override
+	public void notifyIterationStarts(IterationStartsEvent event) {
+		if (!mobSimSwitcher.isQSimIteration()) {
+			if (!populationStateStored) {
+				this.log.info(this.prefix + "hypothetical replanning...");
+				this.originalPopulationState = new PopulationState(
+						this.services.getScenario().getPopulation());
+				this.setWeightOfHypotheticalReplanning(0.0);
+				populationStateStored = true;
+			}
+		}
 	}
 }

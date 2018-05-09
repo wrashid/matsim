@@ -32,8 +32,7 @@ import org.matsim.contrib.pseudosimulation.distributed.listeners.events.transit.
 import org.matsim.contrib.pseudosimulation.mobsim.PSimProvider;
 import org.matsim.contrib.pseudosimulation.mobsim.SwitchingMobsimProvider;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
-import org.matsim.contrib.pseudosimulation.searchacceleration.ConstantReplanningParameters;
-import org.matsim.contrib.pseudosimulation.searchacceleration.LinkUsageListener;
+import org.matsim.contrib.pseudosimulation.searchacceleration.*;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimWaitTimeCalculator;
@@ -43,6 +42,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.MatsimServices;
+import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
@@ -72,26 +72,41 @@ public class RunPSim {
 		//not a system basis
 		config.parallelEventHandling().setSynchronizeOnSimSteps(false);
 		config.parallelEventHandling().setNumberOfThreads(1);
+		AcceptIntendedReplanningStrategy.addStrategySettings(config);
+		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
+		config.qsim().setEndTime(24 * 3600);
 
 		this.matsimControler = new Controler(scenario);
 
 		MobSimSwitcher mobSimSwitcher = new MobSimSwitcher(pSimConfigGroup,scenario);
 		matsimControler.addControlerListener(mobSimSwitcher);
 
+
+
+
+		final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
+		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 1.0);
+		final LinkWeightContainer linkWeightProvider = LinkWeightContainer
+				.newOneOverCapacityLinkWeights(scenario.getNetwork());
+
+		matsimControler.addOverridingModule(
+				new SearchAcceleratorModule(timeDiscr, replanningParameterProvider, linkWeightProvider));
+
 		matsimControler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
+
 				bind(MobSimSwitcher.class).toInstance(mobSimSwitcher);
 				bindMobsim().toProvider(SwitchingMobsimProvider.class);
-				if(config.transit().isUseTransit()) {
+//				if(config.transit().isUseTransit()) {
+					bind(TransitRouter.class).toProvider(TransitRouterEventsWSFactory.class);
 					bind(WaitTimeCalculator.class).to(PSimWaitTimeCalculator.class);
 					bind(WaitTime.class).toProvider(PSimWaitTimeCalculator.class);
 					bind(StopStopTimeCalculator.class).to(PSimStopStopTimeCalculator.class);
 					bind(StopStopTime.class).toProvider(PSimStopStopTimeCalculator.class);
-				}
+//				}
 				bind(TravelTimeCalculator.class).to(PSimTravelTimeCalculator.class);
 				bind(TravelTime.class).toProvider(PSimTravelTimeCalculator.class);
-				bind(TransitRouter.class).toProvider(TransitRouterEventsWSFactory.class);
 				bind(PlanCatcher.class).toInstance(new PlanCatcher());
 				bind(PSimProvider.class).toInstance(new PSimProvider(scenario,matsimControler.getEvents()));
 			}
