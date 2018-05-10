@@ -19,26 +19,24 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.inject.Singleton;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
 import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
 import org.matsim.api.core.v01.events.handler.VehicleEntersTrafficEventHandler;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
-import org.matsim.contrib.pseudosimulation.MobSimSwitcher;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
@@ -51,10 +49,8 @@ import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.controler.events.IterationEndsEvent;
-import org.matsim.core.controler.events.IterationStartsEvent;
 import org.matsim.core.controler.events.StartupEvent;
 import org.matsim.core.controler.listener.IterationEndsListener;
-import org.matsim.core.controler.listener.IterationStartsListener;
 import org.matsim.core.controler.listener.StartupListener;
 import org.matsim.core.events.EventsUtils;
 import org.matsim.core.replanning.GenericPlanStrategy;
@@ -68,11 +64,13 @@ import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
 
 /**
+ *
  * @author Gunnar Flötteröd
+ *
  */
 @Singleton
 public class SearchAccelerator
-		implements StartupListener, IterationEndsListener, IterationStartsListener, LinkEnterEventHandler, VehicleEntersTrafficEventHandler {
+		implements StartupListener, IterationEndsListener, LinkEnterEventHandler, VehicleEntersTrafficEventHandler {
 
 	// -------------------- INJECTED MEMBERS --------------------
 
@@ -91,15 +89,11 @@ public class SearchAccelerator
 	@Inject
 	private LinkWeightContainer linkWeights;
 
-	@Inject
-	private MobSimSwitcher mobSimSwitcher;
-
-	private boolean populationStateStored = false;
-
 	// -------------------- NON-INJECTED MEMBERS --------------------
 
 	private final String prefix = "[Acceleration] ";
 	private final Logger log = Logger.getLogger(Controler.class);
+
 
 	private Set<Id<Person>> replanners = null;
 
@@ -107,12 +101,12 @@ public class SearchAccelerator
 	private LinkUsageListener physicalMobsimUsageListener = null;
 
 	private PopulationState hypotheticalPopulationState = null;
-	private PopulationState originalPopulationState;
 
 	// -------------------- CONSTRUCTION --------------------
 
 	@Inject
 	public SearchAccelerator() {
+		log.setLevel(Level.INFO);
 	}
 
 	// -------------------- IMPLEMENTATION OF EventHandlers --------------------
@@ -138,8 +132,6 @@ public class SearchAccelerator
 
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
-		if (!mobSimSwitcher.isQSimIteration() || !populationStateStored)
-			return;
 
 		this.log.info(this.prefix + " iteration " + event.getIteration() + " ends");
 
@@ -168,10 +160,10 @@ public class SearchAccelerator
 		 * state once the re-planning has been implemented.
 		 */
 
-//		this.log.info(this.prefix + "hyothetical replanning...");
-//		final PopulationState originalPopulationState = new PopulationState(
-//				this.services.getScenario().getPopulation());
-//		this.setWeightOfHypotheticalReplanning(0.0);
+		this.log.info(this.prefix + "hyothetical replanning...");
+		final PopulationState originalPopulationState = new PopulationState(
+				this.services.getScenario().getPopulation());
+		this.setWeightOfHypotheticalReplanning(0.0);
 		this.services.getStrategyManager().run(this.services.getScenario().getPopulation(), this.replanningContext);
 		this.setWeightOfHypotheticalReplanning(1e9);
 		this.hypotheticalPopulationState = new PopulationState(this.services.getScenario().getPopulation());
@@ -275,30 +267,30 @@ public class SearchAccelerator
 
 		for (Id<Person> driverId : allPersonIdsShuffled) {
 
-			this.log.info(this.prefix + "  driver " + driverId);
+			this.log.debug(this.prefix + "  driver " + driverId);
 
 			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(driverId2physicalLinkUsage.get(driverId),
 					driverId2pSimLinkUsage.get(driverId), meanLambda, currentWeightedCounts,
 					sumOfCurrentWeightedCounts2, w, delta, interactionResiduals, inertiaResiduals,
 					regularizationResidual, this.linkWeights);
 
-			this.log.info(
+			this.log.debug(
 					this.prefix + "  scoreChange if one  = " + (totalScoreChange + scoreUpdater.getScoreChangeIfOne()));
-			this.log.info(this.prefix + "  scoreChange if zero = "
+			this.log.debug(this.prefix + "  scoreChange if zero = "
 					+ (totalScoreChange + scoreUpdater.getScoreChangeIfZero()));
 
 			final double newLambda;
 			if (scoreUpdater.getScoreChangeIfOne() < scoreUpdater.getScoreChangeIfZero()) {
 				newLambda = 1.0;
 				this.replanners.add(driverId);
-				this.log.info(this.prefix + "  => is a replanner");
+				this.log.debug(this.prefix + "  => is a replanner");
 				totalScoreChange += scoreUpdater.getScoreChangeIfOne();
 			} else {
 				newLambda = 0.0;
-				this.log.info(this.prefix + "  => is NOT a replanner");
+				this.log.debug(this.prefix + "  => is NOT a replanner");
 				totalScoreChange += scoreUpdater.getScoreChangeIfZero();
 			}
-			this.log.info(this.prefix + "  totalScoreChange = " + totalScoreChange);
+			this.log.debug(this.prefix + "  totalScoreChange = " + totalScoreChange);
 
 			scoreUpdater.updateResiduals(newLambda);
 			// Interaction- and inertiaResiduals are updated by reference.
@@ -307,14 +299,11 @@ public class SearchAccelerator
 
 		this.log.info(this.prefix + "Effective replanning rate = " + (int) (((double) 100 * this.replanners.size())
 				/ this.services.getScenario().getPopulation().getPersons().size()) + " percent");
-		populationStateStored = false;
 	}
 
 	// -------------------- REPLANNING FUNCTIONALITY --------------------
 
 	public void replan(final Person person) {
-		if(!mobSimSwitcher.isQSimIteration())
-			return;
 		if (this.replanners.contains(person.getId())) {
 			this.hypotheticalPopulationState.set(person);
 		}
@@ -384,7 +373,11 @@ public class SearchAccelerator
 		// ConfigUtils.loadConfig("C:/Nobackup/Profilen/git-2018/vsp-playgrounds/gunnar/"
 		// + "testdata/berlin_2014-08-01_car_1pct/config.xml");
 		Config config = ConfigUtils
-				.loadConfig("examples/scenarios/equil/config.xml");
+				.loadConfig("examples/scenarios/berlin/config.xml");
+//				.loadConfig("C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil/config.xml");
+
+		config.controler().setLastIteration(100);
+
 
 		AcceptIntendedReplanningStrategy.addStrategySettings(config);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
@@ -397,6 +390,25 @@ public class SearchAccelerator
 		final Scenario scenario = ScenarioUtils.loadScenario(config);
 		final Controler controler = new Controler(scenario);
 
+		//yoyoyo this to ensure that a scenario  starts naive and transit-free
+		{
+			config.transit().setUseTransit(false);
+
+			for (Person person : scenario.getPopulation().getPersons().values()) {
+				for (Plan plan : person.getPlans()) {
+					Iterator<PlanElement> iterator = plan.getPlanElements().iterator();
+					while (iterator.hasNext()) {
+						PlanElement planElement = iterator.next();
+						if (planElement instanceof Leg) {
+							Leg leg = (Leg) planElement;
+							leg.setRoute(null);
+							leg.setMode(TransportMode.car);
+						}
+					}
+				}
+
+			}
+		}
 		/*
 		 * Install the search acceleration logic.
 		 *
@@ -423,18 +435,5 @@ public class SearchAccelerator
 		controler.run();
 
 		System.out.println(".. DONE.");
-	}
-
-	@Override
-	public void notifyIterationStarts(IterationStartsEvent event) {
-		if (!mobSimSwitcher.isQSimIteration()) {
-			if (!populationStateStored) {
-				this.log.info(this.prefix + "hypothetical replanning...");
-				this.originalPopulationState = new PopulationState(
-						this.services.getScenario().getPopulation());
-				this.setWeightOfHypotheticalReplanning(0.0);
-				populationStateStored = true;
-			}
-		}
 	}
 }
