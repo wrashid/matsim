@@ -18,7 +18,7 @@
   
 package org.matsim.contrib.freight.carrier;
   
-public class VehicleTypeCostInformation {
+public class CarrierVehicleTypeCostInformation {
 
 	public final double fix;
 
@@ -33,7 +33,7 @@ public class VehicleTypeCostInformation {
 	/**
 	 *  Costs perWaitingTimeUnit and perServiceTimeUnit were set to 0.0
 	 * 
-	 * @deprecated Use VehicleTypeCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) instead.
+	 * @deprecated Use CarrierVehicleTypeCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) instead.
 	 * In this "old" version there are only costsPerTimeUnit and no separation for the different values of time dependent costs. // Adaption to jsprit 1.7.x. KMT mar/18
 	 * 
 	 * @param fix
@@ -41,7 +41,7 @@ public class VehicleTypeCostInformation {
 	 * @param perTimeUnit
 	 */
     @Deprecated
-	public VehicleTypeCostInformation(double fix, double perDistanceUnit, double perTimeUnit) {
+	public CarrierVehicleTypeCostInformation(double fix, double perDistanceUnit, double perTimeUnit) {
 		super();
 		this.fix = fix;
 		this.perDistanceUnit = perDistanceUnit;
@@ -61,7 +61,7 @@ public class VehicleTypeCostInformation {
 	 * @param perWaitingTimeUnit
 	 * @param perServiceTimeUnit
 	 */
-	public VehicleTypeCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) {
+	public CarrierVehicleTypeCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) {
 		super();
 		this.fix = fix;
 		this.perDistanceUnit = perDistanceUnit;

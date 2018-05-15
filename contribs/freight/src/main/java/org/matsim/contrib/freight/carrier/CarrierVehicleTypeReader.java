@@ -39,7 +39,7 @@ public class CarrierVehicleTypeReader extends MatsimXmlParser {
 
 //	private Integer currentCap;
 
-	private VehicleTypeCostInformation currentVehicleCosts;
+	private CarrierVehicleTypeCostInformation currentVehicleCosts;
 
 	private EngineInformation currentEngineInfo;
 
@@ -93,7 +93,7 @@ public class CarrierVehicleTypeReader extends MatsimXmlParser {
 			String perMeter = atts.getValue("perMeter");
 			String perSecond = atts.getValue("perSecond");
 			if(fix == null || perMeter == null || perSecond == null) throw new IllegalStateException("cannot read costInformation correctly. probably the paramName was written wrongly");
-			VehicleTypeCostInformation vehicleCosts = new VehicleTypeCostInformation(parseDouble(fix), parseDouble(perMeter), parseDouble(perSecond));
+			CarrierVehicleTypeCostInformation vehicleCosts = new CarrierVehicleTypeCostInformation(parseDouble(fix), parseDouble(perMeter), parseDouble(perSecond));
 			this.currentVehicleCosts = vehicleCosts;
 		}
 	}

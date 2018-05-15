@@ -15,7 +15,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.freight.carrier.CarrierVehicleType;
-import org.matsim.contrib.freight.carrier.VehicleTypeCostInformation;
+import org.matsim.contrib.freight.carrier.CarrierVehicleTypeCostInformation;
 import org.matsim.core.config.Config;
 import org.matsim.core.network.io.NetworkReaderMatsimV1;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -96,12 +96,12 @@ public class TestNetworkBasedTransportCosts extends MatsimTestCase{
 		new NetworkReaderMatsimV1(scenario.getNetwork()).readFile(NETWORK_FILENAME);
 		
 		CarrierVehicleType vtype1 = mock(CarrierVehicleType.class);
-		VehicleTypeCostInformation param1 = new VehicleTypeCostInformation(0.0, 2.0, 0.0, 0.0, 0.0);
+		CarrierVehicleTypeCostInformation param1 = new CarrierVehicleTypeCostInformation(0.0, 2.0, 0.0, 0.0, 0.0);
 		when(vtype1.getVehicleCostInformation()).thenReturn(param1);
 		when(vtype1.getId()).thenReturn(Id.create("type1", org.matsim.vehicles.VehicleType.class));
 		
 		CarrierVehicleType vtype2 = mock(CarrierVehicleType.class);
-		VehicleTypeCostInformation param2 = new VehicleTypeCostInformation(0.0, 4.0, 0.0, 0.0, 0.0);
+		CarrierVehicleTypeCostInformation param2 = new CarrierVehicleTypeCostInformation(0.0, 4.0, 0.0, 0.0, 0.0);
 		when(vtype2.getVehicleCostInformation()).thenReturn(param2);
 		when(vtype2.getId()).thenReturn(Id.create("type2", org.matsim.vehicles.VehicleType.class));
 		

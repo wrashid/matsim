@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.contrib.freight.carrier.CarrierVehicleType;
 import org.matsim.contrib.freight.carrier.CarrierVehicleTypes;
-import org.matsim.contrib.freight.carrier.VehicleTypeCostInformation;
+import org.matsim.contrib.freight.carrier.CarrierVehicleTypeCostInformation;
 import org.matsim.core.utils.io.MatsimXmlParser;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.EngineInformation.FuelType;
@@ -38,7 +38,7 @@ public class CarrierVehicleTypeReaderV2 extends MatsimXmlParser {
 
 //	private Integer currentCap;
 
-	private VehicleTypeCostInformation currentVehicleCosts;
+	private CarrierVehicleTypeCostInformation currentVehicleCosts;
 
 	private EngineInformation currentEngineInfo;
 
@@ -81,7 +81,7 @@ public class CarrierVehicleTypeReaderV2 extends MatsimXmlParser {
 			
 			if(fix == null || perMeter == null || perTransportTimeUnit  == null) throw new IllegalStateException("cannot read costInformation correctly. probably the paramName was written wrongly");
 			//TODO: Muss hier noch ein Fall rein, welche Werte da sind und dann ggf verschiedene VehicleCostInformationsConstrucoren aufrufen? Ich vermute ja mal ja... kmt april/18 
-			VehicleTypeCostInformation vehicleCosts = new VehicleTypeCostInformation(parseDouble(fix), parseDouble(perMeter), parseDouble(perTransportTimeUnit), parseDouble(perWaitingTimeUnit), parseDouble(perServiceTimeUnit));
+			CarrierVehicleTypeCostInformation vehicleCosts = new CarrierVehicleTypeCostInformation(parseDouble(fix), parseDouble(perMeter), parseDouble(perTransportTimeUnit), parseDouble(perWaitingTimeUnit), parseDouble(perServiceTimeUnit));
 			this.currentVehicleCosts = vehicleCosts;
 		}
 	}

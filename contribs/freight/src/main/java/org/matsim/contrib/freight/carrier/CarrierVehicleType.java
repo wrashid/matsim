@@ -167,14 +167,14 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		}
 
 		/**
-		 * Sets {@link VehicleTypeCostInformation}
+		 * Sets {@link CarrierVehicleTypeCostInformation}
 		 * 
 		 * <p>The defaults are [fix=0.0][perDistanceUnit=1.0][perTransportTimeUnit=0.0][perWaitingTimeUnit=0.0][perServiceTimeUnit=0.0].
 		 * 
 		 * @param info
 		 * @return this builder
 		 */
-		public Builder setVehicleCostInformation(VehicleTypeCostInformation info) {
+		public Builder setVehicleCostInformation(CarrierVehicleTypeCostInformation info) {
 			fix = info.fix;
 			perDistanceUnit = info.perDistanceUnit;
 			perTimeUnit = info.perTimeUnit;
@@ -202,13 +202,13 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 	}
 	
 
-	private VehicleTypeCostInformation vehicleCostInformation;
+	private CarrierVehicleTypeCostInformation vehicleCostInformation;
 
 	private int capacity;
 	
 	private CarrierVehicleType(Builder builder){
 		super(new VehicleTypeImpl(builder.typeId));
-		this.vehicleCostInformation = new VehicleTypeCostInformation(builder.fix, builder.perDistanceUnit, builder.perTransportTimeUnit, builder.perWaitingTimeUnit, builder.perServiceTimeUnit);
+		this.vehicleCostInformation = new CarrierVehicleTypeCostInformation(builder.fix, builder.perDistanceUnit, builder.perTransportTimeUnit, builder.perWaitingTimeUnit, builder.perServiceTimeUnit);
 		if(builder.engineInfo != null) super.setEngineInformation(builder.engineInfo);
 		if(builder.description != null) super.setDescription(builder.description);
 		capacity = builder.capacity;
@@ -222,7 +222,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 	 * 
 	 * @return vehicleCostInformation
 	 */
-	public VehicleTypeCostInformation getVehicleCostInformation() {
+	public CarrierVehicleTypeCostInformation getVehicleCostInformation() {
 		return vehicleCostInformation;
 	}
 	
