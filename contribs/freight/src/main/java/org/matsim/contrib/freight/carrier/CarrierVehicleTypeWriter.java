@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
-import org.matsim.contrib.freight.carrier.CarrierVehicleType.VehicleTypeCostInformation;
 import org.matsim.core.utils.io.MatsimXmlWriter;
 import org.matsim.vehicles.EngineInformation;
 

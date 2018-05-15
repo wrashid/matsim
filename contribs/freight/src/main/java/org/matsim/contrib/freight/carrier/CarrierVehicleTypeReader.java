@@ -4,7 +4,6 @@ import java.util.Stack;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
-import org.matsim.contrib.freight.carrier.CarrierVehicleType.VehicleTypeCostInformation;
 import org.matsim.core.utils.io.MatsimXmlParser;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.EngineInformation.FuelType;
