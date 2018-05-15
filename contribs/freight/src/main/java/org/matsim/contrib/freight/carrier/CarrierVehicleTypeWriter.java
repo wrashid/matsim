@@ -4,7 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
-import org.matsim.contrib.freight.carrier.CarrierVehicleType.VehicleCostInformation;
+import org.matsim.contrib.freight.carrier.CarrierVehicleType.VehicleTypeCostInformation;
 import org.matsim.core.utils.io.MatsimXmlWriter;
 import org.matsim.vehicles.EngineInformation;
 
@@ -53,7 +53,7 @@ public class CarrierVehicleTypeWriter extends MatsimXmlWriter {
 			EngineInformation engineInformation = type.getEngineInformation();
 			if(engineInformation != null) writer.write("\t\t\t<engineInformation fuelType=\"" + engineInformation.getFuelType().toString() + "\" gasConsumption=\"" + engineInformation.getGasConsumption() + "\"/>\n");
 			writer.write("\t\t\t<capacity>" + type.getCarrierVehicleCapacity() + "</capacity>\n");
-			VehicleCostInformation vehicleCostInformation = type.getVehicleCostInformation();
+			VehicleTypeCostInformation vehicleCostInformation = type.getVehicleCostInformation();
 			if(vehicleCostInformation == null) throw new IllegalStateException("vehicleCostInformation is missing.");
 			writer.write("\t\t\t<costInformation fix=\"" + vehicleCostInformation.fix + "\" perMeter=\"" + vehicleCostInformation.perDistanceUnit + 
 					"\" perSecond=\"" + vehicleCostInformation.perTimeUnit + "\"/>\n");

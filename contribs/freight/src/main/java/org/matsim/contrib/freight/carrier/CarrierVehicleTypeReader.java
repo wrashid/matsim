@@ -4,7 +4,7 @@ import java.util.Stack;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
-import org.matsim.contrib.freight.carrier.CarrierVehicleType.VehicleCostInformation;
+import org.matsim.contrib.freight.carrier.CarrierVehicleType.VehicleTypeCostInformation;
 import org.matsim.core.utils.io.MatsimXmlParser;
 import org.matsim.vehicles.EngineInformation;
 import org.matsim.vehicles.EngineInformation.FuelType;
@@ -40,7 +40,7 @@ public class CarrierVehicleTypeReader extends MatsimXmlParser {
 
 //	private Integer currentCap;
 
-	private VehicleCostInformation currentVehicleCosts;
+	private VehicleTypeCostInformation currentVehicleCosts;
 
 	private EngineInformation currentEngineInfo;
 
@@ -94,7 +94,7 @@ public class CarrierVehicleTypeReader extends MatsimXmlParser {
 			String perMeter = atts.getValue("perMeter");
 			String perSecond = atts.getValue("perSecond");
 			if(fix == null || perMeter == null || perSecond == null) throw new IllegalStateException("cannot read costInformation correctly. probably the paramName was written wrongly");
-			VehicleCostInformation vehicleCosts = new VehicleCostInformation(parseDouble(fix), parseDouble(perMeter), parseDouble(perSecond));
+			VehicleTypeCostInformation vehicleCosts = new VehicleTypeCostInformation(parseDouble(fix), parseDouble(perMeter), parseDouble(perSecond));
 			this.currentVehicleCosts = vehicleCosts;
 		}
 	}

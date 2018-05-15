@@ -167,14 +167,14 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		}
 
 		/**
-		 * Sets {@link VehicleCostInformation}
+		 * Sets {@link VehicleTypeCostInformation}
 		 * 
 		 * <p>The defaults are [fix=0.0][perDistanceUnit=1.0][perTransportTimeUnit=0.0][perWaitingTimeUnit=0.0][perServiceTimeUnit=0.0].
 		 * 
 		 * @param info
 		 * @return this builder
 		 */
-		public Builder setVehicleCostInformation(VehicleCostInformation info) {
+		public Builder setVehicleCostInformation(VehicleTypeCostInformation info) {
 			fix = info.fix;
 			perDistanceUnit = info.perDistanceUnit;
 			perTimeUnit = info.perTimeUnit;
@@ -202,7 +202,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 	}
 	
 
-	public static class VehicleCostInformation {
+	public static class VehicleTypeCostInformation {
 
 		public final double fix;
 
@@ -217,7 +217,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		/**
 		 *  Costs perWaitingTimeUnit and perServiceTimeUnit were set to 0.0
 		 * 
-		 * @deprecated Use VehicleCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) instead.
+		 * @deprecated Use VehicleTypeCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) instead.
 		 * In this "old" version there are only costsPerTimeUnit and no separation for the different values of time dependent costs. // Adaption to jsprit 1.7.x. KMT mar/18
 		 * 
 		 * @param fix
@@ -225,7 +225,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		 * @param perTimeUnit
 		 */
         @Deprecated
-		public VehicleCostInformation(double fix, double perDistanceUnit, double perTimeUnit) {
+		public VehicleTypeCostInformation(double fix, double perDistanceUnit, double perTimeUnit) {
 			super();
 			this.fix = fix;
 			this.perDistanceUnit = perDistanceUnit;
@@ -245,7 +245,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 		 * @param perWaitingTimeUnit
 		 * @param perServiceTimeUnit
 		 */
-		public VehicleCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) {
+		public VehicleTypeCostInformation(double fix, double perDistanceUnit, double perTransportTimeUnit, double perWaitingTimeUnit, double perServiceTimeUnit) {
 			super();
 			this.fix = fix;
 			this.perDistanceUnit = perDistanceUnit;
@@ -257,13 +257,13 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 
 	}
 
-	private VehicleCostInformation vehicleCostInformation;
+	private VehicleTypeCostInformation vehicleCostInformation;
 
 	private int capacity;
 	
 	private CarrierVehicleType(Builder builder){
 		super(new VehicleTypeImpl(builder.typeId));
-		this.vehicleCostInformation = new VehicleCostInformation(builder.fix, builder.perDistanceUnit, builder.perTransportTimeUnit, builder.perWaitingTimeUnit, builder.perServiceTimeUnit);
+		this.vehicleCostInformation = new VehicleTypeCostInformation(builder.fix, builder.perDistanceUnit, builder.perTransportTimeUnit, builder.perWaitingTimeUnit, builder.perServiceTimeUnit);
 		if(builder.engineInfo != null) super.setEngineInformation(builder.engineInfo);
 		if(builder.description != null) super.setDescription(builder.description);
 		capacity = builder.capacity;
@@ -277,7 +277,7 @@ public class CarrierVehicleType extends ForwardingVehicleType {
 	 * 
 	 * @return vehicleCostInformation
 	 */
-	public VehicleCostInformation getVehicleCostInformation() {
+	public VehicleTypeCostInformation getVehicleCostInformation() {
 		return vehicleCostInformation;
 	}
 	
