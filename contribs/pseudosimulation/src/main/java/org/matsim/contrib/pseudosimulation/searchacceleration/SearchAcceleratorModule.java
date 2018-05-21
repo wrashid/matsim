@@ -19,6 +19,8 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.controler.AbstractModule;
 
 import com.google.inject.Singleton;
@@ -36,18 +38,14 @@ public class SearchAcceleratorModule extends AbstractModule {
 
 	private final TimeDiscretization timeDiscr;
 
-	private final ReplanningParameterContainer replanningParameterProvider;
-
-	private final LinkWeightContainer linkWeightProvider;
+	private final ReplanningParameterContainer<Id<Link>> replanningParameterProvider;
 
 	// -------------------- CONSTRUCTION --------------------
 
 	public SearchAcceleratorModule(final TimeDiscretization timeDiscr,
-			final ReplanningParameterContainer replanningParameterProvider,
-			final LinkWeightContainer linkWeightProvider) {
+			final ReplanningParameterContainer<Id<Link>> replanningParameterProvider) {
 		this.timeDiscr = timeDiscr;
 		this.replanningParameterProvider = replanningParameterProvider;
-		this.linkWeightProvider = linkWeightProvider;
 	}
 
 	// -------------------- OVERRIDING OF AbstractModule --------------------
@@ -57,7 +55,6 @@ public class SearchAcceleratorModule extends AbstractModule {
 
 		this.bind(TimeDiscretization.class).toInstance(this.timeDiscr);
 		this.bind(ReplanningParameterContainer.class).toInstance(this.replanningParameterProvider);
-		this.bind(LinkWeightContainer.class).toInstance(this.linkWeightProvider);
 
 		this.bind(SearchAccelerator.class).in(Singleton.class);
 		this.addControlerListenerBinding().to(SearchAccelerator.class);

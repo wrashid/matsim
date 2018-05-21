@@ -21,6 +21,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +37,10 @@ import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
 import org.matsim.api.core.v01.events.handler.VehicleEntersTrafficEventHandler;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
@@ -87,9 +90,6 @@ public class SearchAccelerator
 	@Inject
 	private ReplanningParameterContainer replanningParameters;
 
-	@Inject
-	private LinkWeightContainer linkWeights;
-
 	// -------------------- NON-INJECTED MEMBERS --------------------
 
 	private final String prefix = "[Acceleration] ";
@@ -101,6 +101,8 @@ public class SearchAccelerator
 	private LinkUsageListener physicalMobsimUsageListener = null;
 
 	private PopulationState hypotheticalPopulationState = null;
+
+	private final Map<Id<Person>, Integer> personId2lastReplanIteration = new LinkedHashMap<>();
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -137,8 +139,8 @@ public class SearchAccelerator
 		/*
 		 * OBTAIN DATA FROM MOST RECENT PHYSICAL NETWORK LOADING
 		 * 
-		 * Receive information about what happened in the network during the
-		 * most recent real network loading.
+		 * Receive information about what happened in the network during the most recent
+		 * real network loading.
 		 */
 		final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalLinkUsage = this.physicalMobsimUsageListener
 				.getAndClearIndicators();
@@ -153,10 +155,10 @@ public class SearchAccelerator
 		/*
 		 * HYPOTHETICAL REPLANNING
 		 * 
-		 * Let every agent re-plan once. Memorize the new plans. Make sure that
-		 * the the actual choice sets and currently chosen plans are NOT
-		 * affected by this by immediately re-setting to the original population
-		 * state once the re-planning has been implemented.
+		 * Let every agent re-plan once. Memorize the new plans. Make sure that the the
+		 * actual choice sets and currently chosen plans are NOT affected by this by
+		 * immediately re-setting to the original population state once the re-planning
+		 * has been implemented.
 		 */
 
 		this.log.info(this.prefix + "hyothetical replanning...");
@@ -202,22 +204,24 @@ public class SearchAccelerator
 		// Check that drivers in physical simulation and pSim were the same.
 		if ((!driverId2physicalLinkUsage.keySet().containsAll(driverId2pSimLinkUsage.keySet()))
 				|| (driverId2physicalLinkUsage.keySet().size() != driverId2pSimLinkUsage.keySet().size())) {
-			throw new RuntimeException("Different drivers in physical simulation and in pSim.");
+			// throw new RuntimeException("Different drivers in physical
+			// simulation and in pSim.");
+			this.log.warn(this.prefix + driverId2physicalLinkUsage.size() + " drivers in physical sim but "
+					+ driverId2pSimLinkUsage.size() + " in psim");
 		}
 
 		/*
 		 * DECIDE WHO GETS TO RE-PLAN.
 		 * 
-		 * At this point, one has (i) the link usage statistics from the
-		 * previous MATSim network loading (vehId2physLinkUsage), and (ii) the
-		 * hypothetical link usage statistics that would result from a 100%
-		 * re-planning rate if network congestion did not change
-		 * (vehId2pSimLinkUsage).
+		 * At this point, one has (i) the link usage statistics from the previous MATSim
+		 * network loading (vehId2physLinkUsage), and (ii) the hypothetical link usage
+		 * statistics that would result from a 100% re-planning rate if network
+		 * congestion did not change (vehId2pSimLinkUsage).
 		 * 
 		 * Now solve an optimization problem that aims at balancing simulation
-		 * advancement (changing link usage patterns) and simulation
-		 * stabilization (keeping link usage patterns as they are). Most of the
-		 * code below prepares the (heuristic) solution of this problem.
+		 * advancement (changing link usage patterns) and simulation stabilization
+		 * (keeping link usage patterns as they are). Most of the code below prepares
+		 * the (heuristic) solution of this problem.
 		 * 
 		 */
 
@@ -226,15 +230,20 @@ public class SearchAccelerator
 		final double meanLambda = this.replanningParameters.getMeanLambda(event.getIteration());
 		final double delta = this.replanningParameters.getDelta(event.getIteration());
 
+		// TODO NEW
+		final DynamicData<Id<Link>> currentTotalCounts = CountIndicatorUtils.newUnweightedCounts(
+				this.physicalMobsimUsageListener.getTimeDiscretization(), driverId2physicalLinkUsage.values());
+
 		final DynamicData<Id<Link>> currentWeightedCounts = CountIndicatorUtils.newWeightedCounts(
 				this.physicalMobsimUsageListener.getTimeDiscretization(), driverId2physicalLinkUsage.values(),
-				this.linkWeights);
+				currentTotalCounts, this.replanningParameters);
 		final DynamicData<Id<Link>> upcomingWeightedCounts = CountIndicatorUtils.newWeightedCounts(
-				pSimLinkUsageListener.getTimeDiscretization(), driverId2pSimLinkUsage.values(), this.linkWeights);
+				pSimLinkUsageListener.getTimeDiscretization(), driverId2pSimLinkUsage.values(), currentTotalCounts,
+				this.replanningParameters);
 
 		final double sumOfCurrentWeightedCounts2 = CountIndicatorUtils.sumOfEntries2(currentWeightedCounts);
 		if (sumOfCurrentWeightedCounts2 < 1e-6) {
-			throw new RuntimeException("There is no traffic on the network.");
+			throw new RuntimeException("There is no traffic on the network: " + sumOfCurrentWeightedCounts2);
 		}
 		final double sumOfWeightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(currentWeightedCounts,
 				upcomingWeightedCounts);
@@ -244,7 +253,8 @@ public class SearchAccelerator
 		// Initialize score residuals.
 
 		final DynamicData<Id<Link>> interactionResiduals = CountIndicatorUtils
-				.newInteractionResiduals(currentWeightedCounts, upcomingWeightedCounts, meanLambda);
+				.newWeightedDifference(upcomingWeightedCounts, currentWeightedCounts, meanLambda);
+
 		final DynamicData<Id<Link>> inertiaResiduals = new DynamicData<>(currentWeightedCounts.getStartTime_s(),
 				currentWeightedCounts.getBinSize_s(), currentWeightedCounts.getBinCnt());
 		for (Id<Link> locObj : currentWeightedCounts.keySet()) {
@@ -271,7 +281,7 @@ public class SearchAccelerator
 			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(driverId2physicalLinkUsage.get(driverId),
 					driverId2pSimLinkUsage.get(driverId), meanLambda, currentWeightedCounts,
 					sumOfCurrentWeightedCounts2, w, delta, interactionResiduals, inertiaResiduals,
-					regularizationResidual, this.linkWeights);
+					regularizationResidual, this.replanningParameters, currentTotalCounts);
 
 			this.log.info(
 					this.prefix + "  scoreChange if one  = " + (totalScoreChange + scoreUpdater.getScoreChangeIfOne()));
@@ -279,11 +289,12 @@ public class SearchAccelerator
 					+ (totalScoreChange + scoreUpdater.getScoreChangeIfZero()));
 
 			final double newLambda;
-			if (scoreUpdater.getScoreChangeIfOne() < scoreUpdater.getScoreChangeIfZero()) {
+			if (scoreUpdater.getScoreChangeIfOne() <= scoreUpdater.getScoreChangeIfZero()) {
 				newLambda = 1.0;
 				this.replanners.add(driverId);
 				this.log.info(this.prefix + "  => is a replanner");
 				totalScoreChange += scoreUpdater.getScoreChangeIfOne();
+				this.personId2lastReplanIteration.put(driverId, event.getIteration());
 			} else {
 				newLambda = 0.0;
 				this.log.info(this.prefix + "  => is NOT a replanner");
@@ -298,6 +309,37 @@ public class SearchAccelerator
 
 		this.log.info(this.prefix + "Effective replanning rate = " + (int) (((double) 100 * this.replanners.size())
 				/ this.services.getScenario().getPopulation().getPersons().size()) + " percent");
+
+		final int[] referenceReplanLagHist = new int[event.getIteration() + 1];
+		for (int i = 0; i <= event.getIteration(); i++) {
+			referenceReplanLagHist[i] = (int) Math.round(Math.pow(1.0 - meanLambda, i) * meanLambda
+					* this.services.getScenario().getPopulation().getPersons().size());
+		}
+
+		final int[] actualReplanLagHist = new int[event.getIteration() + 1];
+		for (Id<Person> personId : this.services.getScenario().getPopulation().getPersons().keySet()) {
+			final int val;
+			if (this.personId2lastReplanIteration.containsKey(personId)) {
+				val = this.personId2lastReplanIteration.get(personId);
+			} else {
+				val = 0;
+			}
+			actualReplanLagHist[event.getIteration() - val]++;
+		}
+
+		this.log.info(this.prefix + "\treplanLag\treference\tactual");
+		for (int i = 0; i <= event.getIteration(); i++) {
+			this.log.info(this.prefix + "\t" + i + "\t" + referenceReplanLagHist[i] + "\t" + actualReplanLagHist[i]);
+		}
+
+		AccelerationAnalyzer analyzer = new AccelerationAnalyzer(this.replanningParameters, this.timeDiscr);
+		analyzer.analyze(this.services.getScenario().getPopulation().getPersons().keySet(), driverId2physicalLinkUsage,
+				driverId2pSimLinkUsage, this.replanners, event.getIteration());
+		this.log.info("OPTIMIZED MINUS UNIFORM REALIZED DELTA N");
+		for (Double val : analyzer.diffList) {
+			this.log.info(val);
+		}
+		System.exit(0);
 	}
 
 	// -------------------- REPLANNING FUNCTIONALITY --------------------
@@ -333,80 +375,113 @@ public class SearchAccelerator
 		/*
 		 * TODO (general):
 		 * 
-		 * This interacts with the core re-planning, which appears to be
-		 * parallel code. Where does this need to be accounted for?
+		 * This interacts with the core re-planning, which appears to be parallel code.
+		 * Where does this need to be accounted for?
 		 * 
-		 * Instances of which strategy-related classes are persistent from one
-		 * iteration to the next, and which are created anew in each iteration?
-		 * Specifically, how to identify a concrete strategy at runtime, by
-		 * reference or by iterating through all available strategies and
-		 * checking "instanceof" or ... ?
+		 * Instances of which strategy-related classes are persistent from one iteration
+		 * to the next, and which are created anew in each iteration? Specifically, how
+		 * to identify a concrete strategy at runtime, by reference or by iterating
+		 * through all available strategies and checking "instanceof" or ... ?
 		 * 
-		 * SearchAccelerator operates on "Person", whereas general re-planning
-		 * operates on "HasPlansAndId<Plan, Person>". Switch to the latter
-		 * throughout.
+		 * SearchAccelerator operates on "Person", whereas general re-planning operates
+		 * on "HasPlansAndId<Plan, Person>". Switch to the latter throughout.
 		 * 
 		 * Allow for parametrization through Config.
 		 */
 
+		final boolean accelerate = true;
+
 		System.out.println("STARTED..");
 
 		/*
-		 * Load a configuration. Strategies like "keep last selected plan" must
-		 * receive a zero weight because they will be dynamically assigned by
-		 * the search acceleration. Could do this dynamically by scanning the
-		 * Config.
+		 * Load a configuration. Strategies like "keep last selected plan" must receive
+		 * a zero weight because they will be dynamically assigned by the search
+		 * acceleration. Could do this dynamically by scanning the Config.
 		 * 
-		 * Configuration for one further strategy that only clones previously
-		 * made hypothetical re-planning decisions (evaluated within the search
-		 * acceleration framework) is added. To switch it off/almost certainly
-		 * on, its weight is set to either zero or a very large number within
-		 * the accelerated simulation process.
+		 * Configuration for one further strategy that only clones previously made
+		 * hypothetical re-planning decisions (evaluated within the search acceleration
+		 * framework) is added. To switch it off/almost certainly on, its weight is set
+		 * to either zero or a very large number within the accelerated simulation
+		 * process.
 		 * 
-		 * TODO It seems as if the pSim does not interpret the simulation end
-		 * time "00:00:00" (which appears to indicate "run until everyone is
-		 * done") right.
+		 * TODO It seems as if the pSim does not interpret the simulation end time
+		 * "00:00:00" (which appears to indicate "run until everyone is done") right.
 		 */
 
-		// final Config config =
-		// ConfigUtils.loadConfig("C:/Nobackup/Profilen/git-2018/vsp-playgrounds/gunnar/"
-		// + "testdata/berlin_2014-08-01_car_1pct/config.xml");
-		Config config = ConfigUtils
-				.loadConfig("C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil/config.xml");
+		final Config config = ConfigUtils.loadConfig("/Users/GunnarF/OneDrive - VTI/"
+				+ "My Code/workspace-2018/gunnar-local/testdata/berlin_2014-08-01_car_1pct/config.xml");
 
-		AcceptIntendedReplanningStrategy.addStrategySettings(config);
+		// final String path =
+		// "C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil-extended/";
+		// final Config config;
+		// if (accelerate) {
+		// config = ConfigUtils.loadConfig(path + "config4acceleration.xml");
+		// } else {
+		// config = ConfigUtils.loadConfig(path + "config.xml");
+		// }
+		// config.controler().setLastIteration(10);
+
+		if (accelerate) {
+			AcceptIntendedReplanningStrategy.addStrategySettings(config);
+		}
+
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-		config.qsim().setEndTime(24 * 3600);
+		config.qsim().setEndTime(30 * 3600);
 
 		/*
-		 * Create scenario and controller as usually.
+		 * Create scenario and controller.
+		 * 
+		 * TODO This does not belong here: Remove all routes to start Berlin scenario
+		 * run from scratch.
 		 */
 
 		final Scenario scenario = ScenarioUtils.loadScenario(config);
+		for (Person person : scenario.getPopulation().getPersons().values()) {
+			for (Plan plan : person.getPlans()) {
+				for (PlanElement planElement : plan.getPlanElements()) {
+					if (planElement instanceof Leg) {
+						((Leg) planElement).setRoute(null);
+					}
+				}
+			}
+		}
 		final Controler controler = new Controler(scenario);
+
+		// >>> TESTING
+		// final Link link =
+		// scenario.getNetwork().getLinks().values().iterator().next();
+		// System.out.println("link " + link.getId() + " has flow capacity of "
+		// + link.getFlowCapacityPerSec() * Units.VEH_H_PER_VEH_S + " veh/h.");
+		// System.exit(0);
+		// <<< TESTING
 
 		/*
 		 * Install the search acceleration logic.
 		 * 
-		 * TimeDiscretization: Could either come from a new config module or be
-		 * derived from other MATSim parameters .
+		 * TimeDiscretization: Could either come from a new config module or be derived
+		 * from other MATSim parameters .
 		 * 
-		 * ReplanningParameterContainer: Should come from a new config module;
-		 * could come in parts from a (somewhat) involved analysis of otherwise
-		 * present strategy modules.
+		 * ReplanningParameterContainer: Should come from a new config module; could
+		 * come in parts from a (somewhat) involved analysis of otherwise present
+		 * strategy modules.
 		 * 
-		 * LinkWeightContainer: There probably is one superior setting that
-		 * needs to be experimentally identified (current guess is that
-		 * "one over capacity" will work best).
+		 * LinkWeightContainer: There probably is one superior setting that needs to be
+		 * experimentally identified (current guess is that "one over capacity" will
+		 * work best).
 		 */
 
-		final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
-		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 1.0);
-		final LinkWeightContainer linkWeightProvider = LinkWeightContainer
-				.newOneOverCapacityLinkWeights(scenario.getNetwork());
-
-		controler.addOverridingModule(
-				new SearchAcceleratorModule(timeDiscr, replanningParameterProvider, linkWeightProvider));
+		if (accelerate) {
+			final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
+			final ReplanningParameterContainer<Id<Link>> replanningParameterProvider = new ConstantReplanningParameters(
+					0.2, 1e-6, 0 * config.qsim().getFlowCapFactor(), timeDiscr.getBinSize_s(),
+					ReplanningParameterContainer.newUniformLinkWeights(scenario.getNetwork()), scenario.getNetwork());
+			// final ReplanningParameterContainer<Id<Link>>
+			// replanningParameterProvider = new ConstantReplanningParameters(
+			// 0.2, 0.0, 0.0, timeDiscr.getBinSize_s(),
+			// ReplanningParameterContainer.newUniformLinkWeights(scenario.getNetwork()),
+			// scenario.getNetwork());
+			controler.addOverridingModule(new SearchAcceleratorModule(timeDiscr, replanningParameterProvider));
+		}
 
 		controler.run();
 

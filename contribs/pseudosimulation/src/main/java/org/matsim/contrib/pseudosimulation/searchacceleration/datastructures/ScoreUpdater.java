@@ -21,7 +21,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration.datastructures;
 
 import java.util.Map;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.LinkWeightContainer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
 
 import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.Tuple;
@@ -69,7 +69,8 @@ public class ScoreUpdater<L> {
 			final double meanLambda, final DynamicData<L> currentWeightedTotalCounts,
 			final double sumOfCurrentWeightedTotalCounts2, final double w, final double delta,
 			final DynamicData<L> interactionResiduals, final DynamicData<L> inertiaResiduals,
-			final double regularizationResidual, final LinkWeightContainer linkWeights) {
+			final double regularizationResidual, final ReplanningParameterContainer<L> replParams,
+			final DynamicData<L> currentTotalCounts) {
 
 		this.currentWeightedTotalCounts = currentWeightedTotalCounts;
 		this.interactionResiduals = interactionResiduals;
@@ -91,14 +92,16 @@ public class ScoreUpdater<L> {
 		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.individualChanges.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final int timeBin = entry.getKey().getB();
-			final double weightedIndividualChange = linkWeights.getWeight(spaceObj) * entry.getValue();
+			final double weightedIndividualChange = replParams.getWeight(spaceObj,
+					currentTotalCounts.getBinValue(spaceObj, timeBin)) * entry.getValue();
 			this.interactionResiduals.add(spaceObj, timeBin, -meanLambda * weightedIndividualChange);
 		}
 
 		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.currentIndividualCounts.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final Integer timeBin = entry.getKey().getB();
-			final double weightedCurrentIndividualCount = linkWeights.getWeight(spaceObj) * entry.getValue();
+			final double weightedCurrentIndividualCount = replParams.getWeight(spaceObj,
+					currentTotalCounts.getBinValue(spaceObj, timeBin)) * entry.getValue();
 			this.inertiaResiduals.add(spaceObj, timeBin, -(1.0 - meanLambda) * weightedCurrentIndividualCount);
 			this.regularizationResidual -= meanLambda * this.currentWeightedTotalCounts.getBinValue(spaceObj, timeBin)
 					* weightedCurrentIndividualCount;
@@ -112,7 +115,8 @@ public class ScoreUpdater<L> {
 		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.individualChanges.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final int timeBin = entry.getKey().getB();
-			final double weightedIndividualChange = linkWeights.getWeight(spaceObj) * entry.getValue();
+			final double weightedIndividualChange = replParams.getWeight(spaceObj,
+					currentTotalCounts.getBinValue(spaceObj, timeBin)) * entry.getValue();
 			sumOfWeightedIndividualChanges2 += weightedIndividualChange * weightedIndividualChange;
 			sumOfWeightedIndividualChangesTimesInteractionResiduals += weightedIndividualChange
 					* this.interactionResiduals.getBinValue(spaceObj, timeBin);
@@ -125,7 +129,8 @@ public class ScoreUpdater<L> {
 		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.currentIndividualCounts.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final Integer timeBin = entry.getKey().getB();
-			final double weightedCurrentIndividualCount = linkWeights.getWeight(spaceObj) * entry.getValue();
+			final double weightedCurrentIndividualCount = replParams.getWeight(spaceObj,
+					currentTotalCounts.getBinValue(spaceObj, timeBin)) * entry.getValue();
 			sumOfWeightedCurrentIndividualCounts2 += weightedCurrentIndividualCount * weightedCurrentIndividualCount;
 			sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts += weightedCurrentIndividualCount
 					* this.currentWeightedTotalCounts.getBinValue(spaceObj, timeBin);

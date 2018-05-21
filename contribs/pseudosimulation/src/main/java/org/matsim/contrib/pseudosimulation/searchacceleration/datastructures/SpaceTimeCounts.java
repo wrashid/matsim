@@ -94,8 +94,8 @@ class SpaceTimeCounts<L> {
 	}
 
 	void subtract(final SpaceTimeCounts<L> other) {
-		for (Map.Entry<Tuple<L, Integer>, Integer> entry : other.data.entrySet()) {
-			this.set(entry.getKey(), this.get(entry.getKey()) - entry.getValue());
+		for (Map.Entry<Tuple<L, Integer>, Integer> otherEntry : other.data.entrySet()) {
+			this.set(otherEntry.getKey(), this.get(otherEntry.getKey()) - otherEntry.getValue());
 		}
 	}
 }

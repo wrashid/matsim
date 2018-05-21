@@ -19,20 +19,39 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import java.util.Map;
+
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
+
 /**
  * 
  * @author Gunnar Flötteröd
  *
  */
-public class ConstantReplanningParameters implements ReplanningParameterContainer {
+public class ConstantReplanningParameters implements ReplanningParameterContainer<Id<Link>> {
 
 	private final double meanLambda;
 
 	private final double delta;
 
-	public ConstantReplanningParameters(final double meanLambda, final double delta) {
+	private final double flowCapacityFactor;
+
+	private final double timeBinSize_s;
+
+	private Map<Id<Link>, Double> linkWeights;
+
+	private final Network network;
+
+	public ConstantReplanningParameters(final double meanLambda, final double delta, final double flowCapacityFactor,
+			final double timeBinSize_s, final Map<Id<Link>, Double> linkWeights, final Network network) {
 		this.meanLambda = meanLambda;
 		this.delta = delta;
+		this.flowCapacityFactor = flowCapacityFactor;
+		this.timeBinSize_s = timeBinSize_s;
+		this.linkWeights = linkWeights;
+		this.network = network;
 	}
 
 	@Override
@@ -43,5 +62,16 @@ public class ConstantReplanningParameters implements ReplanningParameterContaine
 	@Override
 	public double getDelta(final int iteration) {
 		return this.delta;
+	}
+
+	@Override
+	public Double getWeight(final Id<Link> linkId, final double cnt_veh_timeBin) {
+		final Link link = this.network.getLinks().get(linkId);
+		final double threshold_veh = this.flowCapacityFactor * this.timeBinSize_s * link.getFlowCapacityPerSec();
+		if (cnt_veh_timeBin < threshold_veh) {
+			return 0.0;
+		} else {
+			return this.linkWeights.get(linkId);
+		}
 	}
 }
