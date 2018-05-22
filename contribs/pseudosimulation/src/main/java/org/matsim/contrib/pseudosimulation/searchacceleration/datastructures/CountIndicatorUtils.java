@@ -53,7 +53,7 @@ public class CountIndicatorUtils {
 
 	public static <L> DynamicData<L> newWeightedCounts(final TimeDiscretization timeDiscr,
 			final Collection<SpaceTimeIndicators<L>> allIndicators, final DynamicData<L> unweightedCounts,
-			final ReplanningParameterContainer<L> replParams) {
+			final ReplanningParameterContainer replParams) {
 		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
 		for (SpaceTimeIndicators<L> indicators : allIndicators) {
 			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {

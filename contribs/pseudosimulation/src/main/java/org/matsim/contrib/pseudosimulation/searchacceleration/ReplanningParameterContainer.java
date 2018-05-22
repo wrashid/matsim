@@ -33,7 +33,7 @@ import floetteroed.utilities.Units;
  * @author Gunnar Flötteröd
  *
  */
-public interface ReplanningParameterContainer<L> {
+public interface ReplanningParameterContainer {
 
 	public static Map<Id<Link>, Double> newUniformLinkWeights(final Network network) {
 		final Map<Id<Link>, Double> weights = new LinkedHashMap<>();
@@ -59,6 +59,6 @@ public interface ReplanningParameterContainer<L> {
 
 	public double getDelta(int iteration);
 
-	public Double getWeight(L locObj, double count);
+	public Double getWeight(Object locObj, double count);
 
 }

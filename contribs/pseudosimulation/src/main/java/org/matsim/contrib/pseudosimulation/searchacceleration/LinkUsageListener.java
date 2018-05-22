@@ -92,13 +92,6 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 		return this.timeDiscretization;
 	}
 
-	// Map<Id<Vehicle>, Id<Person>> getAndClearDrivers() {
-	// final Map<Id<Vehicle>, Id<Person>> result = new
-	// LinkedHashMap<>(this.vehicleId2driverId);
-	// this.vehicleId2driverId.clear();
-	// return result;
-	// }
-
 	Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> getAndClearIndicators() {
 		final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> result = new LinkedHashMap<>(this.driverId2indicators);
 		this.vehicleId2driverId.clear();
@@ -110,6 +103,8 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 
 	@Override
 	public void reset(int iteration) {
+		// TODO Probably better to (i) remove replace "getAndClearIndicators" by a plain
+		// getter and to clear here.
 		if (this.driverId2indicators.size() > 0) {
 			throw new RuntimeException("veh2indicators should be empty");
 		}

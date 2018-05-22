@@ -30,7 +30,7 @@ import org.matsim.api.core.v01.network.Network;
  * @author Gunnar Flötteröd
  *
  */
-public class ConstantReplanningParameters implements ReplanningParameterContainer<Id<Link>> {
+public class ConstantReplanningParameters implements ReplanningParameterContainer {
 
 	private final double meanLambda;
 
@@ -65,7 +65,7 @@ public class ConstantReplanningParameters implements ReplanningParameterContaine
 	}
 
 	@Override
-	public Double getWeight(final Id<Link> linkId, final double cnt_veh_timeBin) {
+	public Double getWeight(final Object linkId, final double cnt_veh_timeBin) {
 		final Link link = this.network.getLinks().get(linkId);
 		final double threshold_veh = this.flowCapacityFactor * this.timeBinSize_s * link.getFlowCapacityPerSec();
 		if (cnt_veh_timeBin < threshold_veh) {

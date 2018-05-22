@@ -19,8 +19,6 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
-import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.controler.AbstractModule;
 
 import com.google.inject.Singleton;
@@ -38,12 +36,12 @@ public class SearchAcceleratorModule extends AbstractModule {
 
 	private final TimeDiscretization timeDiscr;
 
-	private final ReplanningParameterContainer<Id<Link>> replanningParameterProvider;
+	private final ReplanningParameterContainer replanningParameterProvider;
 
 	// -------------------- CONSTRUCTION --------------------
 
 	public SearchAcceleratorModule(final TimeDiscretization timeDiscr,
-			final ReplanningParameterContainer<Id<Link>> replanningParameterProvider) {
+			final ReplanningParameterContainer replanningParameterProvider) {
 		this.timeDiscr = timeDiscr;
 		this.replanningParameterProvider = replanningParameterProvider;
 	}

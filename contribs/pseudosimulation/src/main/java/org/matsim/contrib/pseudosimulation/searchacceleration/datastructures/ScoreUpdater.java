@@ -69,7 +69,7 @@ public class ScoreUpdater<L> {
 			final double meanLambda, final DynamicData<L> currentWeightedTotalCounts,
 			final double sumOfCurrentWeightedTotalCounts2, final double w, final double delta,
 			final DynamicData<L> interactionResiduals, final DynamicData<L> inertiaResiduals,
-			final double regularizationResidual, final ReplanningParameterContainer<L> replParams,
+			final double regularizationResidual, final ReplanningParameterContainer replParams,
 			final DynamicData<L> currentTotalCounts) {
 
 		this.currentWeightedTotalCounts = currentWeightedTotalCounts;
@@ -78,9 +78,8 @@ public class ScoreUpdater<L> {
 		this.regularizationResidual = regularizationResidual;
 
 		/*
-		 * One has to go beyond 0/1 indicator arithmetics in the following
-		 * because the same vehicle may enter the same link multiple times
-		 * during one time bin.
+		 * One has to go beyond 0/1 indicator arithmetics in the following because the
+		 * same vehicle may enter the same link multiple times during one time bin.
 		 */
 
 		this.currentIndividualCounts = new SpaceTimeCounts<>(currentIndicators);
