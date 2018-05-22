@@ -59,6 +59,8 @@ public interface ReplanningParameterContainer {
 
 	public double getDelta(int iteration);
 
-	public Double getWeight(Object locObj, double count);
+	public double getWeight(Object locObj, double count);
+	
+	// public boolean isCongested(Object locObj, int time_s);
 
 }

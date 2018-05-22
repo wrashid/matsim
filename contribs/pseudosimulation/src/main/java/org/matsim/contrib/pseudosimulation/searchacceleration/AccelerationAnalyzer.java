@@ -21,6 +21,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,13 +39,29 @@ import floetteroed.utilities.TimeDiscretization;
  * @author Gunnar Flötteröd
  *
  */
-class AccelerationAnalyzer {
+public class AccelerationAnalyzer {
 
 	// -------------------- MEMBERS --------------------
 
 	private final ReplanningParameterContainer replParams;
 
 	private final TimeDiscretization timeDiscr;
+
+	private Integer driversInPseudoSim = null;
+
+	private Integer driversInPhysicalSim = null;
+
+	private Double effectiveReplanninRate = null;
+
+	private Double repeatedReplanningProba = null;
+
+	private Double shareNeverReplanned = null;
+
+	private final Set<Id<Person>> everReplanners = new LinkedHashSet<>();
+
+	private Set<Id<Person>> lastReplanners = null;
+	
+	private List<Double> bootstrap = null;
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -53,12 +70,57 @@ class AccelerationAnalyzer {
 		this.timeDiscr = timeDiscr;
 	}
 
+	// -------------------- TODO LOGGING GETTERS --------------------
+
+	public Integer getDriversInPseudoSim() {
+		return this.driversInPseudoSim;
+	}
+
+	public Integer getDriversInPhysicalSim() {
+		return this.driversInPhysicalSim;
+	}
+
+	public Double getEffectiveReplanninRate() {
+		return this.effectiveReplanninRate;
+	}
+
+	public Double getRepeatedReplanningProba() {
+		return this.repeatedReplanningProba;
+	}
+
+	public Double getShareNeverReplanned() {
+		return this.shareNeverReplanned;
+	}
+
+	public List<Double> getBootstrap() {
+		return this.bootstrap;
+	}
+	
 	// -------------------- IMPLEMENTATION --------------------
 
 	public void analyze(final Set<Id<Person>> allPersonIds,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalSimUsage,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pseudoSimUsage,
-			final Set<Id<Person>> replannerIds, final int iteration) {
+			final Set<Id<Person>> replannerIds, final int iteration, final List<Double> bootstrap) {
+
+		this.bootstrap = bootstrap;
+		
+		this.driversInPhysicalSim = driverId2physicalSimUsage.size();
+		this.driversInPseudoSim = driverId2pseudoSimUsage.size();
+
+		this.effectiveReplanninRate = ((double) replannerIds.size()) / allPersonIds.size();
+
+		this.everReplanners.addAll(replannerIds);
+		this.shareNeverReplanned = 1.0 - ((double) this.everReplanners.size()) / allPersonIds.size();
+
+		if (this.lastReplanners != null) {
+			final int lastReplannerCnt = this.lastReplanners.size();
+			this.lastReplanners.retainAll(replannerIds);
+			this.repeatedReplanningProba = ((double) this.lastReplanners.size()) / lastReplannerCnt;
+		}
+		this.lastReplanners = new LinkedHashSet<>(replannerIds);
+
+		// >>> OLD ANALYSIS BELOW >>>
 
 		final double meanLambda = this.replParams.getMeanLambda(iteration);
 

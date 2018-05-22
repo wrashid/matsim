@@ -21,9 +21,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,9 +42,13 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
-import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
-import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.ScoreUpdater;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPhysicalSim;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPseudoSim;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.EffectiveReplanningRate;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RepeatedReplanningProba;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ReplanningBootstrap;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareNeverReplanned;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -65,8 +67,9 @@ import org.matsim.core.scenario.ScenarioUtils;
 
 import com.google.inject.Inject;
 
-import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
+import floetteroed.utilities.statisticslogging.StatisticsWriter;
+import floetteroed.utilities.statisticslogging.TimeStampStatistic;
 
 /**
  * 
@@ -102,6 +105,12 @@ public class SearchAccelerator
 	// Delegate for physical mobsim listening. Created upon startup.
 	private LinkUsageListener physicalMobsimUsageListener = null;
 
+	// Created upon startup
+	private StatisticsWriter<AccelerationAnalyzer> statsWriter = null;
+
+	// Created upon startup
+	private AccelerationAnalyzer analyzer = null;
+
 	private PopulationState hypotheticalPopulationState = null;
 
 	// TODO Move this into a persistent analyzer.
@@ -130,6 +139,17 @@ public class SearchAccelerator
 	@Override
 	public void notifyStartup(final StartupEvent event) {
 		this.physicalMobsimUsageListener = new LinkUsageListener(this.timeDiscr);
+
+		this.analyzer = new AccelerationAnalyzer(this.replanningParameters, this.timeDiscr);
+
+		this.statsWriter = new StatisticsWriter<>("acceleration.log", false);
+		this.statsWriter.addSearchStatistic(new TimeStampStatistic<>());
+		this.statsWriter.addSearchStatistic(new DriversInPhysicalSim());
+		this.statsWriter.addSearchStatistic(new DriversInPseudoSim());
+		this.statsWriter.addSearchStatistic(new EffectiveReplanningRate());
+		this.statsWriter.addSearchStatistic(new RepeatedReplanningProba());
+		this.statsWriter.addSearchStatistic(new ShareNeverReplanned());
+		this.statsWriter.addSearchStatistic(new ReplanningBootstrap());
 	}
 
 	// --------------- IMPLEMENTATION OF IterationEndsListener ---------------
@@ -213,117 +233,137 @@ public class SearchAccelerator
 		 * 
 		 */
 
-		// Extract basic statistics.
+		final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters,
+				this.timeDiscr, event.getIteration(), driverId2physicalLinkUsage, driverId2pSimLinkUsage,
+				this.services.getScenario().getPopulation());
+		this.replanners = replannerIdentifier.drawReplanners();
+		List<Double> bootstrap = replannerIdentifier.bootstrap(10);
 
-		final double meanLambda = this.replanningParameters.getMeanLambda(event.getIteration());
-		final double delta = this.replanningParameters.getDelta(event.getIteration());
+		/*
+		 * 
+		 * // Extract basic statistics.
+		 * 
+		 * final double meanLambda =
+		 * this.replanningParameters.getMeanLambda(event.getIteration()); final double
+		 * delta = this.replanningParameters.getDelta(event.getIteration());
+		 * 
+		 * final DynamicData<Id<Link>> currentTotalCounts =
+		 * CountIndicatorUtils.newUnweightedCounts(
+		 * this.physicalMobsimUsageListener.getTimeDiscretization(),
+		 * driverId2physicalLinkUsage.values()); final DynamicData<Id<Link>>
+		 * currentWeightedCounts = CountIndicatorUtils.newWeightedCounts(
+		 * this.physicalMobsimUsageListener.getTimeDiscretization(),
+		 * driverId2physicalLinkUsage.values(), currentTotalCounts,
+		 * this.replanningParameters); final DynamicData<Id<Link>>
+		 * upcomingWeightedCounts = CountIndicatorUtils.newWeightedCounts(
+		 * pSimLinkUsageListener.getTimeDiscretization(),
+		 * driverId2pSimLinkUsage.values(), currentTotalCounts,
+		 * this.replanningParameters);
+		 * 
+		 * final double sumOfCurrentWeightedCounts2 =
+		 * CountIndicatorUtils.sumOfEntries2(currentWeightedCounts); if
+		 * (sumOfCurrentWeightedCounts2 < 1e-6) { throw new
+		 * RuntimeException("There is no (weighted) traffic on the network: " +
+		 * sumOfCurrentWeightedCounts2); } final double sumOfWeightedCountDifferences2 =
+		 * CountIndicatorUtils.sumOfDifferences2(currentWeightedCounts,
+		 * upcomingWeightedCounts); final double w = meanLambda / (1.0 - meanLambda) *
+		 * (sumOfWeightedCountDifferences2 + delta) / sumOfCurrentWeightedCounts2;
+		 * 
+		 * // Initialize score residuals.
+		 * 
+		 * final DynamicData<Id<Link>> interactionResiduals = CountIndicatorUtils
+		 * .newWeightedDifference(upcomingWeightedCounts, currentWeightedCounts,
+		 * meanLambda);
+		 * 
+		 * final DynamicData<Id<Link>> inertiaResiduals = new
+		 * DynamicData<>(currentWeightedCounts.getStartTime_s(),
+		 * currentWeightedCounts.getBinSize_s(), currentWeightedCounts.getBinCnt()); for
+		 * (Id<Link> locObj : currentWeightedCounts.keySet()) { for (int bin = 0; bin <
+		 * currentWeightedCounts.getBinCnt(); bin++) { inertiaResiduals.put(locObj, bin,
+		 * (1.0 - meanLambda) * currentWeightedCounts.getBinValue(locObj, bin)); } }
+		 * double regularizationResidual = meanLambda * sumOfCurrentWeightedCounts2;
+		 * 
+		 * // Go through all vehicles and decide which driver gets to re-plan.
+		 * 
+		 * this.log("identify replanners");
+		 * 
+		 * this.replanners = new LinkedHashSet<>(); double totalScoreChange = 0.0;
+		 * 
+		 * final List<Id<Person>> allPersonIdsShuffled = new
+		 * ArrayList<>(driverId2physicalLinkUsage.keySet());
+		 * Collections.shuffle(allPersonIdsShuffled);
+		 * 
+		 * for (Id<Person> driverId : allPersonIdsShuffled) {
+		 * 
+		 * this.log("  driver " + driverId);
+		 * 
+		 * final ScoreUpdater<Id<Link>> scoreUpdater = new
+		 * ScoreUpdater<>(driverId2physicalLinkUsage.get(driverId),
+		 * driverId2pSimLinkUsage.get(driverId), meanLambda, currentWeightedCounts,
+		 * sumOfCurrentWeightedCounts2, w, delta, interactionResiduals,
+		 * inertiaResiduals, regularizationResidual, this.replanningParameters,
+		 * currentTotalCounts);
+		 * 
+		 * this.log("    scoreChange if one  = " + (totalScoreChange +
+		 * scoreUpdater.getScoreChangeIfOne())); this.log("    scoreChange if zero = " +
+		 * (totalScoreChange + scoreUpdater.getScoreChangeIfZero()));
+		 * 
+		 * final double newLambda; if (scoreUpdater.getScoreChangeIfOne() <=
+		 * scoreUpdater.getScoreChangeIfZero()) { newLambda = 1.0;
+		 * this.replanners.add(driverId); this.log("  => is a replanner");
+		 * totalScoreChange += scoreUpdater.getScoreChangeIfOne();
+		 * this.personId2lastReplanIteration.put(driverId, event.getIteration()); } else
+		 * { newLambda = 0.0; this.log("  => is NOT a replanner"); totalScoreChange +=
+		 * scoreUpdater.getScoreChangeIfZero(); } this.log("  totalScoreChange = " +
+		 * totalScoreChange);
+		 * 
+		 * scoreUpdater.updateResiduals(newLambda); // Interaction- and inertiaResiduals
+		 * are updated by reference. regularizationResidual =
+		 * scoreUpdater.getUpdatedRegularizationResidual(); }
+		 * 
+		 */
 
-		final DynamicData<Id<Link>> currentTotalCounts = CountIndicatorUtils.newUnweightedCounts(
-				this.physicalMobsimUsageListener.getTimeDiscretization(), driverId2physicalLinkUsage.values());
-		final DynamicData<Id<Link>> currentWeightedCounts = CountIndicatorUtils.newWeightedCounts(
-				this.physicalMobsimUsageListener.getTimeDiscretization(), driverId2physicalLinkUsage.values(),
-				currentTotalCounts, this.replanningParameters);
-		final DynamicData<Id<Link>> upcomingWeightedCounts = CountIndicatorUtils.newWeightedCounts(
-				pSimLinkUsageListener.getTimeDiscretization(), driverId2pSimLinkUsage.values(), currentTotalCounts,
-				this.replanningParameters);
+		// this.log("Effective replanning rate = " + (int) (((double) 100 *
+		// this.replanners.size())
+		// / this.services.getScenario().getPopulation().getPersons().size()) + "
+		// percent");
+		//
+		// final int[] referenceReplanLagHist = new int[event.getIteration() + 1];
+		// for (int i = 0; i <= event.getIteration(); i++) {
+		// referenceReplanLagHist[i] = (int) Math.round(Math.pow(1.0 - meanLambda, i) *
+		// meanLambda
+		// * this.services.getScenario().getPopulation().getPersons().size());
+		// }
+		//
+		// final int[] actualReplanLagHist = new int[event.getIteration() + 1];
+		// for (Id<Person> personId :
+		// this.services.getScenario().getPopulation().getPersons().keySet()) {
+		// final int val;
+		// if (this.personId2lastReplanIteration.containsKey(personId)) {
+		// val = this.personId2lastReplanIteration.get(personId);
+		// } else {
+		// val = 0;
+		// }
+		// actualReplanLagHist[event.getIteration() - val]++;
+		// }
 
-		final double sumOfCurrentWeightedCounts2 = CountIndicatorUtils.sumOfEntries2(currentWeightedCounts);
-		if (sumOfCurrentWeightedCounts2 < 1e-6) {
-			throw new RuntimeException("There is no (weighted) traffic on the network: " + sumOfCurrentWeightedCounts2);
-		}
-		final double sumOfWeightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(currentWeightedCounts,
-				upcomingWeightedCounts);
-		final double w = meanLambda / (1.0 - meanLambda) * (sumOfWeightedCountDifferences2 + delta)
-				/ sumOfCurrentWeightedCounts2;
+		// this.log("\treplanLag\treference\tactual");
+		// for (int i = 0; i <= event.getIteration(); i++) {
+		// this.log("\t" + i + "\t" + referenceReplanLagHist[i] + "\t" +
+		// actualReplanLagHist[i]);
+		// }
+		//
 
-		// Initialize score residuals.
+		this.analyzer.analyze(this.services.getScenario().getPopulation().getPersons().keySet(),
+				driverId2physicalLinkUsage, driverId2pSimLinkUsage, this.replanners, event.getIteration(), bootstrap);
 
-		final DynamicData<Id<Link>> interactionResiduals = CountIndicatorUtils
-				.newWeightedDifference(upcomingWeightedCounts, currentWeightedCounts, meanLambda);
+		// this.log("OPTIMIZED MINUS UNIFORM REALIZED DELTA N");
+		// for (Double val : analyzer.diffList) {
+		// this.log(val);
+		// }
+		// System.exit(0);
 
-		final DynamicData<Id<Link>> inertiaResiduals = new DynamicData<>(currentWeightedCounts.getStartTime_s(),
-				currentWeightedCounts.getBinSize_s(), currentWeightedCounts.getBinCnt());
-		for (Id<Link> locObj : currentWeightedCounts.keySet()) {
-			for (int bin = 0; bin < currentWeightedCounts.getBinCnt(); bin++) {
-				inertiaResiduals.put(locObj, bin, (1.0 - meanLambda) * currentWeightedCounts.getBinValue(locObj, bin));
-			}
-		}
-		double regularizationResidual = meanLambda * sumOfCurrentWeightedCounts2;
-
-		// Go through all vehicles and decide which driver gets to re-plan.
-
-		this.log("identify replanners");
-
-		this.replanners = new LinkedHashSet<>();
-		double totalScoreChange = 0.0;
-
-		final List<Id<Person>> allPersonIdsShuffled = new ArrayList<>(driverId2physicalLinkUsage.keySet());
-		Collections.shuffle(allPersonIdsShuffled);
-
-		for (Id<Person> driverId : allPersonIdsShuffled) {
-
-			this.log("  driver " + driverId);
-
-			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(driverId2physicalLinkUsage.get(driverId),
-					driverId2pSimLinkUsage.get(driverId), meanLambda, currentWeightedCounts,
-					sumOfCurrentWeightedCounts2, w, delta, interactionResiduals, inertiaResiduals,
-					regularizationResidual, this.replanningParameters, currentTotalCounts);
-
-			this.log("    scoreChange if one  = " + (totalScoreChange + scoreUpdater.getScoreChangeIfOne()));
-			this.log("    scoreChange if zero = " + (totalScoreChange + scoreUpdater.getScoreChangeIfZero()));
-
-			final double newLambda;
-			if (scoreUpdater.getScoreChangeIfOne() <= scoreUpdater.getScoreChangeIfZero()) {
-				newLambda = 1.0;
-				this.replanners.add(driverId);
-				this.log("  => is a replanner");
-				totalScoreChange += scoreUpdater.getScoreChangeIfOne();
-				this.personId2lastReplanIteration.put(driverId, event.getIteration());
-			} else {
-				newLambda = 0.0;
-				this.log("  => is NOT a replanner");
-				totalScoreChange += scoreUpdater.getScoreChangeIfZero();
-			}
-			this.log("  totalScoreChange = " + totalScoreChange);
-
-			scoreUpdater.updateResiduals(newLambda);
-			// Interaction- and inertiaResiduals are updated by reference.
-			regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();
-		}
-
-		this.log("Effective replanning rate = " + (int) (((double) 100 * this.replanners.size())
-				/ this.services.getScenario().getPopulation().getPersons().size()) + " percent");
-
-		final int[] referenceReplanLagHist = new int[event.getIteration() + 1];
-		for (int i = 0; i <= event.getIteration(); i++) {
-			referenceReplanLagHist[i] = (int) Math.round(Math.pow(1.0 - meanLambda, i) * meanLambda
-					* this.services.getScenario().getPopulation().getPersons().size());
-		}
-
-		final int[] actualReplanLagHist = new int[event.getIteration() + 1];
-		for (Id<Person> personId : this.services.getScenario().getPopulation().getPersons().keySet()) {
-			final int val;
-			if (this.personId2lastReplanIteration.containsKey(personId)) {
-				val = this.personId2lastReplanIteration.get(personId);
-			} else {
-				val = 0;
-			}
-			actualReplanLagHist[event.getIteration() - val]++;
-		}
-
-		this.log("\treplanLag\treference\tactual");
-		for (int i = 0; i <= event.getIteration(); i++) {
-			this.log("\t" + i + "\t" + referenceReplanLagHist[i] + "\t" + actualReplanLagHist[i]);
-		}
-
-		AccelerationAnalyzer analyzer = new AccelerationAnalyzer(this.replanningParameters, this.timeDiscr);
-		analyzer.analyze(this.services.getScenario().getPopulation().getPersons().keySet(), driverId2physicalLinkUsage,
-				driverId2pSimLinkUsage, this.replanners, event.getIteration());
-		this.log("OPTIMIZED MINUS UNIFORM REALIZED DELTA N");
-		for (Double val : analyzer.diffList) {
-			this.log(val);
-		}
-		System.exit(0);
+		this.statsWriter.writeToFile(this.analyzer);
 	}
 
 	// -------------------- REPLANNING FUNCTIONALITY --------------------
@@ -385,8 +425,14 @@ public class SearchAccelerator
 		 * "00:00:00" (which appears to indicate "run until everyone is done") right.
 		 */
 
-		final Config config = ConfigUtils.loadConfig("/Users/GunnarF/OneDrive - VTI/"
-				+ "My Code/workspace-2018/gunnar-local/testdata/berlin_2014-08-01_car_1pct/config.xml");
+		final Config config;
+		if (accelerate) {
+			config = ConfigUtils.loadConfig("/Users/GunnarF/OneDrive - VTI/"
+					+ "My Code/workspace-2018/gunnar-local/testdata/berlin_2014-08-01_car_1pct/config4opt.xml");
+		} else {
+			config = ConfigUtils.loadConfig("/Users/GunnarF/OneDrive - VTI/"
+					+ "My Code/workspace-2018/gunnar-local/testdata/berlin_2014-08-01_car_1pct/config.xml");
+		}
 
 		// final String path =
 		// "C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil-extended/";
@@ -449,7 +495,7 @@ public class SearchAccelerator
 
 		if (accelerate) {
 			final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
-			final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 1e-6,
+			final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 1e6,
 					0 * config.qsim().getFlowCapFactor(), timeDiscr.getBinSize_s(),
 					ReplanningParameterContainer.newUniformLinkWeights(scenario.getNetwork()), scenario.getNetwork());
 			// final ReplanningParameterContainer<Id<Link>>

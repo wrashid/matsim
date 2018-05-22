@@ -65,7 +65,7 @@ public class ConstantReplanningParameters implements ReplanningParameterContaine
 	}
 
 	@Override
-	public Double getWeight(final Object linkId, final double cnt_veh_timeBin) {
+	public double getWeight(final Object linkId, final double cnt_veh_timeBin) {
 		final Link link = this.network.getLinks().get(linkId);
 		final double threshold_veh = this.flowCapacityFactor * this.timeBinSize_s * link.getFlowCapacityPerSec();
 		if (cnt_veh_timeBin < threshold_veh) {
@@ -74,4 +74,10 @@ public class ConstantReplanningParameters implements ReplanningParameterContaine
 			return this.linkWeights.get(linkId);
 		}
 	}
+
+	// @Override
+	// public boolean isCongested(final Object linkId, int time_s) {
+	// return false;
+	// }
+
 }
