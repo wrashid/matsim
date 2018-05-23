@@ -19,6 +19,12 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -30,6 +36,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
+import org.matsim.contrib.pseudosimulation.searchacceleration.utils.SetUtils;
 
 import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
@@ -42,6 +49,8 @@ import floetteroed.utilities.TimeDiscretization;
 public class AccelerationAnalyzer {
 
 	// -------------------- MEMBERS --------------------
+
+	private final String compareToUniformReplanningFileName = "acceleration_compare-to-uniform.csv";
 
 	private final ReplanningParameterContainer replParams;
 
@@ -60,7 +69,7 @@ public class AccelerationAnalyzer {
 	private final Set<Id<Person>> everReplanners = new LinkedHashSet<>();
 
 	private Set<Id<Person>> lastReplanners = null;
-	
+
 	private List<Double> bootstrap = null;
 
 	// -------------------- CONSTRUCTION --------------------
@@ -68,6 +77,13 @@ public class AccelerationAnalyzer {
 	AccelerationAnalyzer(final ReplanningParameterContainer replParams, final TimeDiscretization timeDiscr) {
 		this.replParams = replParams;
 		this.timeDiscr = timeDiscr;
+		try {
+			final Path path = Paths.get(this.compareToUniformReplanningFileName);
+			Files.deleteIfExists(path);
+			Files.createFile(path);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	// -------------------- TODO LOGGING GETTERS --------------------
@@ -95,7 +111,7 @@ public class AccelerationAnalyzer {
 	public List<Double> getBootstrap() {
 		return this.bootstrap;
 	}
-	
+
 	// -------------------- IMPLEMENTATION --------------------
 
 	public void analyze(final Set<Id<Person>> allPersonIds,
@@ -104,7 +120,7 @@ public class AccelerationAnalyzer {
 			final Set<Id<Person>> replannerIds, final int iteration, final List<Double> bootstrap) {
 
 		this.bootstrap = bootstrap;
-		
+
 		this.driversInPhysicalSim = driverId2physicalSimUsage.size();
 		this.driversInPseudoSim = driverId2pseudoSimUsage.size();
 
@@ -156,19 +172,29 @@ public class AccelerationAnalyzer {
 			}
 		}
 
-		// TODO effect of optimized re-planning
-
-		this.diffList.clear();
-		for (Id<Link> linkId : uniformDeltaN.keySet()) {
+		final List<Double> diffList = new ArrayList<>();
+		for (Id<Link> linkId : SetUtils.union(uniformDeltaN.keySet(), optimizedDeltaN.keySet())) {
 			double sum = 0;
 			for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
 				sum += (optimizedDeltaN.getBinValue(linkId, timeBin) - uniformDeltaN.getBinValue(linkId, timeBin));
 			}
-			this.diffList.add(sum);
+			if (Math.abs(sum) >= 1e-3) {
+				diffList.add(sum);
+			}
 		}
-		Collections.sort(this.diffList);
-	}
+		Collections.sort(diffList);
 
-	// TODO
-	public final List<Double> diffList = new ArrayList<>();
+		if (diffList.size() > 0) {
+			final Path path = Paths.get(this.compareToUniformReplanningFileName);
+			try (BufferedWriter writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
+				writer.write(diffList.get(0).toString());
+				for (int i = 1; i < diffList.size(); i++) {
+					writer.write("," + diffList.get(i));
+				}
+				writer.newLine();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
 }

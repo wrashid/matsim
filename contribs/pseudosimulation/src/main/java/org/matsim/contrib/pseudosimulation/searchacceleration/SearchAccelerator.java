@@ -96,6 +96,8 @@ public class SearchAccelerator
 
 	// -------------------- NON-INJECTED MEMBERS --------------------
 
+	private final int bootstrapReplications = 0;
+	
 	private void log(final Object msg) {
 		Logger.getLogger(Controler.class).info("[Acceleration] " + msg);
 	}
@@ -237,7 +239,13 @@ public class SearchAccelerator
 				this.timeDiscr, event.getIteration(), driverId2physicalLinkUsage, driverId2pSimLinkUsage,
 				this.services.getScenario().getPopulation());
 		this.replanners = replannerIdentifier.drawReplanners();
-		List<Double> bootstrap = replannerIdentifier.bootstrap(10);
+		
+		final List<Double> bootstrap;
+		if (this.bootstrapReplications > 0) {
+			bootstrap = replannerIdentifier.bootstrap(this.bootstrapReplications);
+		} else {
+			bootstrap = null;
+		}
 
 		/*
 		 * 
@@ -495,7 +503,7 @@ public class SearchAccelerator
 
 		if (accelerate) {
 			final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
-			final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 1e6,
+			final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 0,
 					0 * config.qsim().getFlowCapFactor(), timeDiscr.getBinSize_s(),
 					ReplanningParameterContainer.newUniformLinkWeights(scenario.getNetwork()), scenario.getNetwork());
 			// final ReplanningParameterContainer<Id<Link>>
