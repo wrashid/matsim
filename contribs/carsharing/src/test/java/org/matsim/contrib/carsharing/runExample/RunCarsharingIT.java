@@ -157,12 +157,9 @@ public class RunCarsharingIT {
 					} else if ( TransportMode.car.equals(legMode) ) {
 						Assert.assertEquals( 0, nOfModeLegs ) ;
 					} else if ( "twoway_vehicle".equals(legMode) ) {
-<<<<<<< HEAD
-						Assert.assertEquals( 8, nOfModeLegs ) ;
-=======
+
 						Assert.assertEquals( 10, nOfModeLegs ) ;
-//						Assert.assertEquals( 8, nOfModeLegs ) ;
->>>>>>> refs/remotes/origin/master
+
 					}
 					else if ( "oneway_vehicle".equals(legMode) ) {
 						Assert.assertEquals( 0, nOfModeLegs ) ;
@@ -189,12 +186,9 @@ public class RunCarsharingIT {
 					if ( TransportMode.walk.equals(legMode) ) {
 						Assert.assertEquals(2, nOfModeLegs );
 					} else if ( "twoway_vehicle".equals(legMode) ) {
-<<<<<<< HEAD
-						Assert.assertEquals( 8, nOfModeLegs ) ;
-=======
+
 						Assert.assertEquals( 10, nOfModeLegs ) ;
-//						Assert.assertEquals( 8, nOfModeLegs ) ;
->>>>>>> refs/remotes/origin/master
+
 					} else if ( TransportMode.car.equals(legMode) ) {
 						Assert.assertEquals( 2, nOfModeLegs ) ;
 					} else if ( "egress_walk_tw".equals(legMode) ) {
