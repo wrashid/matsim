@@ -50,7 +50,10 @@ public class StrategyManager implements MatsimManager {
 	private final GenericStrategyManager<Plan, Person> delegate;
 
 	@Inject
-	StrategyManager(StrategyConfigGroup strategyConfigGroup, PlansConfigGroup plansConfigGroup, ControlerConfigGroup controlerConfigGroup, Map<StrategyConfigGroup.StrategySettings, PlanStrategy> planStrategies) {
+	StrategyManager(StrategyConfigGroup strategyConfigGroup, PlansConfigGroup plansConfigGroup,
+					ControlerConfigGroup controlerConfigGroup,
+					Map<StrategyConfigGroup.StrategySettings, PlanStrategy> planStrategies) {
+
 		this();
 		setMaxPlansPerAgent(strategyConfigGroup.getMaxAgentPlanMemorySize());
 
@@ -204,7 +207,7 @@ public class StrategyManager implements MatsimManager {
 	 * @return the chosen strategy
 	 */
 	public GenericPlanStrategy<Plan, Person> chooseStrategy(final Person person, final String subpopulation) {
-		final GenericPlanStrategy<Plan, Person> strategy = delegate.chooseStrategy(subpopulation);
+		final GenericPlanStrategy<Plan, Person> strategy = delegate.chooseStrategy(person, subpopulation);
 		return strategy;
 	}
 
