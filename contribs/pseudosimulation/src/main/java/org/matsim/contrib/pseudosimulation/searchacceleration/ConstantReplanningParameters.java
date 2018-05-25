@@ -24,6 +24,7 @@ import java.util.Map;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.core.router.util.TravelTime;
 
 /**
  * 
@@ -32,46 +33,57 @@ import org.matsim.api.core.v01.network.Network;
  */
 public class ConstantReplanningParameters implements ReplanningParameterContainer {
 
-	private final double meanLambda;
-
-	private final double delta;
-
-	private final double flowCapacityFactor;
-
-	private final double timeBinSize_s;
+	private final AccelerationConfigGroup accelerationConfig;
 
 	private Map<Id<Link>, Double> linkWeights;
 
 	private final Network network;
 
-	public ConstantReplanningParameters(final double meanLambda, final double delta, final double flowCapacityFactor,
-			final double timeBinSize_s, final Map<Id<Link>, Double> linkWeights, final Network network) {
-		this.meanLambda = meanLambda;
-		this.delta = delta;
-		this.flowCapacityFactor = flowCapacityFactor;
-		this.timeBinSize_s = timeBinSize_s;
-		this.linkWeights = linkWeights;
+	public ConstantReplanningParameters(final AccelerationConfigGroup accelerationConfig, final Network network) {
+		this.accelerationConfig = accelerationConfig;
+		this.linkWeights = accelerationConfig.newLinkWeights(network);
 		this.network = network;
 	}
 
 	@Override
 	public double getMeanLambda(final int iteration) {
-		return this.meanLambda;
+		return this.accelerationConfig.getMeanReplanningRate();
 	}
 
 	@Override
-	public double getDelta(final int iteration) {
-		return this.delta;
-	}
-
-	@Override
-	public double getWeight(final Object linkId, final double cnt_veh_timeBin) {
-		final Link link = this.network.getLinks().get(linkId);
-		final double threshold_veh = this.flowCapacityFactor * this.timeBinSize_s * link.getFlowCapacityPerSec();
-		if (cnt_veh_timeBin < threshold_veh) {
-			return 0.0;
+	public double getDelta(final int iteration, final Double deltaN2) {
+		if (this.accelerationConfig.getRegularizationType() == AccelerationConfigGroup.RegularizationType.absolute) {
+			return this.accelerationConfig.getRegularizationWeight();
+		} else if (this.accelerationConfig
+				.getRegularizationType() == AccelerationConfigGroup.RegularizationType.relative) {
+			return this.accelerationConfig.getRegularizationWeight() * this.getMeanLambda(iteration) * deltaN2;
 		} else {
-			return this.linkWeights.get(linkId);
+			throw new RuntimeException(
+					"Unhandled regularizationType: " + this.accelerationConfig.getRegularizationType());
+		}
+	}
+
+	@Override
+	public boolean isCongested(final Object linkId, final int bin, final TravelTime travelTimes) {
+		final Link link = this.network.getLinks().get(linkId);
+		return this.accelerationConfig.isCongested(link, bin, travelTimes);
+	}
+
+	private double congestionFactor(final Object linkId, final int bin, final TravelTime travelTimes) {
+		final Link link = this.network.getLinks().get(linkId);
+		return this.accelerationConfig.congestionFactor(link, bin, travelTimes);
+	}
+
+	@Override
+	public double getWeight(final Object linkId, final int bin, final TravelTime travelTimes) {
+		if (this.isCongested(linkId, bin, travelTimes)) {
+			if (this.accelerationConfig.getCongestionProportionalWeighting()) {
+				return this.linkWeights.get(linkId) * this.congestionFactor(linkId, bin, travelTimes);
+			} else {
+				return this.linkWeights.get(linkId);
+			}
+		} else {
+			return 0.0;
 		}
 	}
 

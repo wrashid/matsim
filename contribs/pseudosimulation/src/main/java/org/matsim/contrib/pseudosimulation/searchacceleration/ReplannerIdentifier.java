@@ -34,6 +34,8 @@ import org.matsim.api.core.v01.population.Population;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.ScoreUpdater;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
+import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
@@ -50,6 +52,7 @@ class ReplannerIdentifier {
 	private final ReplanningParameterContainer replanningParameters;
 	private final double meanLambda; // somewhat redundant
 	private final double delta; // somewhat redundant
+	private final TravelTime travelTimes;
 
 	private final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalLinkUsage;
 	private final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pSimLinkUsage;
@@ -63,16 +66,20 @@ class ReplannerIdentifier {
 	private final double sumOfWeightedCountDifferences2;
 	private final double w;
 
+	private Double shareOfScoreImprovingReplanners = null;
+	private Double finalObjectiveFunctionValue = null;
+
 	// -------------------- CONSTRUCTION --------------------
 
 	ReplannerIdentifier(final ReplanningParameterContainer replanningParameters,
 			final TimeDiscretization timeDiscretization, final int iteration,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalLinkUsage,
-			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pSimLinkUsage, final Population population) {
+			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pSimLinkUsage, final Population population,
+			final TravelTime travelTimes) {
 
 		this.replanningParameters = replanningParameters;
 		this.meanLambda = replanningParameters.getMeanLambda(iteration);
-		this.delta = replanningParameters.getDelta(iteration);
+		this.travelTimes = travelTimes;
 
 		this.driverId2physicalLinkUsage = driverId2physicalLinkUsage;
 		this.driverId2pSimLinkUsage = driverId2pSimLinkUsage;
@@ -81,9 +88,9 @@ class ReplannerIdentifier {
 		this.currentTotalCounts = CountIndicatorUtils.newUnweightedCounts(timeDiscretization,
 				driverId2physicalLinkUsage.values());
 		this.currentWeightedCounts = CountIndicatorUtils.newWeightedCounts(timeDiscretization,
-				driverId2physicalLinkUsage.values(), this.currentTotalCounts, replanningParameters);
+				driverId2physicalLinkUsage.values(), this.currentTotalCounts, replanningParameters, travelTimes);
 		this.upcomingWeightedCounts = CountIndicatorUtils.newWeightedCounts(timeDiscretization,
-				driverId2pSimLinkUsage.values(), this.currentTotalCounts, replanningParameters);
+				driverId2pSimLinkUsage.values(), this.currentTotalCounts, replanningParameters, travelTimes);
 
 		this.sumOfCurrentWeightedCounts2 = CountIndicatorUtils.sumOfEntries2(this.currentWeightedCounts);
 		if (this.sumOfCurrentWeightedCounts2 < 1e-6) {
@@ -92,6 +99,7 @@ class ReplannerIdentifier {
 		}
 		this.sumOfWeightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(this.currentWeightedCounts,
 				this.upcomingWeightedCounts);
+		this.delta = replanningParameters.getDelta(iteration, this.sumOfWeightedCountDifferences2);
 		this.w = this.meanLambda / (1.0 - this.meanLambda) * (this.sumOfWeightedCountDifferences2 + this.delta)
 				/ this.sumOfCurrentWeightedCounts2;
 	}
@@ -100,6 +108,7 @@ class ReplannerIdentifier {
 		this.replanningParameters = parent.replanningParameters;
 		this.meanLambda = parent.meanLambda;
 		this.delta = parent.delta;
+		this.travelTimes = parent.travelTimes;
 
 		this.driverId2physicalLinkUsage = parent.driverId2physicalLinkUsage;
 		this.driverId2pSimLinkUsage = parent.driverId2pSimLinkUsage;
@@ -115,6 +124,22 @@ class ReplannerIdentifier {
 	}
 
 	// -------------------- IMPLEMENTATION --------------------
+
+	public double getUniformReplanningObjectiveFunctionValue() {
+		return this.meanLambda * (this.sumOfWeightedCountDifferences2 + this.delta);
+	}
+
+	public double getUniformityExcess() {
+		return this.sumOfWeightedCountDifferences2 * this.meanLambda / this.delta;
+	}
+
+	public Double getShareOfScoreImprovingReplanners() {
+		return this.shareOfScoreImprovingReplanners;
+	}
+
+	public Double getFinalObjectiveFunctionValue() {
+		return this.finalObjectiveFunctionValue;
+	}
 
 	Set<Id<Person>> drawReplanners() {
 
@@ -136,10 +161,12 @@ class ReplannerIdentifier {
 		// Go through all vehicles and decide which driver gets to re-plan.
 
 		final Set<Id<Person>> replanners = new LinkedHashSet<>();
-		// double totalScoreChange = 0.0;
+		double score = this.getUniformReplanningObjectiveFunctionValue();
 
 		final List<Id<Person>> allPersonIdsShuffled = new ArrayList<>(this.population.getPersons().keySet());
 		Collections.shuffle(allPersonIdsShuffled);
+
+		int scoreImprovingReplanners = 0;
 
 		for (Id<Person> driverId : allPersonIdsShuffled) {
 
@@ -149,7 +176,7 @@ class ReplannerIdentifier {
 					this.driverId2physicalLinkUsage.get(driverId), this.driverId2pSimLinkUsage.get(driverId),
 					this.meanLambda, this.currentWeightedCounts, this.sumOfCurrentWeightedCounts2, this.w, this.delta,
 					interactionResiduals, inertiaResiduals, regularizationResidual, this.replanningParameters,
-					this.currentTotalCounts);
+					this.currentTotalCounts, this.travelTimes);
 
 			// this.log(" scoreChange if one = " + (totalScoreChange +
 			// scoreUpdater.getScoreChangeIfOne()));
@@ -157,23 +184,34 @@ class ReplannerIdentifier {
 			// scoreUpdater.getScoreChangeIfZero()));
 
 			final double newLambda;
-			if (scoreUpdater.getScoreChangeIfOne() <= scoreUpdater.getScoreChangeIfZero()) {
-				newLambda = 1.0;
-				replanners.add(driverId);
-				// this.log(" => is a replanner");
-				// totalScoreChange += scoreUpdater.getScoreChangeIfOne();
-				// this.personId2lastReplanIteration.put(driverId, event.getIteration());
+
+			if (Math.min(scoreUpdater.getScoreChangeIfOne(), scoreUpdater.getScoreChangeIfZero()) < 0) {
+				if (scoreUpdater.getScoreChangeIfOne() < scoreUpdater.getScoreChangeIfZero()) {
+					newLambda = 1.0;
+					replanners.add(driverId);
+					score += scoreUpdater.getScoreChangeIfOne();
+					// this.personId2lastReplanIteration.put(driverId, event.getIteration());
+				} else {
+					newLambda = 0.0;
+					score += scoreUpdater.getScoreChangeIfZero();
+				}
+				scoreImprovingReplanners++;
 			} else {
-				newLambda = 0.0;
-				// this.log(" => is NOT a replanner");
-				// totalScoreChange += scoreUpdater.getScoreChangeIfZero();
+				newLambda = 0.1;
+				if (MatsimRandom.getRandom().nextDouble() < newLambda) {
+					replanners.add(driverId);
+					score += scoreUpdater.getScoreChangeIfOne();
+				} else {
+					score += scoreUpdater.getScoreChangeIfZero();
+				}
 			}
-			// this.log(" totalScoreChange = " + totalScoreChange);
 
 			scoreUpdater.updateResiduals(newLambda);
 			// Interaction- and inertiaResiduals are updated by reference.
 			regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();
 		}
+		this.shareOfScoreImprovingReplanners = ((double) scoreImprovingReplanners) / allPersonIdsShuffled.size();
+		this.finalObjectiveFunctionValue = score;
 
 		return replanners;
 	}
@@ -196,7 +234,7 @@ class ReplannerIdentifier {
 		final List<Double> stats = new ArrayList<Double>();
 		for (int i = 0; i <= replications; i++) {
 			stats.add(0.0);
-		}		
+		}
 		for (Integer cnt : personId2replanCnt.values()) {
 			stats.set(cnt, stats.get(cnt) + 1.0 / this.population.getPersons().size());
 		}

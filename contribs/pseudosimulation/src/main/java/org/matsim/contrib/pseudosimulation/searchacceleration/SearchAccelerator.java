@@ -19,9 +19,9 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,12 +43,19 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AnticipatedCongestedLinkShare;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPhysicalSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPseudoSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.EffectiveReplanningRate;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ExperiencedCongestedLinkShare;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.FinalObjectiveFunctionValue;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.HypotheticalCongestedLinkShare;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RepeatedReplanningProba;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ReplanningBootstrap;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareNeverReplanned;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareScoreImprovingReplanners;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformReplanningObjectiveFunctionValue;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformityExcess;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -97,7 +104,7 @@ public class SearchAccelerator
 	// -------------------- NON-INJECTED MEMBERS --------------------
 
 	private final int bootstrapReplications = 0;
-	
+
 	private void log(final Object msg) {
 		Logger.getLogger(Controler.class).info("[Acceleration] " + msg);
 	}
@@ -116,7 +123,8 @@ public class SearchAccelerator
 	private PopulationState hypotheticalPopulationState = null;
 
 	// TODO Move this into a persistent analyzer.
-	private final Map<Id<Person>, Integer> personId2lastReplanIteration = new LinkedHashMap<>();
+	// private final Map<Id<Person>, Integer> personId2lastReplanIteration = new
+	// LinkedHashMap<>();
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -142,15 +150,25 @@ public class SearchAccelerator
 	public void notifyStartup(final StartupEvent event) {
 		this.physicalMobsimUsageListener = new LinkUsageListener(this.timeDiscr);
 
-		this.analyzer = new AccelerationAnalyzer(this.replanningParameters, this.timeDiscr);
+		this.analyzer = new AccelerationAnalyzer(this.replanningParameters, this.timeDiscr,
+				this.services.getLinkTravelTimes());
 
-		this.statsWriter = new StatisticsWriter<>("acceleration.log", false);
+		this.statsWriter = new StatisticsWriter<>(
+				new File(this.services.getConfig().controler().getOutputDirectory(), "acceleration.log").toString(),
+				false);
 		this.statsWriter.addSearchStatistic(new TimeStampStatistic<>());
 		this.statsWriter.addSearchStatistic(new DriversInPhysicalSim());
 		this.statsWriter.addSearchStatistic(new DriversInPseudoSim());
 		this.statsWriter.addSearchStatistic(new EffectiveReplanningRate());
 		this.statsWriter.addSearchStatistic(new RepeatedReplanningProba());
 		this.statsWriter.addSearchStatistic(new ShareNeverReplanned());
+		this.statsWriter.addSearchStatistic(new ExperiencedCongestedLinkShare());
+		this.statsWriter.addSearchStatistic(new HypotheticalCongestedLinkShare());
+		this.statsWriter.addSearchStatistic(new AnticipatedCongestedLinkShare());
+		this.statsWriter.addSearchStatistic(new UniformReplanningObjectiveFunctionValue());
+		this.statsWriter.addSearchStatistic(new FinalObjectiveFunctionValue());
+		this.statsWriter.addSearchStatistic(new ShareScoreImprovingReplanners());
+		this.statsWriter.addSearchStatistic(new UniformityExcess());
 		this.statsWriter.addSearchStatistic(new ReplanningBootstrap());
 	}
 
@@ -172,53 +190,52 @@ public class SearchAccelerator
 		this.log("observed " + driverId2physicalLinkUsage.size() + " drivers in physical mobsim");
 
 		/*
-		 * HYPOTHETICAL REPLANNING
+		 * HYPOTHETICAL REPLANNING AND PSEUDOSIM
 		 * 
-		 * Let every agent re-plan once. Memorize the new plans. Make sure that the the
-		 * actual choice sets and currently chosen plans are NOT affected by this by
-		 * immediately re-setting to the original population state once the re-planning
-		 * has been implemented.
+		 * Let every agent re-plan once. Execute all new plans in the pseudoSim.
+		 * Memorize the new plans. Make sure that the the actual choice sets and
+		 * currently chosen plans are NOT affected by this by immediately re-setting to
+		 * the original population state once the re-planning has been implemented.
 		 */
 		this.log("hypothetical replanning...");
+
+		// Memorize the original state.
+
 		final PopulationState originalPopulationState = new PopulationState(
 				this.services.getScenario().getPopulation());
+
+		// Re-plan. The population is now in the hypothetical state.
+
 		this.setWeightOfHypotheticalReplanning(0.0);
 		this.services.getStrategyManager().run(this.services.getScenario().getPopulation(), this.replanningContext);
 		this.setWeightOfHypotheticalReplanning(1e9);
 		this.hypotheticalPopulationState = new PopulationState(this.services.getScenario().getPopulation());
-		originalPopulationState.set(this.services.getScenario().getPopulation());
 
-		/*
-		 * PSEUDOSIM
-		 * 
-		 * Execute all new plans in the pSim.
-		 */
+		// Execute the currently selected hypothetical plans in the pseudoSim.
+
 		this.log("pSim");
 
-		final Collection<Plan> selectedPlans = new ArrayList<>(
+		final Collection<Plan> selectedHypotheticalPlans = new ArrayList<>(
 				this.services.getScenario().getPopulation().getPersons().size());
 		for (Person person : this.services.getScenario().getPopulation().getPersons().values()) {
-			selectedPlans.add(person.getSelectedPlan());
+			selectedHypotheticalPlans.add(person.getSelectedPlan());
 		}
-		this.log("selected plans = " + selectedPlans.size());
+		this.log("selected plans = " + selectedHypotheticalPlans.size());
 
 		final LinkUsageListener pSimLinkUsageListener = new LinkUsageListener(this.timeDiscr);
 		final EventsManager eventsManager = EventsUtils.createEventsManager();
 		eventsManager.addHandler(pSimLinkUsageListener);
 
-		final PSim pSim = new PSim(this.services.getScenario(), eventsManager, selectedPlans,
+		final PSim pSim = new PSim(this.services.getScenario(), eventsManager, selectedHypotheticalPlans,
 				this.services.getLinkTravelTimes());
 		pSim.run();
 		final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pSimLinkUsage = pSimLinkUsageListener
 				.getAndClearIndicators();
 		this.log("identified " + driverId2pSimLinkUsage.size() + " drivers in pSim");
 
-		// Check that drivers in physical simulation and pSim were about the same.
-		if ((!driverId2physicalLinkUsage.keySet().containsAll(driverId2pSimLinkUsage.keySet()))
-				|| (driverId2physicalLinkUsage.keySet().size() != driverId2pSimLinkUsage.keySet().size())) {
-			this.log(driverId2physicalLinkUsage.size() + " drivers in physical sim but " + driverId2pSimLinkUsage.size()
-					+ " in psim");
-		}
+		// Return (for now) to original population state.
+
+		originalPopulationState.set(this.services.getScenario().getPopulation());
 
 		/*
 		 * DECIDE WHO GETS TO RE-PLAN.
@@ -237,9 +254,9 @@ public class SearchAccelerator
 
 		final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters,
 				this.timeDiscr, event.getIteration(), driverId2physicalLinkUsage, driverId2pSimLinkUsage,
-				this.services.getScenario().getPopulation());
+				this.services.getScenario().getPopulation(), this.services.getLinkTravelTimes());
 		this.replanners = replannerIdentifier.drawReplanners();
-		
+
 		final List<Double> bootstrap;
 		if (this.bootstrapReplications > 0) {
 			bootstrap = replannerIdentifier.bootstrap(this.bootstrapReplications);
@@ -363,7 +380,10 @@ public class SearchAccelerator
 		//
 
 		this.analyzer.analyze(this.services.getScenario().getPopulation().getPersons().keySet(),
-				driverId2physicalLinkUsage, driverId2pSimLinkUsage, this.replanners, event.getIteration(), bootstrap);
+				driverId2physicalLinkUsage, driverId2pSimLinkUsage, this.replanners, event.getIteration(), bootstrap,
+				replannerIdentifier.getUniformReplanningObjectiveFunctionValue(),
+				replannerIdentifier.getShareOfScoreImprovingReplanners(),
+				replannerIdentifier.getFinalObjectiveFunctionValue(), replannerIdentifier.getUniformityExcess());
 
 		// this.log("OPTIMIZED MINUS UNIFORM REALIZED DELTA N");
 		// for (Double val : analyzer.diffList) {
@@ -411,7 +431,6 @@ public class SearchAccelerator
 		 * SearchAccelerator operates on "Person", whereas general re-planning operates
 		 * on "HasPlansAndId<Plan, Person>". Switch to the latter throughout.
 		 * 
-		 * Allow for parametrization through Config.
 		 */
 
 		final boolean accelerate = true;
@@ -435,12 +454,18 @@ public class SearchAccelerator
 
 		final Config config;
 		if (accelerate) {
-			config = ConfigUtils.loadConfig("/Users/GunnarF/OneDrive - VTI/"
-					+ "My Code/workspace-2018/gunnar-local/testdata/berlin_2014-08-01_car_1pct/config4opt.xml");
+			config = ConfigUtils.loadConfig("/Users/GunnarF/NoBackup/data-workspace/searchacceleration"
+					+ "/berlin_2014-08-01_car_1pct/config4opt.xml"); // ,
+																		// new
+																		// AccelerationConfigGroup());
 		} else {
-			config = ConfigUtils.loadConfig("/Users/GunnarF/OneDrive - VTI/"
-					+ "My Code/workspace-2018/gunnar-local/testdata/berlin_2014-08-01_car_1pct/config.xml");
+			config = ConfigUtils.loadConfig("/Users/GunnarF/NoBackup/data-workspace/searchacceleration"
+					+ "/berlin_2014-08-01_car_1pct/config.xml");
 		}
+
+		// System.out.println(ConfigUtils.addOrGetModule(config,
+		// AccelerationConfigGroup.class));
+		// System.exit(0);
 
 		// final String path =
 		// "C:/Nobackup/Profilen/git-2018/matsim-code-examples/scenarios/equil-extended/";
@@ -502,15 +527,11 @@ public class SearchAccelerator
 		 */
 
 		if (accelerate) {
-			final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
-			final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 0,
-					0 * config.qsim().getFlowCapFactor(), timeDiscr.getBinSize_s(),
-					ReplanningParameterContainer.newUniformLinkWeights(scenario.getNetwork()), scenario.getNetwork());
-			// final ReplanningParameterContainer<Id<Link>>
-			// replanningParameterProvider = new ConstantReplanningParameters(
-			// 0.2, 0.0, 0.0, timeDiscr.getBinSize_s(),
-			// ReplanningParameterContainer.newUniformLinkWeights(scenario.getNetwork()),
-			// scenario.getNetwork());
+			final AccelerationConfigGroup accelerationConfig = ConfigUtils.addOrGetModule(config,
+					AccelerationConfigGroup.class);
+			final TimeDiscretization timeDiscr = accelerationConfig.getTimeDiscretization();
+			final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(
+					accelerationConfig, scenario.getNetwork());
 			controler.addOverridingModule(new SearchAcceleratorModule(timeDiscr, replanningParameterProvider));
 		}
 

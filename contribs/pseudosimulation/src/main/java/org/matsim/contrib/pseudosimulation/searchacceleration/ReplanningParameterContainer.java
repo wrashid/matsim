@@ -25,6 +25,7 @@ import java.util.Map;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.Units;
 
@@ -57,9 +58,11 @@ public interface ReplanningParameterContainer {
 
 	public double getMeanLambda(int iteration);
 
-	public double getDelta(int iteration);
-
-	public double getWeight(Object locObj, double count);
+	public double getDelta(int iteration, Double deltaN2);
+	
+	public boolean isCongested(Object locObj, int timeBin, TravelTime travelTimes);
+	
+	public double getWeight(Object locObj, int timeBin, TravelTime travelTimes);
 	
 	// public boolean isCongested(Object locObj, int time_s);
 

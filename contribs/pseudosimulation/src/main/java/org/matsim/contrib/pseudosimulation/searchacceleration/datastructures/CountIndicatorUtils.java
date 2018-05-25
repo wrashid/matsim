@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
+import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
@@ -53,12 +54,12 @@ public class CountIndicatorUtils {
 
 	public static <L> DynamicData<L> newWeightedCounts(final TimeDiscretization timeDiscr,
 			final Collection<SpaceTimeIndicators<L>> allIndicators, final DynamicData<L> unweightedCounts,
-			final ReplanningParameterContainer replParams) {
+			final ReplanningParameterContainer replParams, final TravelTime travelTimes) {
 		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
 		for (SpaceTimeIndicators<L> indicators : allIndicators) {
 			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
 				for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
-					result.add(locObj, bin, replParams.getWeight(locObj, unweightedCounts.getBinValue(locObj, bin)));
+					result.add(locObj, bin, replParams.getWeight(locObj, bin, travelTimes));
 				}
 			}
 		}
