@@ -21,7 +21,6 @@
 
 package org.matsim.contrib.pseudosimulation;
 
-import floetteroed.utilities.TimeDiscretization;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.eventsBasedPTRouter.TransitRouterEventsWSFactory;
 import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTime;
@@ -32,8 +31,6 @@ import org.matsim.contrib.pseudosimulation.distributed.listeners.events.transit.
 import org.matsim.contrib.pseudosimulation.mobsim.PSimProvider;
 import org.matsim.contrib.pseudosimulation.mobsim.SwitchingMobsimProvider;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
-import org.matsim.contrib.pseudosimulation.searchacceleration.ConstantReplanningParameters;
-import org.matsim.contrib.pseudosimulation.searchacceleration.LinkUsageListener;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimWaitTimeCalculator;
@@ -95,11 +92,12 @@ public class RunPSim {
 			}
 		});
 
-//		LinkUsageListener linkUsageListener = new LinkUsageListener(new TimeDiscretization(0, 3600, 24));
-//		LinkUsageAnalyzer linkUsageAnalyzer = new LinkUsageAnalyzer(linkUsageListener,
-//				new ConstantReplanningParameters(0.1, 1.0), LinkUsageAnalyzer.newUniformLinkWeights(scenario.getNetwork()));
-//		matsimControler.getEvents().addHandler(linkUsageListener);
-//		matsimControler.addControlerListener(linkUsageAnalyzer);
+		if (config.transit().isUseTransit()) {
+			if (pSimConfigGroup.isFullTransitPerformanceTransmission()) {
+				transitPerformanceRecorder = new TransitPerformanceRecorder(matsimControler.getScenario(), matsimControler.getEvents(), mobSimSwitcher);
+			}
+
+		}
 
 
 
