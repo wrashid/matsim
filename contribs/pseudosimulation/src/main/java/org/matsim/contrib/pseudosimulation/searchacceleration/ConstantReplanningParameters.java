@@ -65,17 +65,26 @@ public class ConstantReplanningParameters implements ReplanningParameterContaine
 
 	@Override
 	public boolean isCongested(final Object linkId, final int bin, final TravelTime travelTimes) {
+		if (!(linkId instanceof Id<?>)) {
+			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
+		}
 		final Link link = this.network.getLinks().get(linkId);
 		return this.accelerationConfig.isCongested(link, bin, travelTimes);
 	}
 
 	private double congestionFactor(final Object linkId, final int bin, final TravelTime travelTimes) {
+		if (!(linkId instanceof Id<?>)) {
+			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
+		}
 		final Link link = this.network.getLinks().get(linkId);
 		return this.accelerationConfig.congestionFactor(link, bin, travelTimes);
 	}
 
 	@Override
 	public double getWeight(final Object linkId, final int bin, final TravelTime travelTimes) {
+		if (!(linkId instanceof Id<?>)) {
+			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
+		}
 		if (this.isCongested(linkId, bin, travelTimes)) {
 			if (this.accelerationConfig.getCongestionProportionalWeighting()) {
 				return this.linkWeights.get(linkId) * this.congestionFactor(linkId, bin, travelTimes);

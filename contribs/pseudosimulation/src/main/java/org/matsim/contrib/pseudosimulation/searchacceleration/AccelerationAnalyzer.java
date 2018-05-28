@@ -48,8 +48,6 @@ public class AccelerationAnalyzer {
 
 	private final TimeDiscretization timeDiscr;
 
-	private final TravelTime travelTimes;
-
 	private Integer driversInPseudoSim = null;
 
 	private Integer driversInPhysicalSim = null;
@@ -84,11 +82,9 @@ public class AccelerationAnalyzer {
 
 	// -------------------- CONSTRUCTION --------------------
 
-	AccelerationAnalyzer(final ReplanningParameterContainer replParams, final TimeDiscretization timeDiscr,
-			final TravelTime travelTimes) {
+	AccelerationAnalyzer(final ReplanningParameterContainer replParams, final TimeDiscretization timeDiscr) {
 		this.replParams = replParams;
 		this.timeDiscr = timeDiscr;
-		this.travelTimes = travelTimes;
 		// try {
 		// final Path path = Paths.get(this.compareToUniformReplanningFileName);
 		// Files.deleteIfExists(path);
@@ -163,7 +159,7 @@ public class AccelerationAnalyzer {
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pseudoSimUsage,
 			final Set<Id<Person>> replannerIds, final int iteration, final List<Double> bootstrap,
 			final Double uniformReplanningObjectiveFunctionValue, final Double shareOfScoreImprovingReplanners,
-			final Double finalObjectiveFunctionValue, final Double uniformityExcess) {
+			final Double finalObjectiveFunctionValue, final Double uniformityExcess, final TravelTime travelTimes) {
 
 		this.bootstrap = bootstrap;
 		this.uniformReplanningObjectiveFunctionValue = uniformReplanningObjectiveFunctionValue;
@@ -273,7 +269,7 @@ public class AccelerationAnalyzer {
 				for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
 					for (Id<Link> linkId : hypotheticalTravelIndicators.getVisitedSpaceObjects(timeBin)) {
 						totalHypotheticalVisitedLinkCnt++;
-						if (this.replParams.isCongested(linkId, timeBin, this.travelTimes)) {
+						if (this.replParams.isCongested(linkId, timeBin, travelTimes)) {
 							hypotheticalVisitedCongestedLinkCnt++;
 						}
 					}
@@ -286,7 +282,7 @@ public class AccelerationAnalyzer {
 				for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
 					for (Id<Link> linkId : experiencedTravelIndicators.getVisitedSpaceObjects(timeBin)) {
 						totalExperiencedVisitedLinkCnt++;
-						if (this.replParams.isCongested(linkId, timeBin, this.travelTimes)) {
+						if (this.replParams.isCongested(linkId, timeBin, travelTimes)) {
 							experiencedVisitedCongestedLinkCnt++;
 						}
 					}
@@ -304,7 +300,7 @@ public class AccelerationAnalyzer {
 				for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
 					for (Id<Link> linkId : anticipatedTravelIndicators.getVisitedSpaceObjects(timeBin)) {
 						totalAnticipatedVisitedLinkCnt++;
-						if (this.replParams.isCongested(linkId, timeBin, this.travelTimes)) {
+						if (this.replParams.isCongested(linkId, timeBin, travelTimes)) {
 							anticipatedVisitedCongestedLinkCnt++;
 						}
 					}

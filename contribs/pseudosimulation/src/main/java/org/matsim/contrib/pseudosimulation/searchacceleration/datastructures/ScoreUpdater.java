@@ -46,9 +46,9 @@ public class ScoreUpdater<L> {
 
 	// -------------------- MEMBERS --------------------
 
-	private final SpaceTimeCounts<L> currentIndividualCounts;
+	private final SpaceTimeCounts<L> currentIndividualWeightedCounts;
 
-	private final SpaceTimeCounts<L> individualChanges;
+	private final SpaceTimeCounts<L> individualWeightedChanges;
 
 	private final DynamicData<L> currentWeightedTotalCounts;
 
@@ -71,7 +71,7 @@ public class ScoreUpdater<L> {
 			final double sumOfCurrentWeightedTotalCounts2, final double w, final double delta,
 			final DynamicData<L> interactionResiduals, final DynamicData<L> inertiaResiduals,
 			final double regularizationResidual, final ReplanningParameterContainer replParams,
-			final DynamicData<L> currentTotalCounts, final TravelTime travelTimes) {
+			final TravelTime travelTimes) {
 
 		this.currentWeightedTotalCounts = currentWeightedTotalCounts;
 		this.interactionResiduals = interactionResiduals;
@@ -83,25 +83,23 @@ public class ScoreUpdater<L> {
 		 * same vehicle may enter the same link multiple times during one time bin.
 		 */
 
-		this.currentIndividualCounts = new SpaceTimeCounts<>(currentIndicators);
-		this.individualChanges = new SpaceTimeCounts<>(upcomingIndicators);
-		this.individualChanges.subtract(this.currentIndividualCounts);
+		this.currentIndividualWeightedCounts = new SpaceTimeCounts<>(currentIndicators, replParams, travelTimes);
+		this.individualWeightedChanges = new SpaceTimeCounts<>(upcomingIndicators, replParams, travelTimes);
+		this.individualWeightedChanges.subtract(this.currentIndividualWeightedCounts);
 
 		// Update the residuals.
 
-		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.individualChanges.entriesView()) {
+		for (Map.Entry<Tuple<L, Integer>, Double> entry : this.individualWeightedChanges.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final int timeBin = entry.getKey().getB();
-			final double weightedIndividualChange = replParams.getWeight(spaceObj, timeBin, travelTimes)
-					* entry.getValue();
+			final double weightedIndividualChange = entry.getValue();
 			this.interactionResiduals.add(spaceObj, timeBin, -meanLambda * weightedIndividualChange);
 		}
 
-		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.currentIndividualCounts.entriesView()) {
+		for (Map.Entry<Tuple<L, Integer>, Double> entry : this.currentIndividualWeightedCounts.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final Integer timeBin = entry.getKey().getB();
-			final double weightedCurrentIndividualCount = replParams.getWeight(spaceObj, timeBin, travelTimes)
-					* entry.getValue();
+			final double weightedCurrentIndividualCount = entry.getValue();
 			this.inertiaResiduals.add(spaceObj, timeBin, -(1.0 - meanLambda) * weightedCurrentIndividualCount);
 			this.regularizationResidual -= meanLambda * this.currentWeightedTotalCounts.getBinValue(spaceObj, timeBin)
 					* weightedCurrentIndividualCount;
@@ -112,11 +110,10 @@ public class ScoreUpdater<L> {
 		double sumOfWeightedIndividualChanges2 = 0.0;
 		double sumOfWeightedIndividualChangesTimesInteractionResiduals = 0.0;
 
-		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.individualChanges.entriesView()) {
+		for (Map.Entry<Tuple<L, Integer>, Double> entry : this.individualWeightedChanges.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final int timeBin = entry.getKey().getB();
-			final double weightedIndividualChange = replParams.getWeight(spaceObj, timeBin, travelTimes)
-					* entry.getValue();
+			final double weightedIndividualChange = entry.getValue();
 			sumOfWeightedIndividualChanges2 += weightedIndividualChange * weightedIndividualChange;
 			sumOfWeightedIndividualChangesTimesInteractionResiduals += weightedIndividualChange
 					* this.interactionResiduals.getBinValue(spaceObj, timeBin);
@@ -126,11 +123,10 @@ public class ScoreUpdater<L> {
 		double sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts = 0.0;
 		double sumOfWeightedCurrentIndividualCountsTimesInertiaResiduals = 0.0;
 
-		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.currentIndividualCounts.entriesView()) {
+		for (Map.Entry<Tuple<L, Integer>, Double> entry : this.currentIndividualWeightedCounts.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final Integer timeBin = entry.getKey().getB();
-			final double weightedCurrentIndividualCount = replParams.getWeight(spaceObj, timeBin, travelTimes)
-					* entry.getValue();
+			final double weightedCurrentIndividualCount = entry.getValue();
 			sumOfWeightedCurrentIndividualCounts2 += weightedCurrentIndividualCount * weightedCurrentIndividualCount;
 			sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts += weightedCurrentIndividualCount
 					* this.currentWeightedTotalCounts.getBinValue(spaceObj, timeBin);
@@ -180,13 +176,13 @@ public class ScoreUpdater<L> {
 		}
 		this.residualsUpdated = true;
 
-		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.individualChanges.entriesView()) {
+		for (Map.Entry<Tuple<L, Integer>, Double> entry : this.individualWeightedChanges.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final int timeBin = entry.getKey().getB();
 			this.interactionResiduals.add(spaceObj, timeBin, newLambda * entry.getValue());
 		}
 
-		for (Map.Entry<Tuple<L, Integer>, Integer> entry : this.currentIndividualCounts.entriesView()) {
+		for (Map.Entry<Tuple<L, Integer>, Double> entry : this.currentIndividualWeightedCounts.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final int timeBin = entry.getKey().getB();
 			this.inertiaResiduals.add(spaceObj, timeBin, (1.0 - newLambda) * entry.getValue());

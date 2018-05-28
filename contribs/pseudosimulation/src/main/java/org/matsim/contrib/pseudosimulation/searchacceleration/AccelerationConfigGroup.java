@@ -46,6 +46,20 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		super(GROUP_NAME);
 	}
 
+	// -------------------- accelerate --------------------
+
+	private boolean accelerate = false;
+
+	@StringGetter("accelerate")
+	public boolean getAccelerate() {
+		return this.accelerate;
+	}
+
+	@StringSetter("accelerate")
+	public void setAccelerate(boolean accelerate) {
+		this.accelerate = accelerate;
+	}
+
 	// -------------------- startTime_s --------------------
 
 	private int startTime_s = 0;
@@ -180,6 +194,20 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		this.congestionProportionalWeighting = congestionProportionalWeighting;
 	}
 
+	// -------------------- pseudoSimIterations --------------------
+
+	private int pseudoSimIterations = 0;
+
+	@StringGetter("pseudoSimIterations")
+	public int getPseudoSimIterations() {
+		return this.pseudoSimIterations;
+	}
+
+	@StringSetter("pseudoSimIterations")
+	public void setPseudoSimIterations(final int pseudoSimIterations) {
+		this.pseudoSimIterations = pseudoSimIterations;
+	}
+
 	// -------------------- CUSTOM STUFF --------------------
 
 	private TimeDiscretization myTimeDiscretization = null;
@@ -202,15 +230,15 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		}
 	}
 
-	public double congestionFactor(final Link link, int bin, final TravelTime travelTimes) {
-		final int time_s = this.getTimeDiscretization().getBinCenterTime_s(bin);
+	public double congestionFactor(final Link link, int timeBin, final TravelTime travelTimes) {
+		final int time_s = this.getTimeDiscretization().getBinCenterTime_s(timeBin);
 		final double minimalTT_s = link.getLength() / link.getFreespeed(time_s);
 		final double realizedTT_s = travelTimes.getLinkTravelTime(link, time_s, null, null);
 		return (realizedTT_s / Math.max(minimalTT_s, 1e-9));
 	}
 
-	public boolean isCongested(final Link link, int bin, final TravelTime travelTimes) {
-		return (this.congestionFactor(link, bin, travelTimes) >= this.relativeCongestionTreshold);
+	public boolean isCongested(final Link link, int timeBin, final TravelTime travelTimes) {
+		return (this.congestionFactor(link, timeBin, travelTimes) >= this.relativeCongestionTreshold);
 	}
 
 }

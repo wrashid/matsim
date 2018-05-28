@@ -20,10 +20,9 @@
 package org.matsim.contrib.pseudosimulation.searchacceleration.datastructures;
 
 import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.utils.SetUtils;
 import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.DynamicData;
@@ -39,22 +38,23 @@ public class CountIndicatorUtils {
 	private CountIndicatorUtils() {
 	}
 
-	public static <L> DynamicData<L> newUnweightedCounts(final TimeDiscretization timeDiscr,
-			final Collection<SpaceTimeIndicators<L>> allIndicators) {
-		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
-		for (SpaceTimeIndicators<L> indicators : allIndicators) {
-			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
-				for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
-					result.add(locObj, bin, 1.0);
-				}
-			}
-		}
-		return result;
-	}
+	// public static <L> DynamicData<L> newUnweightedCounts(final TimeDiscretization
+	// timeDiscr,
+	// final Collection<SpaceTimeIndicators<L>> allIndicators) {
+	// final DynamicData<L> result = new DynamicData<L>(timeDiscr);
+	// for (SpaceTimeIndicators<L> indicators : allIndicators) {
+	// for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
+	// for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
+	// result.add(locObj, bin, 1.0);
+	// }
+	// }
+	// }
+	// return result;
+	// }
 
 	public static <L> DynamicData<L> newWeightedCounts(final TimeDiscretization timeDiscr,
-			final Collection<SpaceTimeIndicators<L>> allIndicators, final DynamicData<L> unweightedCounts,
-			final ReplanningParameterContainer replParams, final TravelTime travelTimes) {
+			final Collection<SpaceTimeIndicators<L>> allIndicators, final ReplanningParameterContainer replParams,
+			final TravelTime travelTimes) {
 		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
 		for (SpaceTimeIndicators<L> indicators : allIndicators) {
 			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
@@ -83,9 +83,7 @@ public class CountIndicatorUtils {
 					"counts1 has " + counts1.getBinCnt() + " bins, but counts2 has " + counts2.getBinCnt() + " bins.");
 		}
 		double result = 0.0;
-		final Set<L> allLocObj = new LinkedHashSet<>(counts1.keySet());
-		allLocObj.addAll(counts2.keySet());
-		for (L locObj : allLocObj) {
+		for (L locObj : SetUtils.union(counts1.keySet(), counts2.keySet())) {
 			for (int bin = 0; bin < counts1.getBinCnt(); bin++) {
 				final double diff = counts1.getBinValue(locObj, bin) - counts2.getBinValue(locObj, bin);
 				result += diff * diff;
@@ -102,9 +100,7 @@ public class CountIndicatorUtils {
 		}
 		final DynamicData<L> result = new DynamicData<L>(data1.getStartTime_s(), data1.getBinSize_s(),
 				data1.getBinCnt());
-		final Set<L> allLocObjs = new LinkedHashSet<>(data1.keySet());
-		allLocObjs.addAll(data2.keySet());
-		for (L locObj : allLocObjs) {
+		for (L locObj : SetUtils.union(data1.keySet(), data2.keySet())) {
 			for (int bin = 0; bin < data1.getBinCnt(); bin++) {
 				result.put(locObj, bin, weight * (data1.getBinValue(locObj, bin) - data2.getBinValue(locObj, bin)));
 			}
