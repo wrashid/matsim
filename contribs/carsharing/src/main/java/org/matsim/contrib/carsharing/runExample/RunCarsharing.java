@@ -1,12 +1,18 @@
 package org.matsim.contrib.carsharing.runExample;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.contrib.carsharing.bikeshare.BikeshareFleet;
 import org.matsim.contrib.carsharing.config.CarsharingConfigGroup;
 import org.matsim.contrib.carsharing.control.listeners.CarsharingListener;
 import org.matsim.contrib.carsharing.events.handlers.PersonArrivalDepartureHandler;
@@ -40,7 +46,6 @@ import org.matsim.contrib.carsharing.router.CarsharingRoute;
 import org.matsim.contrib.carsharing.router.CarsharingRouteFactory;
 import org.matsim.contrib.carsharing.scoring.CarsharingScoringFunctionFactory;
 import org.matsim.contrib.dvrp.router.DvrpRoutingNetworkProvider;
-import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.contrib.dvrp.trafficmonitoring.DvrpTravelTimeModule;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -50,6 +55,8 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.collections.QuadTree;
+import org.matsim.vehicles.Vehicle;
 
 import com.google.inject.Key;
 import com.google.inject.name.Names;
@@ -126,10 +133,35 @@ public class RunCarsharing {
 		controler.addOverridingModule(new CarsharingQSimModule());
 		controler.addOverridingModule(new DvrpTravelTimeModule());
 
+		// bikeshare
+
+		double minx = (1.0D / 0.0D);
+		double miny = (1.0D / 0.0D);
+		double maxx = (-1.0D / 0.0D);
+		double maxy = (-1.0D / 0.0D);
+		for (Link l : networkFF.getLinks().values()) {
+			if (l.getCoord().getX() < minx)
+				minx = l.getCoord().getX();
+			if (l.getCoord().getY() < miny)
+				miny = l.getCoord().getY();
+			if (l.getCoord().getX() > maxx)
+				maxx = l.getCoord().getX();
+			if (l.getCoord().getY() <= maxy)
+				continue;
+			maxy = l.getCoord().getY();
+		}
+		minx -= 1.0D;
+		miny -= 1.0D;
+		maxx += 1.0D;
+		maxy += 1.0D;
+		QuadTree<Id<Vehicle>> availableBikesLocationQuadTree = new QuadTree<>(minx, miny, maxx, maxy);
+		Map<Id<Vehicle>, Coord> bikeCoordMap = new HashMap<>();
+		BikeshareFleet bikeshareFleet = new BikeshareFleet(availableBikesLocationQuadTree, bikeCoordMap);
 		controler.addOverridingModule(new AbstractModule() {
 
 			@Override
 			public void install() {
+				bind(BikeshareFleet.class).toInstance(bikeshareFleet);
 				bind(KeepingTheCarModel.class).toInstance(keepingCarModel);
 				bind(ChooseTheCompany.class).toInstance(chooseCompany);
 				bind(ChooseVehicleType.class).toInstance(chooseCehicleType);
@@ -142,7 +174,8 @@ public class RunCarsharing {
 				bind(CarsharingManagerInterface.class).to(CarsharingManagerNew.class);
 				bind(VehicleChoiceAgent.class).toInstance(vehicleChoiceAgent);
 				bind(DemandHandler.class).asEagerSingleton();
-				bind(Network.class).annotatedWith(Names.named(DvrpRoutingNetworkProvider.DVRP_ROUTING)).to(Network.class);
+				bind(Network.class).annotatedWith(Names.named(DvrpRoutingNetworkProvider.DVRP_ROUTING))
+						.to(Network.class);
 
 				bind(Network.class).annotatedWith(Names.named("carnetwork")).toInstance(networkFF);
 				bind(TravelTime.class).annotatedWith(Names.named("ff"))

@@ -1,6 +1,7 @@
 package org.matsim.contrib.carsharing.qsim;
 
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.contrib.carsharing.bikeshare.BikeshareDepartureHandler;
 import org.matsim.contrib.carsharing.manager.supply.CarsharingSupplyInterface;
 import org.matsim.core.mobsim.qsim.QSim;
 import org.matsim.core.mobsim.qsim.agents.AgentFactory;
@@ -26,7 +27,7 @@ public class CarsharingModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-
+		bind(BikeshareDepartureHandler.class);
 	}
 
 }

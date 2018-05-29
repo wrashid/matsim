@@ -17,6 +17,7 @@ import org.matsim.core.mobsim.framework.MobsimDriverAgent;
 import org.matsim.core.mobsim.framework.MobsimPassengerAgent;
 import org.matsim.core.mobsim.framework.PlanAgent;
 import org.matsim.core.mobsim.qsim.agents.BasicPlanAgentImpl;
+import org.matsim.core.mobsim.qsim.agents.HasModifiablePlan;
 import org.matsim.core.mobsim.qsim.agents.PlanBasedDriverAgentImpl;
 import org.matsim.core.mobsim.qsim.agents.TransitAgentImpl;
 import org.matsim.core.mobsim.qsim.agents.WithinDayAgentUtils;
@@ -33,7 +34,7 @@ import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.vehicles.Vehicle;
 
 
-public class CarsharingPersonDriverAgentImpl implements MobsimDriverAgent, MobsimPassengerAgent, HasPerson, PlanAgent, PTPassengerAgent {
+public class CarsharingPersonDriverAgentImpl implements MobsimDriverAgent, MobsimPassengerAgent, HasPerson, PlanAgent, PTPassengerAgent, HasModifiablePlan {
 	
 
 	private CarsharingManagerInterface carsharingManager;
@@ -119,7 +120,7 @@ public class CarsharingPersonDriverAgentImpl implements MobsimDriverAgent, Mobsi
 	}
 	//the end of added methods	
 
-	void resetCaches() {
+	public void resetCaches() {
 		WithinDayAgentUtils.resetCaches(this.basicAgentDelegate);
 	}
 
@@ -275,6 +276,11 @@ public class CarsharingPersonDriverAgentImpl implements MobsimDriverAgent, Mobsi
 
 	public final PlanElement getPreviousPlanElement() {
 		return this.basicAgentDelegate.getPreviousPlanElement();
+	}
+
+	@Override
+	public int getCurrentLinkIndex() {
+		return this.basicAgentDelegate.getCurrentLinkIndex();
 	}
 
 }

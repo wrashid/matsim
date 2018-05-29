@@ -121,7 +121,7 @@
 	<param name="Module_2" value="RandomTripToCarsharingStrategy" />
 	<param name="ModuleDisableAfterIteration_2" value="1000" />
 
-	<param name="ModuleProbability_3" value="1.0" />
+	<param name="ModuleProbability_3" value="0.0" />
 	<param name="Module_3" value="CarsharingSubtourModeChoiceStrategy" />
 	<param name="ModuleDisableAfterIteration_3" value="1000" />
 
@@ -139,7 +139,7 @@
     <module name="subtourModeChoice" >
 		<param name="chainBasedModes" value="car,bike" />
 		<param name="considerCarAvailability" value="true" />
-		<param name="modes" value="car,bike,pt,walk" />
+		<param name="modes" value="car,bike,pt,walk,bikeshare" />
 	</module>
 
 <!-- ====================================================================== -->

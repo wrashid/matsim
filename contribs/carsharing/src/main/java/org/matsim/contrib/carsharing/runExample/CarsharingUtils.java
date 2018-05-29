@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.contrib.carsharing.bikeshare.BikeshareRoutingModule;
 import org.matsim.contrib.carsharing.config.CarsharingConfigGroup;
 import org.matsim.contrib.carsharing.config.FreeFloatingConfigGroup;
 import org.matsim.contrib.carsharing.config.OneWayCarsharingConfigGroup;
@@ -79,7 +80,7 @@ public class CarsharingUtils {
 			public void install() {
 				addRoutingModuleBinding("twoway").toInstance(new TwoWayCarsharingRoutingModule());
 				addRoutingModuleBinding("freefloating").toInstance(new FreeFloatingRoutingModule());
-
+				addRoutingModuleBinding("bikeshare").toInstance(new BikeshareRoutingModule());
 				addRoutingModuleBinding("oneway").toInstance(new OneWayCarsharingRoutingModule());
 				bind(MainModeIdentifier.class).toInstance(new MainModeIdentifier() {
 					final MainModeIdentifier defaultModeIdentifier = new MainModeIdentifierImpl();
@@ -97,7 +98,10 @@ public class CarsharingUtils {
 							} else if (pe instanceof Leg && ((Leg) pe).getMode().equals("freefloating")) {
 								return "freefloating";
 
-							}
+							} else if (pe instanceof Leg && ((Leg) pe).getMode().equals("bikeshare")) {
+								return "bikeshare";
+
+						}
 						}
 						// if the trip doesn't contain a carsharing leg,
 						// fall back to the default identification method.
