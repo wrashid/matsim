@@ -79,7 +79,7 @@ public class RunPSim {
 		//not a system basis
 		config.parallelEventHandling().setSynchronizeOnSimSteps(false);
 		config.parallelEventHandling().setNumberOfThreads(1);
-		AcceptIntendedReplanningStrategy.addStrategySettings(config);
+		AcceptIntendedReplanningStrategy.addOwnStrategySettings(config);
 		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
 		config.qsim().setEndTime(24 * 3600);
 
@@ -108,13 +108,13 @@ public class RunPSim {
 			}
 		}
 
-		final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
-		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(0.2, 1.0);
-		final LinkWeightContainer linkWeightProvider = LinkWeightContainer
-				.newOneOverCapacityLinkWeights(scenario.getNetwork());
+		final AccelerationConfigGroup accelerationConfig = ConfigUtils.addOrGetModule(config,
+				AccelerationConfigGroup.class);
+		final TimeDiscretization timeDiscr = accelerationConfig.getTimeDiscretization();
+		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(
+				accelerationConfig, scenario.getNetwork());
+		matsimControler.addOverridingModule(new SearchAcceleratorModule(timeDiscr, replanningParameterProvider));
 
-		matsimControler.addOverridingModule(
-				new SearchAcceleratorModule(timeDiscr, replanningParameterProvider, linkWeightProvider));
 
 		matsimControler.addOverridingModule(new AbstractModule() {
 			@Override
