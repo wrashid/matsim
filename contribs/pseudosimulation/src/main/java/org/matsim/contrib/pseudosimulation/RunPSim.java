@@ -84,6 +84,7 @@ public class RunPSim {
 		config.qsim().setEndTime(24 * 3600);
 
 		this.matsimControler = new Controler(scenario);
+		pSimConfigGroup.setIterationsPerCycle(50);
 
 		MobSimSwitcher mobSimSwitcher = new MobSimSwitcher(pSimConfigGroup,scenario);
 		matsimControler.addControlerListener(mobSimSwitcher);
@@ -148,7 +149,8 @@ public class RunPSim {
 
 	public static void main(String args[]) {
 		Config config = ConfigUtils.loadConfig(args[0]);
-		config.controler().setCreateGraphs(false);
+		config.controler().setCreateGraphs(true);
+		config.controler().setLastIteration(1000);
 
 		PSimConfigGroup pSimConfigGroup = new PSimConfigGroup();
 		config.addModule(pSimConfigGroup);

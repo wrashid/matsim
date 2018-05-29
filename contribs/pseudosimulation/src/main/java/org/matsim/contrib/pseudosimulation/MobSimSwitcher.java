@@ -59,9 +59,9 @@ public class MobSimSwitcher implements IterationEndsListener,
 		} else {
 			Logger.getLogger(this.getClass()).info("Running PSim");
 			plancatcher.init();
-			for (Person person : scenario.getPopulation().getPersons().values()) {
-					plancatcher.addPlansForPsim(person.getSelectedPlan());
-			}
+//			for (Person person : scenario.getPopulation().getPersons().values()) {
+//					plancatcher.addPlansForPsim(person.getSelectedPlan());
+//			}
 
 		}
 	}
@@ -99,17 +99,17 @@ public class MobSimSwitcher implements IterationEndsListener,
 			return;
 
 		for (Person person : scenario.getPopulation().getPersons().values()) {
-				plancatcher.removeExistingPlanOrAddNewPlan(person.getSelectedPlan());
+				plancatcher.addPlansForPsim(person.getSelectedPlan());
 		}
 
-		selectedPlanScoreMemory = new HashMap<>(scenario.getPopulation().getPersons().size());
-
-		for (Person person : scenario.getPopulation().getPersons().values()) {
-			selectedPlanScoreMemory.put(person.getId(), person.getSelectedPlan().getScore());
-		}
-		for (Plan plan : plancatcher.getPlansForPSim()) {
-			selectedPlanScoreMemory.remove(plan.getPerson().getId());
-		}
+//		selectedPlanScoreMemory = new HashMap<>(scenario.getPopulation().getPersons().size());
+//
+//		for (Person person : scenario.getPopulation().getPersons().values()) {
+//			selectedPlanScoreMemory.put(person.getId(), person.getSelectedPlan().getScore());
+//		}
+//		for (Plan plan : plancatcher.getPlansForPSim()) {
+//			selectedPlanScoreMemory.remove(plan.getPerson().getId());
+//		}
 
 	}
 
@@ -118,11 +118,11 @@ public class MobSimSwitcher implements IterationEndsListener,
 	public void notifyIterationEnds(IterationEndsEvent event) {
 		if (this.isQSimIteration())
 			return;
-		Iterator<Map.Entry<Id<Person>, Double>> iterator = selectedPlanScoreMemory.entrySet().iterator();
-		while (iterator.hasNext()) {
-			Map.Entry<Id<Person>, Double> entry = iterator.next();
-			scenario.getPopulation().getPersons().get(entry.getKey()).getSelectedPlan().setScore(entry.getValue());
-		}
+//		Iterator<Map.Entry<Id<Person>, Double>> iterator = selectedPlanScoreMemory.entrySet().iterator();
+//		while (iterator.hasNext()) {
+//			Map.Entry<Id<Person>, Double> entry = iterator.next();
+//			scenario.getPopulation().getPersons().get(entry.getKey()).getSelectedPlan().setScore(entry.getValue());
+//		}
 	}
 
 }
