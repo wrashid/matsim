@@ -38,16 +38,12 @@ public class SearchAcceleratorModule extends AbstractModule {
 
 	private final ReplanningParameterContainer replanningParameterProvider;
 
-	private final LinkWeightContainer linkWeightProvider;
-
 	// -------------------- CONSTRUCTION --------------------
 
 	public SearchAcceleratorModule(final TimeDiscretization timeDiscr,
-			final ReplanningParameterContainer replanningParameterProvider,
-			final LinkWeightContainer linkWeightProvider) {
+			final ReplanningParameterContainer replanningParameterProvider) {
 		this.timeDiscr = timeDiscr;
 		this.replanningParameterProvider = replanningParameterProvider;
-		this.linkWeightProvider = linkWeightProvider;
 	}
 
 	// -------------------- OVERRIDING OF AbstractModule --------------------
@@ -57,7 +53,6 @@ public class SearchAcceleratorModule extends AbstractModule {
 
 		this.bind(TimeDiscretization.class).toInstance(this.timeDiscr);
 		this.bind(ReplanningParameterContainer.class).toInstance(this.replanningParameterProvider);
-		this.bind(LinkWeightContainer.class).toInstance(this.linkWeightProvider);
 
 		this.bind(SearchAccelerator.class).in(Singleton.class);
 		this.addControlerListenerBinding().to(SearchAccelerator.class);

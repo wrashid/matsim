@@ -19,6 +19,13 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import java.util.Map;
+
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
+import org.matsim.core.router.util.TravelTime;
+
 /**
  * 
  * @author Gunnar Flötteröd
@@ -26,22 +33,72 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
  */
 public class ConstantReplanningParameters implements ReplanningParameterContainer {
 
-	private final double meanLambda;
+	private final AccelerationConfigGroup accelerationConfig;
 
-	private final double delta;
+	private Map<Id<Link>, Double> linkWeights;
 
-	public ConstantReplanningParameters(final double meanLambda, final double delta) {
-		this.meanLambda = meanLambda;
-		this.delta = delta;
+	private final Network network;
+
+	public ConstantReplanningParameters(final AccelerationConfigGroup accelerationConfig, final Network network) {
+		this.accelerationConfig = accelerationConfig;
+		this.linkWeights = accelerationConfig.newLinkWeights(network);
+		this.network = network;
 	}
 
 	@Override
 	public double getMeanLambda(final int iteration) {
-		return this.meanLambda;
+		return this.accelerationConfig.getMeanReplanningRate();
 	}
 
 	@Override
-	public double getDelta(final int iteration) {
-		return this.delta;
+	public double getDelta(final int iteration, final Double deltaN2) {
+		if (this.accelerationConfig.getRegularizationType() == AccelerationConfigGroup.RegularizationType.absolute) {
+			return this.accelerationConfig.getRegularizationWeight();
+		} else if (this.accelerationConfig
+				.getRegularizationType() == AccelerationConfigGroup.RegularizationType.relative) {
+			return this.accelerationConfig.getRegularizationWeight() * this.getMeanLambda(iteration) * deltaN2;
+		} else {
+			throw new RuntimeException(
+					"Unhandled regularizationType: " + this.accelerationConfig.getRegularizationType());
+		}
 	}
+
+	@Override
+	public boolean isCongested(final Object linkId, final int bin, final TravelTime travelTimes) {
+		if (!(linkId instanceof Id<?>)) {
+			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
+		}
+		final Link link = this.network.getLinks().get(linkId);
+		return this.accelerationConfig.isCongested(link, bin, travelTimes);
+	}
+
+	private double congestionFactor(final Object linkId, final int bin, final TravelTime travelTimes) {
+		if (!(linkId instanceof Id<?>)) {
+			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
+		}
+		final Link link = this.network.getLinks().get(linkId);
+		return this.accelerationConfig.congestionFactor(link, bin, travelTimes);
+	}
+
+	@Override
+	public double getWeight(final Object linkId, final int bin, final TravelTime travelTimes) {
+		if (!(linkId instanceof Id<?>)) {
+			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
+		}
+		if (this.isCongested(linkId, bin, travelTimes)) {
+			if (this.accelerationConfig.getCongestionProportionalWeighting()) {
+				return this.linkWeights.get(linkId) * this.congestionFactor(linkId, bin, travelTimes);
+			} else {
+				return this.linkWeights.get(linkId);
+			}
+		} else {
+			return 0.0;
+		}
+	}
+
+	// @Override
+	// public boolean isCongested(final Object linkId, int time_s) {
+	// return false;
+	// }
+
 }

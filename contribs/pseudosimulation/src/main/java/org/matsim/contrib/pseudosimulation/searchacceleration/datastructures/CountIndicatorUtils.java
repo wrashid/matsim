@@ -20,10 +20,10 @@
 package org.matsim.contrib.pseudosimulation.searchacceleration.datastructures;
 
 import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.LinkWeightContainer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.utils.SetUtils;
+import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
@@ -38,13 +38,28 @@ public class CountIndicatorUtils {
 	private CountIndicatorUtils() {
 	}
 
+	// public static <L> DynamicData<L> newUnweightedCounts(final TimeDiscretization
+	// timeDiscr,
+	// final Collection<SpaceTimeIndicators<L>> allIndicators) {
+	// final DynamicData<L> result = new DynamicData<L>(timeDiscr);
+	// for (SpaceTimeIndicators<L> indicators : allIndicators) {
+	// for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
+	// for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
+	// result.add(locObj, bin, 1.0);
+	// }
+	// }
+	// }
+	// return result;
+	// }
+
 	public static <L> DynamicData<L> newWeightedCounts(final TimeDiscretization timeDiscr,
-			final Collection<SpaceTimeIndicators<L>> allIndicators, final LinkWeightContainer weights) {
+			final Collection<SpaceTimeIndicators<L>> allIndicators, final ReplanningParameterContainer replParams,
+			final TravelTime travelTimes) {
 		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
 		for (SpaceTimeIndicators<L> indicators : allIndicators) {
 			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
 				for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
-					result.add(locObj, bin, weights.getWeight(locObj));
+					result.add(locObj, bin, replParams.getWeight(locObj, bin, travelTimes));
 				}
 			}
 		}
@@ -65,12 +80,10 @@ public class CountIndicatorUtils {
 	public static <L> double sumOfDifferences2(final DynamicData<L> counts1, final DynamicData<L> counts2) {
 		if (counts1.getBinCnt() != counts2.getBinCnt()) {
 			throw new RuntimeException(
-					"counts1 has " + counts1.getBinCnt() + " bins; counts2 has " + counts2.getBinCnt() + " bins.");
+					"counts1 has " + counts1.getBinCnt() + " bins, but counts2 has " + counts2.getBinCnt() + " bins.");
 		}
 		double result = 0.0;
-		final Set<L> allLocObj = new LinkedHashSet<>(counts1.keySet());
-		allLocObj.addAll(counts2.keySet());
-		for (L locObj : allLocObj) {
+		for (L locObj : SetUtils.union(counts1.keySet(), counts2.keySet())) {
 			for (int bin = 0; bin < counts1.getBinCnt(); bin++) {
 				final double diff = counts1.getBinValue(locObj, bin) - counts2.getBinValue(locObj, bin);
 				result += diff * diff;
@@ -79,20 +92,17 @@ public class CountIndicatorUtils {
 		return result;
 	}
 
-	public static <L> DynamicData<L> newInteractionResiduals(final DynamicData<L> currentWeightedCounts,
-			final DynamicData<L> newWeightedCounts, final double meanLambda) {
-		if (currentWeightedCounts.getBinCnt() != newWeightedCounts.getBinCnt()) {
-			throw new RuntimeException("currentWeightedCounts has " + currentWeightedCounts.getBinCnt()
-					+ " bins; newWeightedCounts has " + newWeightedCounts.getBinCnt() + " bins.");
+	public static <L> DynamicData<L> newWeightedDifference(final DynamicData<L> data1, final DynamicData<L> data2,
+			final double weight) {
+		if (data1.getBinCnt() != data2.getBinCnt()) {
+			throw new RuntimeException("currentWeightedCounts has " + data1.getBinCnt()
+					+ " bins; newWeightedCounts has " + data2.getBinCnt() + " bins.");
 		}
-		final DynamicData<L> result = new DynamicData<L>(currentWeightedCounts.getStartTime_s(),
-				currentWeightedCounts.getBinSize_s(), currentWeightedCounts.getBinCnt());
-		final Set<L> allLocObjs = new LinkedHashSet<>(currentWeightedCounts.keySet());
-		allLocObjs.addAll(newWeightedCounts.keySet());
-		for (L locObj : allLocObjs) {
-			for (int bin = 0; bin < currentWeightedCounts.getBinCnt(); bin++) {
-				result.put(locObj, bin, meanLambda * (newWeightedCounts.getBinValue(locObj, bin)
-						- currentWeightedCounts.getBinValue(locObj, bin)));
+		final DynamicData<L> result = new DynamicData<L>(data1.getStartTime_s(), data1.getBinSize_s(),
+				data1.getBinCnt());
+		for (L locObj : SetUtils.union(data1.keySet(), data2.keySet())) {
+			for (int bin = 0; bin < data1.getBinCnt(); bin++) {
+				result.put(locObj, bin, weight * (data1.getBinValue(locObj, bin) - data2.getBinValue(locObj, bin)));
 			}
 		}
 		return result;

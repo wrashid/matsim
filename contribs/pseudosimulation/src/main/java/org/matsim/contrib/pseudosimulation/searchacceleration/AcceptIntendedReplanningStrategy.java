@@ -34,25 +34,32 @@ import org.matsim.core.replanning.ReplanningContext;
  */
 public class AcceptIntendedReplanningStrategy implements PlanStrategy {
 
+	// -------------------- MEMBERS --------------------
+
 	public static final String STRATEGY_NAME = "AcceptIntendedReplanning";
 
 	private final SearchAccelerator searchAccelerator;
+
+	// -------------------- CONSTRUCTION --------------------
 
 	public AcceptIntendedReplanningStrategy(final SearchAccelerator searchAccelerator) {
 		this.searchAccelerator = searchAccelerator;
 	}
 
-	public static void addStrategySettings(final Config config) {
+	// -------------------- IMPLEMENTATION --------------------
+
+	public static void addOwnStrategySettings(final Config config) {
 		final StrategySettings stratSets = new StrategySettings();
 		stratSets.setStrategyName(STRATEGY_NAME);
-		stratSets.setWeight(0.0); // for now
+		stratSets.setWeight(0.0); // changed dynamically
 		config.strategy().addStrategySettings(stratSets);
 	}
 
+	// -------------------- IMPLEMENTATION OF PlanStrategy --------------------
+
 	@Override
 	public void run(HasPlansAndId<Plan, Person> person) {
-		// TODO Just testing. Need to get rid of this cast.
-		this.searchAccelerator.replan((Person) person);
+		this.searchAccelerator.replan(person);
 	}
 
 	@Override

@@ -53,21 +53,19 @@ public class SpaceTimeIndicators<L> {
 		}
 	}
 
-	// -------------------- PACKAGE INTERNALS --------------------
+	// -------------------- IMPLEMENTATION --------------------
 
-	int getTimeBinCnt() {
+	public int getTimeBinCnt() {
 		return this.data.size();
 	}
 
-	Iterable<L> getVisitedSpaceObjects(final int timeBin) {
+	public Iterable<L> getVisitedSpaceObjects(final int timeBin) {
 		if (this.data.get(timeBin) != null) {
 			return this.data.get(timeBin);
 		} else {
 			return new EmptyIterable<L>();
 		}
 	}
-
-	// -------------------- IMPLEMENTATION --------------------
 
 	public void visit(final L spaceObj, final int timeBin) {
 		List<L> spaceObjList = this.data.get(timeBin);
