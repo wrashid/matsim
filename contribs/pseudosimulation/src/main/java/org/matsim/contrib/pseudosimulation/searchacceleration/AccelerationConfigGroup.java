@@ -194,20 +194,6 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		this.congestionProportionalWeighting = congestionProportionalWeighting;
 	}
 
-	// -------------------- pseudoSimIterations --------------------
-
-	private int pseudoSimIterations = 0;
-
-	@StringGetter("pseudoSimIterations")
-	public int getPseudoSimIterations() {
-		return this.pseudoSimIterations;
-	}
-
-	@StringSetter("pseudoSimIterations")
-	public void setPseudoSimIterations(final int pseudoSimIterations) {
-		this.pseudoSimIterations = pseudoSimIterations;
-	}
-
 	// -------------------- CUSTOM STUFF --------------------
 
 	private TimeDiscretization myTimeDiscretization = null;

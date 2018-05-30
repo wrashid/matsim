@@ -136,19 +136,29 @@ public class ScoreUpdater<L> {
 
 		// Compose the actual score change.
 
-		final double factor1 = (sumOfWeightedIndividualChanges2 + w * sumOfWeightedCurrentIndividualCounts2
+		this.factor1 = (sumOfWeightedIndividualChanges2 + w * sumOfWeightedCurrentIndividualCounts2
 				+ delta * (sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts
 						* sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts)
 						/ (sumOfCurrentWeightedTotalCounts2 * sumOfCurrentWeightedTotalCounts2));
 
-		final double factor2 = 2.0 * (sumOfWeightedIndividualChangesTimesInteractionResiduals - w
+		this.factor2 = 2.0 * (sumOfWeightedIndividualChangesTimesInteractionResiduals - w
 				* (sumOfWeightedCurrentIndividualCounts2 + sumOfWeightedCurrentIndividualCountsTimesInertiaResiduals)
 				+ delta * this.regularizationResidual
 						* sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts
 						/ (sumOfCurrentWeightedTotalCounts2 * sumOfCurrentWeightedTotalCounts2));
+		this.meanLambda = meanLambda;
 
 		this.scoreChangeIfOne = (1.0 - meanLambda * meanLambda) * factor1 + (1.0 - meanLambda) * factor2;
 		this.scoreChangeIfZero = (0.0 - meanLambda * meanLambda) * factor1 + (0.0 - meanLambda) * factor2;
+	}
+
+	private final double factor1;
+	private final double factor2;
+	private final double meanLambda;
+
+	public double getScoreChange(final double newLambda) {
+		return (newLambda * newLambda - this.meanLambda * this.meanLambda) * this.factor1
+				+ (newLambda - this.meanLambda) * this.factor2;
 	}
 
 	// -------------------- GETTERS --------------------

@@ -80,6 +80,8 @@ public class AccelerationAnalyzer {
 
 	private Double uniformityExcess = null;
 
+	private Double expectedUniformSamplingObjectiveFunctionValue = null;
+
 	// -------------------- CONSTRUCTION --------------------
 
 	AccelerationAnalyzer(final ReplanningParameterContainer replParams, final TimeDiscretization timeDiscr) {
@@ -151,6 +153,10 @@ public class AccelerationAnalyzer {
 	public Double getUniformityExcess() {
 		return this.uniformityExcess;
 	}
+	
+	public Double getExpectedUniformSamplingObjectiveFunctionValue() {
+		return this.expectedUniformSamplingObjectiveFunctionValue;
+	}
 
 	// -------------------- IMPLEMENTATION --------------------
 
@@ -159,13 +165,15 @@ public class AccelerationAnalyzer {
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pseudoSimUsage,
 			final Set<Id<Person>> replannerIds, final int iteration, final List<Double> bootstrap,
 			final Double uniformReplanningObjectiveFunctionValue, final Double shareOfScoreImprovingReplanners,
-			final Double finalObjectiveFunctionValue, final Double uniformityExcess, final TravelTime travelTimes) {
+			final Double finalObjectiveFunctionValue, final Double uniformityExcess, final TravelTime travelTimes,
+			final Double expectedUniformSamplingObjectiveFunctionValue) {
 
 		this.bootstrap = bootstrap;
 		this.uniformReplanningObjectiveFunctionValue = uniformReplanningObjectiveFunctionValue;
 		this.shareOfScoreImprovingReplanners = shareOfScoreImprovingReplanners;
 		this.finalObjectiveFunctionValue = finalObjectiveFunctionValue;
 		this.uniformityExcess = uniformityExcess;
+		this.expectedUniformSamplingObjectiveFunctionValue = expectedUniformSamplingObjectiveFunctionValue;
 
 		this.driversInPhysicalSim = driverId2physicalSimUsage.size();
 		this.driversInPseudoSim = driverId2pseudoSimUsage.size();

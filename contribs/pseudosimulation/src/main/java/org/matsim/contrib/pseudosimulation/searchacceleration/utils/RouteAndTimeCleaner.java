@@ -19,17 +19,24 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration.utils;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.population.io.PopulationWriter;
 import org.matsim.core.scenario.ScenarioUtils;
+
+import floetteroed.utilities.FractionalIterable;
 
 /**
  *
@@ -58,91 +65,82 @@ public class RouteAndTimeCleaner {
 		}
 	}
 
-	public static void removeTimeAndRoute(final Scenario scenario) {
-
-		PlansConfigGroup plansConfigGroup = scenario.getConfig().plans();
-
-		PlansConfigGroup.ActivityDurationInterpretation actDurInterp = plansConfigGroup
-				.getActivityDurationInterpretation();
-
+	public static void removeTimeAndRoute(final Scenario scenario, final boolean removeTime,
+			final boolean removeRoute) {
 		for (Person person : scenario.getPopulation().getPersons().values()) {
-
 			Plan plan = person.getSelectedPlan();
-
 			for (PlanElement pe : plan.getPlanElements()) {
 				if (pe instanceof Activity) {
 					Activity act = (Activity) pe;
-
-					act.setStartTime(randomTime_s());
-					act.setMaximumDuration(randomTime_s());
-					act.setEndTime(randomTime_s());
-
-					// act.setStartTime(Time.getUndefinedTime());
-					// act.setMaximumDuration(Time.getUndefinedTime());
-					// act.setEndTime(Time.getUndefinedTime());
-
-					// if (actDurInterp ==
-					// PlansConfigGroup.ActivityDurationInterpretation.minOfDurationAndEndTime) {
-					//
-					// // person stays at the activity either until its duration is over or until
-					// its
-					// // end time, whatever comes first
-					// // do nothing
-					//
-					// } else if (actDurInterp ==
-					// PlansConfigGroup.ActivityDurationInterpretation.endTimeOnly) {
-					//
-					// // always set duration to undefined:
-					// act.setMaximumDuration(Time.UNDEFINED_TIME);
-					//
-					// } else if (actDurInterp ==
-					// PlansConfigGroup.ActivityDurationInterpretation.tryEndTimeThenDuration) {
-					//
-					// // set duration to undefined if there is an activity end time:
-					// if (act.getEndTime() != Time.UNDEFINED_TIME) {
-					// act.setMaximumDuration(Time.UNDEFINED_TIME);
-					// }
-					//
-					// } else {
-					// throw new IllegalStateException("should not happen");
-					// }
-					//
-					// if (plansConfigGroup.isRemovingUnneccessaryPlanAttributes()) {
-					//
-					// }
-
+					if (removeTime) {
+						act.setStartTime(randomTime_s());
+						act.setMaximumDuration(randomTime_s());
+						act.setEndTime(randomTime_s());
+					}
 				} else if (pe instanceof Leg) {
 					Leg leg = (Leg) pe;
-
-					leg.setDepartureTime(randomTime_s());
-					leg.setTravelTime(randomTime_s());
-					leg.setRoute(null);
-
-					// if (plansConfigGroup.isRemovingUnneccessaryPlanAttributes()) {
-					// leg.setDepartureTime(Time.UNDEFINED_TIME);
-					// Leg r = (leg); // given by activity end time; everything else confuses
-					// r.setTravelTime(Time.UNDEFINED_TIME - r.getDepartureTime());
-					// leg.setTravelTime(Time.UNDEFINED_TIME); // added apr'2015
-					// }
+					if (removeTime) {
+						leg.setDepartureTime(randomTime_s());
+						leg.setTravelTime(randomTime_s());
+					}
+					if (removeRoute) {
+						leg.setRoute(null);
+					}
 				}
 			}
 		}
 	}
 
+	static void keepOnlyCarUsers(Population pop) {
+
+		Set<Id<Person>> noCarUsersIds = new LinkedHashSet<>(pop.getPersons().keySet());
+		for (Person person : pop.getPersons().values()) {
+			final Plan plan = person.getSelectedPlan();
+			for (PlanElement pe : plan.getPlanElements()) {
+				if (pe instanceof Leg) {
+					Leg leg = (Leg) pe;
+					if ("car".equals(leg.getMode())) {
+						noCarUsersIds.remove(person.getId());
+					}
+				}
+			}
+		}
+
+		for (Id<Person> nonCarUserId : noCarUsersIds) {
+			pop.getPersons().remove(nonCarUserId);
+		}
+	}
+
+	static void keepOnlyFraction(Population pop, final double frac) {
+
+		final Set<Id<Person>> idsToRemove = new LinkedHashSet<>();
+		for (Id<Person> removePersonId : new FractionalIterable<>(pop.getPersons().keySet(), 1.0 - frac)) {
+			idsToRemove.add(removePersonId);
+		}
+
+		for (Id<Person> removeId : idsToRemove) {
+			pop.getPersons().remove(removeId);
+		}
+	}
+
 	public static void main(String[] args) {
-		//
-		// System.out.println("exiting");
-		// System.exit(0);
+
+		System.out.println("exiting");
+		System.exit(0);
 
 		String path = "/Users/GunnarF/NoBackup/data-workspace/searchacceleration" + "/rerun-2015-11-23a_No_Toll_large/";
 		Config config = ConfigUtils.loadConfig(path + "matsim-config.xml");
+		config.plans().setInputFile(path + "400.plans.xml.gz");
 
 		Scenario scenario = ScenarioUtils.loadScenario(config);
 
 		keepOnlySelected(scenario);
+		keepOnlyFraction(scenario.getPopulation(), 0.2); // from 5 to 1 percent
+		keepOnlyCarUsers(scenario.getPopulation()); // of the maintained fraction!
+		removeTimeAndRoute(scenario, false, true);
 
 		PopulationWriter writer = new PopulationWriter(scenario.getPopulation());
-		writer.write(path + "selected-converged-plans.xml");
+		writer.write(path + "initial-plans.1pct.with-time.xml");
 	}
 
 }
