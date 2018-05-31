@@ -22,6 +22,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -206,11 +207,11 @@ public class SearchAccelerator
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
 
-		for (Person person : this.services.getScenario().getPopulation().getPersons().values()) {
-			if (person.getPlans().size() > 1) {
-				throw new RuntimeException("person " + person.getId() + " has " + person.getPlans().size() + " plans");
-			}
-		}
+//		for (Person person : this.services.getScenario().getPopulation().getPersons().values()) {
+//			if (person.getPlans().size() > 1) {
+//				throw new RuntimeException("person " + person.getId() + " has " + person.getPlans().size() + " plans");
+//			}
+//		}
 
 		if (this.mobsimSwitcher.isQSimIteration()) {
 			this.log("physical mobsim run in iteration " + event.getIteration() + " ends");
@@ -230,7 +231,19 @@ public class SearchAccelerator
 
 		if (this.pseudoSimIterationCnt == (ConfigUtils.addOrGetModule(this.services.getConfig(), PSimConfigGroup.class)
 				.getIterationsPerCycle() - 1)) {
-			// "n iterations per cycle" comprises on physical mobsim run, so n-1 psim runs.
+
+			/*
+			 * Extract, for each agent, the expected (hypothetical) score change.
+			 */
+			double deltaScoreTotal = 0.0;
+			final Map<Id<Person>, Double> personId2deltaScore = new LinkedHashMap<>();
+			for (Person person : this.services.getScenario().getPopulation().getPersons().values()) {
+				final double oldScore = this.lastPhysicalPopulationState.getSelectedPlan(person.getId()).getScore();
+				final double newScore = person.getSelectedPlan().getScore();
+				final double deltaScore = newScore - oldScore;
+				personId2deltaScore.put(person.getId(), deltaScore);
+				deltaScoreTotal += deltaScore;
+			}
 
 			/*
 			 * Extract hypothetical selected plans.
@@ -284,7 +297,8 @@ public class SearchAccelerator
 			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters,
 					this.timeDiscr, event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
 					this.services.getScenario().getPopulation(), this.services.getLinkTravelTimes(), ConfigUtils
-							.addOrGetModule(this.services.getConfig(), AccelerationConfigGroup.class).getAccelerate());
+							.addOrGetModule(this.services.getConfig(), AccelerationConfigGroup.class).getAccelerate(),
+					personId2deltaScore, deltaScoreTotal);
 			this.replanners = replannerIdentifier.drawReplanners();
 
 			final List<Double> bootstrap;

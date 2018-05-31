@@ -75,18 +75,25 @@ class ReplannerIdentifier {
 
 	private final int numberOfRelevantLinkTimeSlots;
 
+	private final Map<Id<Person>, Double> personId2deltaScore;
+	private final double deltaScoreTotal;
+	
 	// -------------------- CONSTRUCTION --------------------
 
 	ReplannerIdentifier(final ReplanningParameterContainer replanningParameters,
 			final TimeDiscretization timeDiscretization, final int iteration,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalLinkUsage,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pSimLinkUsage, final Population population,
-			final TravelTime travelTimes, final boolean accelerate) {
+			final TravelTime travelTimes, final boolean accelerate, final Map<Id<Person>, Double> personId2deltaScore,
+			final double deltaScoreTotal) {
 
 		this.replanningParameters = replanningParameters;
 		this.meanLambda = replanningParameters.getMeanLambda(iteration);
 		this.travelTimes = travelTimes;
 		this.accelerate = accelerate;
+		
+		this.personId2deltaScore = personId2deltaScore;
+		this.deltaScoreTotal = deltaScoreTotal;
 
 		this.driverId2physicalLinkUsage = driverId2physicalLinkUsage;
 		this.driverId2pSimLinkUsage = driverId2pSimLinkUsage;
@@ -120,14 +127,18 @@ class ReplannerIdentifier {
 		this.sumOfWeightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(this.currentWeightedCounts,
 				this.upcomingWeightedCounts);
 		this.delta = replanningParameters.getDelta(iteration, this.sumOfWeightedCountDifferences2);
-		this.w = this.meanLambda / (1.0 - this.meanLambda) * (this.sumOfWeightedCountDifferences2 + this.delta);
-		
+
+		this.w = 2.0 * this.meanLambda * (this.sumOfWeightedCountDifferences2 + this.delta) / deltaScoreTotal;
+
 		// >>> only for logging >>>
-		
-		DynamicData<Id<Link>> currentUnweightedCounts = CountIndicatorUtils.newUnweightedCounts(timeDiscretization, driverId2physicalLinkUsage.values());
-		DynamicData<Id<Link>> upcomingUnweightedCounts = CountIndicatorUtils.newUnweightedCounts(timeDiscretization, driverId2pSimLinkUsage.values());
-		this.sumOfUnweightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(currentUnweightedCounts, upcomingUnweightedCounts);
-		
+
+		DynamicData<Id<Link>> currentUnweightedCounts = CountIndicatorUtils.newUnweightedCounts(timeDiscretization,
+				driverId2physicalLinkUsage.values());
+		DynamicData<Id<Link>> upcomingUnweightedCounts = CountIndicatorUtils.newUnweightedCounts(timeDiscretization,
+				driverId2pSimLinkUsage.values());
+		this.sumOfUnweightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(currentUnweightedCounts,
+				upcomingUnweightedCounts);
+
 		// <<< only for logging <<<
 	}
 
@@ -137,6 +148,8 @@ class ReplannerIdentifier {
 		this.delta = parent.delta;
 		this.travelTimes = parent.travelTimes;
 		this.accelerate = parent.accelerate;
+		this.deltaScoreTotal = parent.deltaScoreTotal;
+		this.personId2deltaScore = parent.personId2deltaScore;
 
 		this.driverId2physicalLinkUsage = parent.driverId2physicalLinkUsage;
 		this.driverId2pSimLinkUsage = parent.driverId2pSimLinkUsage;
@@ -150,7 +163,7 @@ class ReplannerIdentifier {
 		// this.sumOfCurrentWeightedCounts2 = parent.sumOfCurrentWeightedCounts2;
 		this.sumOfWeightedCountDifferences2 = parent.sumOfWeightedCountDifferences2;
 		this.w = parent.w;
-		
+
 		this.sumOfUnweightedCountDifferences2 = parent.sumOfUnweightedCountDifferences2;
 	}
 
@@ -179,31 +192,32 @@ class ReplannerIdentifier {
 	public Double getSumOfWeightedCountDifferences2() {
 		return this.sumOfWeightedCountDifferences2;
 	}
-	
+
 	public Double getSumOfUnweightedCountDifferences2() {
 		return this.sumOfUnweightedCountDifferences2;
 	}
-	
+
 	Set<Id<Person>> drawReplanners() {
 
 		// Initialize score residuals.
 
 		final DynamicData<Id<Link>> interactionResiduals = CountIndicatorUtils
 				.newWeightedDifference(this.upcomingWeightedCounts, this.currentWeightedCounts, this.meanLambda);
-
-		final DynamicData<Id<Link>> inertiaResiduals = new DynamicData<>(this.currentWeightedCounts.getStartTime_s(),
-				this.currentWeightedCounts.getBinSize_s(), this.currentWeightedCounts.getBinCnt());
-		final DynamicData<Id<Link>> regularizationResiduals = new DynamicData<>(
-				this.currentWeightedCounts.getStartTime_s(), this.currentWeightedCounts.getBinSize_s(),
-				this.currentWeightedCounts.getBinCnt());
-		for (Id<Link> locObj : this.currentWeightedCounts.keySet()) {
-			for (int bin = 0; bin < this.currentWeightedCounts.getBinCnt(); bin++) {
-				inertiaResiduals.put(locObj, bin,
-						(1.0 - this.meanLambda) * this.currentWeightedCounts.getBinValue(locObj, bin));
-				regularizationResiduals.put(locObj, bin,
-						this.meanLambda * this.currentWeightedCounts.getBinValue(locObj, bin));
-			}
-		}
+		double regularizationResidual = this.meanLambda * deltaScoreTotal;
+		
+//		final DynamicData<Id<Link>> inertiaResiduals = new DynamicData<>(this.currentWeightedCounts.getStartTime_s(),
+//				this.currentWeightedCounts.getBinSize_s(), this.currentWeightedCounts.getBinCnt());
+//		final DynamicData<Id<Link>> regularizationResiduals = new DynamicData<>(
+//				this.currentWeightedCounts.getStartTime_s(), this.currentWeightedCounts.getBinSize_s(),
+//				this.currentWeightedCounts.getBinCnt());
+//		for (Id<Link> locObj : this.currentWeightedCounts.keySet()) {
+//			for (int bin = 0; bin < this.currentWeightedCounts.getBinCnt(); bin++) {
+////				inertiaResiduals.put(locObj, bin,
+////						(1.0 - this.meanLambda) * this.currentWeightedCounts.getBinValue(locObj, bin));
+//				regularizationResiduals.put(locObj, bin,
+//						this.meanLambda * this.currentWeightedCounts.getBinValue(locObj, bin));
+//			}
+//		}
 
 		// Go through all vehicles and decide which driver gets to re-plan.
 
@@ -220,7 +234,9 @@ class ReplannerIdentifier {
 
 			if (!this.accelerate) {
 
-				replanners.add(driverId);
+				if (MatsimRandom.getRandom().nextDouble() < this.meanLambda) {
+					replanners.add(driverId);	
+				}				
 
 			} else {
 
@@ -229,9 +245,9 @@ class ReplannerIdentifier {
 				final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(
 						this.driverId2physicalLinkUsage.get(driverId), this.driverId2pSimLinkUsage.get(driverId),
 						this.meanLambda, this.currentWeightedCounts, this.w, this.delta, interactionResiduals,
-						inertiaResiduals, regularizationResiduals, this.replanningParameters,
+						regularizationResidual, this.replanningParameters,
 						// this.currentTotalCounts,
-						this.travelTimes, this.numberOfRelevantLinkTimeSlots);
+						this.travelTimes, this.personId2deltaScore.get(driverId), this.deltaScoreTotal);
 
 				// this.log(" scoreChange if one = " + (totalScoreChange +
 				// scoreUpdater.getScoreChangeIfOne()));
@@ -267,6 +283,7 @@ class ReplannerIdentifier {
 				}
 
 				scoreUpdater.updateResiduals(newLambda); // by reference
+				regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();
 			}
 		}
 		this.shareOfDetScoreImprovingReplanners = ((double) scoreImprovingReplanners) / allPersonIdsShuffled.size();

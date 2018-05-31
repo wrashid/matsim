@@ -68,20 +68,27 @@ public class RouteAndTimeCleaner {
 	public static void removeTimeAndRoute(final Scenario scenario, final boolean removeTime,
 			final boolean removeRoute) {
 		for (Person person : scenario.getPopulation().getPersons().values()) {
+			
 			Plan plan = person.getSelectedPlan();
+
+			final int actCnt = (plan.getPlanElements().size() + 1) / 2;
+			double actLength_s = 3600 * 24 / actCnt;
+			double nextActStartTime_s = 0;
+			
 			for (PlanElement pe : plan.getPlanElements()) {
 				if (pe instanceof Activity) {
 					Activity act = (Activity) pe;
 					if (removeTime) {
-						act.setStartTime(randomTime_s());
-						act.setMaximumDuration(randomTime_s());
-						act.setEndTime(randomTime_s());
+						act.setStartTime(nextActStartTime_s);
+						act.setMaximumDuration(actLength_s);
+						nextActStartTime_s += actLength_s;
+						act.setEndTime(nextActStartTime_s);
 					}
 				} else if (pe instanceof Leg) {
 					Leg leg = (Leg) pe;
 					if (removeTime) {
-						leg.setDepartureTime(randomTime_s());
-						leg.setTravelTime(randomTime_s());
+						leg.setDepartureTime(nextActStartTime_s);
+						leg.setTravelTime(0);
 					}
 					if (removeRoute) {
 						leg.setRoute(null);
@@ -137,10 +144,10 @@ public class RouteAndTimeCleaner {
 		keepOnlySelected(scenario);
 		keepOnlyFraction(scenario.getPopulation(), 0.2); // from 5 to 1 percent
 		keepOnlyCarUsers(scenario.getPopulation()); // of the maintained fraction!
-		removeTimeAndRoute(scenario, false, true);
+		removeTimeAndRoute(scenario, true, true);
 
 		PopulationWriter writer = new PopulationWriter(scenario.getPopulation());
-		writer.write(path + "initial-plans.1pct.with-time.xml");
+		writer.write(path + "initial-plans.1pct.xml");
 	}
 
 }
