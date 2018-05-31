@@ -82,6 +82,10 @@ public class AccelerationAnalyzer {
 
 	private Double expectedUniformSamplingObjectiveFunctionValue = null;
 
+	private Double sumOfWeightedCountDifferences2 = null;
+
+	private Double sumOfUnweightedCountDifferences2 = null;
+
 	// -------------------- CONSTRUCTION --------------------
 
 	AccelerationAnalyzer(final ReplanningParameterContainer replParams, final TimeDiscretization timeDiscr) {
@@ -157,6 +161,15 @@ public class AccelerationAnalyzer {
 	public Double getExpectedUniformSamplingObjectiveFunctionValue() {
 		return this.expectedUniformSamplingObjectiveFunctionValue;
 	}
+	
+	public Double getSumOfWeightedCountDifferences2() {
+		return this.sumOfWeightedCountDifferences2;
+	}
+	
+	public Double getSumOfUnweightedCountDifferences2() {
+		return this.sumOfUnweightedCountDifferences2;
+	}
+
 
 	// -------------------- IMPLEMENTATION --------------------
 
@@ -166,7 +179,7 @@ public class AccelerationAnalyzer {
 			final Set<Id<Person>> replannerIds, final int iteration, final List<Double> bootstrap,
 			final Double uniformReplanningObjectiveFunctionValue, final Double shareOfScoreImprovingReplanners,
 			final Double finalObjectiveFunctionValue, final Double uniformityExcess, final TravelTime travelTimes,
-			final Double expectedUniformSamplingObjectiveFunctionValue) {
+			final Double expectedUniformSamplingObjectiveFunctionValue, final Double sumOfWeightedCountDifferences2, final Double sumOfUnweightedCountDifferences2) {
 
 		this.bootstrap = bootstrap;
 		this.uniformReplanningObjectiveFunctionValue = uniformReplanningObjectiveFunctionValue;
@@ -175,6 +188,9 @@ public class AccelerationAnalyzer {
 		this.uniformityExcess = uniformityExcess;
 		this.expectedUniformSamplingObjectiveFunctionValue = expectedUniformSamplingObjectiveFunctionValue;
 
+		this.sumOfWeightedCountDifferences2 = sumOfWeightedCountDifferences2;
+		this.sumOfUnweightedCountDifferences2 = sumOfUnweightedCountDifferences2;
+		
 		this.driversInPhysicalSim = driverId2physicalSimUsage.size();
 		this.driversInPseudoSim = driverId2pseudoSimUsage.size();
 

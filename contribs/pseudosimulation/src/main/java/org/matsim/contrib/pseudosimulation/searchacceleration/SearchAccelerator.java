@@ -56,6 +56,8 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareNever
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareScoreImprovingReplanners;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformReplanningObjectiveFunctionValue;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformityExcess;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UnweightedCountDifferences2;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.WeightedCountDifferences2;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
@@ -168,6 +170,8 @@ public class SearchAccelerator
 		this.statsWriter.addSearchStatistic(new FinalObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new ShareScoreImprovingReplanners());
 		this.statsWriter.addSearchStatistic(new UniformityExcess());
+		this.statsWriter.addSearchStatistic(new UnweightedCountDifferences2());
+		this.statsWriter.addSearchStatistic(new WeightedCountDifferences2());
 		this.statsWriter.addSearchStatistic(new ReplanningBootstrap());
 	}
 
@@ -202,6 +206,12 @@ public class SearchAccelerator
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
 
+		for (Person person : this.services.getScenario().getPopulation().getPersons().values()) {
+			if (person.getPlans().size() > 1) {
+				throw new RuntimeException("person " + person.getId() + " has " + person.getPlans().size() + " plans");
+			}
+		}
+
 		if (this.mobsimSwitcher.isQSimIteration()) {
 			this.log("physical mobsim run in iteration " + event.getIteration() + " ends");
 			if (!this.nextMobsimIsExpectedToBePhysical) {
@@ -219,7 +229,7 @@ public class SearchAccelerator
 		}
 
 		if (this.pseudoSimIterationCnt == (ConfigUtils.addOrGetModule(this.services.getConfig(), PSimConfigGroup.class)
-				.getIterationsPerCycle() - 1)) { 
+				.getIterationsPerCycle() - 1)) {
 			// "n iterations per cycle" comprises on physical mobsim run, so n-1 psim runs.
 
 			/*
@@ -290,7 +300,9 @@ public class SearchAccelerator
 					replannerIdentifier.getShareOfScoreImprovingReplanners(),
 					replannerIdentifier.getFinalObjectiveFunctionValue(), replannerIdentifier.getUniformityExcess(),
 					this.services.getLinkTravelTimes(),
-					replannerIdentifier.getExpectedUniformSamplingObjectiveFunctionValue());
+					replannerIdentifier.getExpectedUniformSamplingObjectiveFunctionValue(),
+					replannerIdentifier.getSumOfWeightedCountDifferences2(),
+					replannerIdentifier.getSumOfUnweightedCountDifferences2());
 
 			this.statsWriter.writeToFile(this.analyzer);
 

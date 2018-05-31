@@ -21,6 +21,9 @@
 
 package org.matsim.contrib.pseudosimulation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.eventsBasedPTRouter.TransitRouterEventsWSFactory;
 import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTime;
@@ -37,7 +40,7 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedRepl
 import org.matsim.contrib.pseudosimulation.searchacceleration.ConstantReplanningParameters;
 import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
 import org.matsim.contrib.pseudosimulation.searchacceleration.SearchAccelerator;
-import org.matsim.contrib.pseudosimulation.searchacceleration.SearchAcceleratorModule;
+import org.matsim.contrib.pseudosimulation.searchacceleration.utils.RemoveAllButSelectedPlan;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimWaitTimeCalculator;
@@ -45,7 +48,6 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
-import org.matsim.core.controler.MatsimServices;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -62,7 +64,7 @@ import floetteroed.utilities.TimeDiscretization;
  * 
  */
 public class RunPSim_NEW {
-	
+
 	private Config config;
 	private Scenario scenario;
 	private TransitPerformanceRecorder transitPerformanceRecorder;
@@ -71,11 +73,13 @@ public class RunPSim_NEW {
 	private PlanCatcher plancatcher;
 	private PSimProvider pSimProvider;
 
+	private List<AbstractModule> overridingModules = new ArrayList<>();
+
 	public RunPSim_NEW(final Config config, final PSimConfigGroup pSimConfigGroup,
 			final AccelerationConfigGroup accelerationConfigGroup) {
 
 		// pSim.
-		
+
 		this.config = config;
 		this.scenario = ScenarioUtils.loadScenario(config);
 
@@ -107,17 +111,17 @@ public class RunPSim_NEW {
 				bind(PlanCatcher.class).toInstance(new PlanCatcher());
 				bind(PSimProvider.class).toInstance(new PSimProvider(scenario, matsimControler.getEvents()));
 			}
-		});		
-		
+		});
+
 		if (config.transit().isUseTransit()) {
 			if (pSimConfigGroup.isFullTransitPerformanceTransmission()) {
 				transitPerformanceRecorder = new TransitPerformanceRecorder(matsimControler.getScenario(),
 						matsimControler.getEvents(), mobSimSwitcher);
 			}
 		}
-		
+
 		// Re-planner selection.
-		
+
 		final TimeDiscretization timeDiscr = accelerationConfigGroup.getTimeDiscretization();
 		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(
 				accelerationConfigGroup, this.scenario.getNetwork());
@@ -136,6 +140,11 @@ public class RunPSim_NEW {
 	}
 
 	public void run() {
+		
+		for (AbstractModule module : this.overridingModules) {
+			this.matsimControler.addOverridingModule(module);
+		}
+
 		this.matsimControler.run();
 	}
 
@@ -171,6 +180,16 @@ public class RunPSim_NEW {
 				AccelerationConfigGroup.class);
 
 		final RunPSim_NEW pSim = new RunPSim_NEW(config, pSimConfigGroup, accelerationConfigGroup);
+
+		// the following for best response
+		final RemoveAllButSelectedPlan br = new RemoveAllButSelectedPlan();
+		pSim.overridingModules.add(new AbstractModule() {
+			@Override
+			public void install() {
+				this.addControlerListenerBinding().toInstance(br);
+			}
+		});
+
 		pSim.run();
 	}
 }

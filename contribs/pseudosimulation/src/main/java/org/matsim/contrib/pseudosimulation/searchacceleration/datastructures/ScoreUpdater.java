@@ -56,7 +56,7 @@ public class ScoreUpdater<L> {
 
 	private final DynamicData<L> inertiaResiduals;
 
-	private double regularizationResidual;
+	private final DynamicData<L> regularizationResiduals;
 
 	private final double scoreChangeIfZero;
 
@@ -67,16 +67,15 @@ public class ScoreUpdater<L> {
 	// -------------------- CONSTRUCTION --------------------
 
 	public ScoreUpdater(final SpaceTimeIndicators<L> currentIndicators, final SpaceTimeIndicators<L> upcomingIndicators,
-			final double meanLambda, final DynamicData<L> currentWeightedTotalCounts,
-			final double sumOfCurrentWeightedTotalCounts2, final double w, final double delta,
-			final DynamicData<L> interactionResiduals, final DynamicData<L> inertiaResiduals,
-			final double regularizationResidual, final ReplanningParameterContainer replParams,
-			final TravelTime travelTimes) {
+			final double meanLambda, final DynamicData<L> currentWeightedTotalCounts, final double w,
+			final double delta, final DynamicData<L> interactionResiduals, final DynamicData<L> inertiaResiduals,
+			final DynamicData<L> regularizationResiduals, final ReplanningParameterContainer replParams,
+			final TravelTime travelTimes, final double numberOfRelevantLinkTimeSlots) {
 
 		this.currentWeightedTotalCounts = currentWeightedTotalCounts;
 		this.interactionResiduals = interactionResiduals;
 		this.inertiaResiduals = inertiaResiduals;
-		this.regularizationResidual = regularizationResidual;
+		this.regularizationResiduals = regularizationResiduals;
 
 		/*
 		 * One has to go beyond 0/1 indicator arithmetics in the following because the
@@ -101,8 +100,7 @@ public class ScoreUpdater<L> {
 			final Integer timeBin = entry.getKey().getB();
 			final double weightedCurrentIndividualCount = entry.getValue();
 			this.inertiaResiduals.add(spaceObj, timeBin, -(1.0 - meanLambda) * weightedCurrentIndividualCount);
-			this.regularizationResidual -= meanLambda * this.currentWeightedTotalCounts.getBinValue(spaceObj, timeBin)
-					* weightedCurrentIndividualCount;
+			this.regularizationResiduals.add(spaceObj, timeBin, -meanLambda * weightedCurrentIndividualCount);
 		}
 
 		// Compute individual score terms.
@@ -119,37 +117,52 @@ public class ScoreUpdater<L> {
 					* this.interactionResiduals.getBinValue(spaceObj, timeBin);
 		}
 
-		double sumOfWeightedCurrentIndividualCounts2 = 0.0;
-		double sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts = 0.0;
-		double sumOfWeightedCurrentIndividualCountsTimesInertiaResiduals = 0.0;
+		double sumOfLinkShares2 = 0;
+		double sumOfWeightedCurrentIndividualCountsTimesInertiaResidualsOverWeightedSquareCounts = 0;
+		double sumOfWeightedCurrentIndividualCountsTimesRegularizationResidualsOverWeigthedSquareCounts = 0;
+		// double sumOfWeightedCurrentIndividualCounts2 = 0.0;
+		// double sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts =
+		// 0.0;
+		// double sumOfWeightedCurrentIndividualCountsTimesInertiaResiduals = 0.0;
 
 		for (Map.Entry<Tuple<L, Integer>, Double> entry : this.currentIndividualWeightedCounts.entriesView()) {
 			final L spaceObj = entry.getKey().getA();
 			final Integer timeBin = entry.getKey().getB();
 			final double weightedCurrentIndividualCount = entry.getValue();
-			sumOfWeightedCurrentIndividualCounts2 += weightedCurrentIndividualCount * weightedCurrentIndividualCount;
-			sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts += weightedCurrentIndividualCount
-					* this.currentWeightedTotalCounts.getBinValue(spaceObj, timeBin);
-			sumOfWeightedCurrentIndividualCountsTimesInertiaResiduals += weightedCurrentIndividualCount
-					* this.inertiaResiduals.getBinValue(spaceObj, timeBin);
+			// sumOfWeightedCurrentIndividualCounts2 += weightedCurrentIndividualCount *
+			// weightedCurrentIndividualCount;
+			// sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts +=
+			// weightedCurrentIndividualCount
+			// * this.currentWeightedTotalCounts.getBinValue(spaceObj, timeBin);
+			// sumOfWeightedCurrentIndividualCountsTimesInertiaResiduals +=
+			// weightedCurrentIndividualCount
+			// * this.inertiaResiduals.getBinValue(spaceObj, timeBin);
+			final double weightedCurrentTotalCount = this.currentWeightedTotalCounts.getBinValue(spaceObj, timeBin);
+			if (weightedCurrentTotalCount > 1e-6) {
+				sumOfLinkShares2 += Math.pow(weightedCurrentIndividualCount / weightedCurrentTotalCount, 2.0);
+				sumOfWeightedCurrentIndividualCountsTimesInertiaResidualsOverWeightedSquareCounts += weightedCurrentIndividualCount
+						* this.inertiaResiduals.getBinValue(spaceObj, timeBin) / weightedCurrentTotalCount
+						/ weightedCurrentTotalCount;
+				sumOfWeightedCurrentIndividualCountsTimesRegularizationResidualsOverWeigthedSquareCounts += weightedCurrentIndividualCount
+						* this.regularizationResiduals.getBinValue(spaceObj, timeBin) / weightedCurrentTotalCount
+						/ weightedCurrentTotalCount;
+			}
 		}
 
 		// Compose the actual score change.
 
-		this.factor1 = (sumOfWeightedIndividualChanges2 + w * sumOfWeightedCurrentIndividualCounts2
-				+ delta * (sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts
-						* sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts)
-						/ (sumOfCurrentWeightedTotalCounts2 * sumOfCurrentWeightedTotalCounts2));
-
-		this.factor2 = 2.0 * (sumOfWeightedIndividualChangesTimesInteractionResiduals - w
-				* (sumOfWeightedCurrentIndividualCounts2 + sumOfWeightedCurrentIndividualCountsTimesInertiaResiduals)
-				+ delta * this.regularizationResidual
-						* sumOfWeightedCurrentIndividualCountsTimesWeightedCurrentTotalCounts
-						/ (sumOfCurrentWeightedTotalCounts2 * sumOfCurrentWeightedTotalCounts2));
+		this.factor1 = sumOfWeightedIndividualChanges2 + w / numberOfRelevantLinkTimeSlots * sumOfLinkShares2
+				+ delta / numberOfRelevantLinkTimeSlots * sumOfLinkShares2;
+		this.factor2 = 2.0 * (sumOfWeightedIndividualChangesTimesInteractionResiduals
+				- w / numberOfRelevantLinkTimeSlots
+						* (sumOfLinkShares2
+								+ sumOfWeightedCurrentIndividualCountsTimesInertiaResidualsOverWeightedSquareCounts)
+				+ delta / numberOfRelevantLinkTimeSlots
+						* sumOfWeightedCurrentIndividualCountsTimesRegularizationResidualsOverWeigthedSquareCounts);
 		this.meanLambda = meanLambda;
 
-		this.scoreChangeIfOne = (1.0 - meanLambda * meanLambda) * factor1 + (1.0 - meanLambda) * factor2;
-		this.scoreChangeIfZero = (0.0 - meanLambda * meanLambda) * factor1 + (0.0 - meanLambda) * factor2;
+		this.scoreChangeIfOne = (1.0 - meanLambda * meanLambda) * this.factor1 + (1.0 - meanLambda) * this.factor2;
+		this.scoreChangeIfZero = (0.0 - meanLambda * meanLambda) * this.factor1 + (0.0 - meanLambda) * this.factor2;
 	}
 
 	private final double factor1;
@@ -163,12 +176,12 @@ public class ScoreUpdater<L> {
 
 	// -------------------- GETTERS --------------------
 
-	public double getUpdatedRegularizationResidual() {
-		if (!this.residualsUpdated) {
-			throw new RuntimeException("Residuals have not yet updated.");
-		}
-		return this.regularizationResidual;
-	}
+	// public double getUpdatedRegularizationResidual() {
+	// if (!this.residualsUpdated) {
+	// throw new RuntimeException("Residuals have not yet updated.");
+	// }
+	// return this.regularizationResidual;
+	// }
 
 	public double getScoreChangeIfOne() {
 		return this.scoreChangeIfOne;
@@ -196,8 +209,7 @@ public class ScoreUpdater<L> {
 			final L spaceObj = entry.getKey().getA();
 			final int timeBin = entry.getKey().getB();
 			this.inertiaResiduals.add(spaceObj, timeBin, (1.0 - newLambda) * entry.getValue());
-			this.regularizationResidual += newLambda * this.currentWeightedTotalCounts.getBinValue(spaceObj, timeBin)
-					* entry.getValue();
+			this.regularizationResiduals.add(spaceObj, timeBin, newLambda * entry.getValue());
 		}
 	}
 }

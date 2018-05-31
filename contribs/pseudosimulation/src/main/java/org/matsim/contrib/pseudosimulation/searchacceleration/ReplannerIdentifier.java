@@ -63,15 +63,18 @@ class ReplannerIdentifier {
 	private final DynamicData<Id<Link>> currentWeightedCounts;
 	private final DynamicData<Id<Link>> upcomingWeightedCounts;
 
-	private final double sumOfCurrentWeightedCounts2;
+	// private final double sumOfCurrentWeightedCounts2;
 	private final double sumOfWeightedCountDifferences2;
+	private final double sumOfUnweightedCountDifferences2;
 	private final double w;
 
 	private Double shareOfDetScoreImprovingReplanners = null;
 	private Double shareOfExpScoreImprovingReplanners = null;
 	private Double finalObjectiveFunctionValue = null;
 	private Double expectedUniformSamplingObjectiveFunctionValue = null;
-	
+
+	private final int numberOfRelevantLinkTimeSlots;
+
 	// -------------------- CONSTRUCTION --------------------
 
 	ReplannerIdentifier(final ReplanningParameterContainer replanningParameters,
@@ -101,16 +104,31 @@ class ReplannerIdentifier {
 				// this.currentTotalCounts,
 				replanningParameters, travelTimes);
 
-		this.sumOfCurrentWeightedCounts2 = CountIndicatorUtils.sumOfEntries2(this.currentWeightedCounts);
-		if (this.sumOfCurrentWeightedCounts2 < 1e-6) {
+		// this.sumOfCurrentWeightedCounts2 =
+		// CountIndicatorUtils.sumOfEntries2(this.currentWeightedCounts);
+		// if (this.sumOfCurrentWeightedCounts2 < 1e-6) {
+		// throw new RuntimeException(
+		// "There is no (weighted) traffic on the network: " +
+		// this.sumOfCurrentWeightedCounts2);
+		// }
+		this.numberOfRelevantLinkTimeSlots = CountIndicatorUtils.count(this.currentWeightedCounts, 1e-6);
+		if (this.numberOfRelevantLinkTimeSlots == 0) {
 			throw new RuntimeException(
-					"There is no (weighted) traffic on the network: " + this.sumOfCurrentWeightedCounts2);
+					"Number of relant link/time slots in the network is " + this.numberOfRelevantLinkTimeSlots);
 		}
+
 		this.sumOfWeightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(this.currentWeightedCounts,
 				this.upcomingWeightedCounts);
 		this.delta = replanningParameters.getDelta(iteration, this.sumOfWeightedCountDifferences2);
-		this.w = this.meanLambda / (1.0 - this.meanLambda) * (this.sumOfWeightedCountDifferences2 + this.delta)
-				/ this.sumOfCurrentWeightedCounts2;
+		this.w = this.meanLambda / (1.0 - this.meanLambda) * (this.sumOfWeightedCountDifferences2 + this.delta);
+		
+		// >>> only for logging >>>
+		
+		DynamicData<Id<Link>> currentUnweightedCounts = CountIndicatorUtils.newUnweightedCounts(timeDiscretization, driverId2physicalLinkUsage.values());
+		DynamicData<Id<Link>> upcomingUnweightedCounts = CountIndicatorUtils.newUnweightedCounts(timeDiscretization, driverId2pSimLinkUsage.values());
+		this.sumOfUnweightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(currentUnweightedCounts, upcomingUnweightedCounts);
+		
+		// <<< only for logging <<<
 	}
 
 	ReplannerIdentifier(final ReplannerIdentifier parent) {
@@ -128,9 +146,12 @@ class ReplannerIdentifier {
 		this.currentWeightedCounts = parent.currentWeightedCounts;
 		this.upcomingWeightedCounts = parent.upcomingWeightedCounts;
 
-		this.sumOfCurrentWeightedCounts2 = parent.sumOfCurrentWeightedCounts2;
+		this.numberOfRelevantLinkTimeSlots = parent.numberOfRelevantLinkTimeSlots;
+		// this.sumOfCurrentWeightedCounts2 = parent.sumOfCurrentWeightedCounts2;
 		this.sumOfWeightedCountDifferences2 = parent.sumOfWeightedCountDifferences2;
 		this.w = parent.w;
+		
+		this.sumOfUnweightedCountDifferences2 = parent.sumOfUnweightedCountDifferences2;
 	}
 
 	// -------------------- IMPLEMENTATION --------------------
@@ -150,11 +171,19 @@ class ReplannerIdentifier {
 	public Double getFinalObjectiveFunctionValue() {
 		return this.finalObjectiveFunctionValue;
 	}
-	
+
 	public Double getExpectedUniformSamplingObjectiveFunctionValue() {
 		return this.expectedUniformSamplingObjectiveFunctionValue;
 	}
 
+	public Double getSumOfWeightedCountDifferences2() {
+		return this.sumOfWeightedCountDifferences2;
+	}
+	
+	public Double getSumOfUnweightedCountDifferences2() {
+		return this.sumOfUnweightedCountDifferences2;
+	}
+	
 	Set<Id<Person>> drawReplanners() {
 
 		// Initialize score residuals.
@@ -164,20 +193,24 @@ class ReplannerIdentifier {
 
 		final DynamicData<Id<Link>> inertiaResiduals = new DynamicData<>(this.currentWeightedCounts.getStartTime_s(),
 				this.currentWeightedCounts.getBinSize_s(), this.currentWeightedCounts.getBinCnt());
+		final DynamicData<Id<Link>> regularizationResiduals = new DynamicData<>(
+				this.currentWeightedCounts.getStartTime_s(), this.currentWeightedCounts.getBinSize_s(),
+				this.currentWeightedCounts.getBinCnt());
 		for (Id<Link> locObj : this.currentWeightedCounts.keySet()) {
 			for (int bin = 0; bin < this.currentWeightedCounts.getBinCnt(); bin++) {
 				inertiaResiduals.put(locObj, bin,
 						(1.0 - this.meanLambda) * this.currentWeightedCounts.getBinValue(locObj, bin));
+				regularizationResiduals.put(locObj, bin,
+						this.meanLambda * this.currentWeightedCounts.getBinValue(locObj, bin));
 			}
 		}
-		double regularizationResidual = this.meanLambda * this.sumOfCurrentWeightedCounts2;
 
 		// Go through all vehicles and decide which driver gets to re-plan.
 
 		final Set<Id<Person>> replanners = new LinkedHashSet<>();
 		double score = this.getUniformReplanningObjectiveFunctionValue();
 		this.expectedUniformSamplingObjectiveFunctionValue = this.getUniformReplanningObjectiveFunctionValue();
-		
+
 		final List<Id<Person>> allPersonIdsShuffled = new ArrayList<>(this.population.getPersons().keySet());
 		Collections.shuffle(allPersonIdsShuffled);
 
@@ -195,11 +228,10 @@ class ReplannerIdentifier {
 
 				final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(
 						this.driverId2physicalLinkUsage.get(driverId), this.driverId2pSimLinkUsage.get(driverId),
-						this.meanLambda, this.currentWeightedCounts, this.sumOfCurrentWeightedCounts2, this.w,
-						this.delta, interactionResiduals, inertiaResiduals, regularizationResidual,
-						this.replanningParameters,
+						this.meanLambda, this.currentWeightedCounts, this.w, this.delta, interactionResiduals,
+						inertiaResiduals, regularizationResiduals, this.replanningParameters,
 						// this.currentTotalCounts,
-						this.travelTimes);
+						this.travelTimes, this.numberOfRelevantLinkTimeSlots);
 
 				// this.log(" scoreChange if one = " + (totalScoreChange +
 				// scoreUpdater.getScoreChangeIfOne()));
@@ -208,10 +240,10 @@ class ReplannerIdentifier {
 
 				final double newLambda;
 
-				this.expectedUniformSamplingObjectiveFunctionValue +=
-						this.meanLambda * scoreUpdater.getScoreChangeIfOne()
-						+ (1.0 - this.meanLambda) * scoreUpdater.getScoreChangeIfZero(); 
-				
+				this.expectedUniformSamplingObjectiveFunctionValue += this.meanLambda
+						* scoreUpdater.getScoreChangeIfOne()
+						+ (1.0 - this.meanLambda) * scoreUpdater.getScoreChangeIfZero();
+
 				if (Math.min(scoreUpdater.getScoreChangeIfOne(), scoreUpdater.getScoreChangeIfZero()) < 0) {
 					if (scoreUpdater.getScoreChangeIfOne() < scoreUpdater.getScoreChangeIfZero()) {
 						newLambda = 1.0;
@@ -234,9 +266,7 @@ class ReplannerIdentifier {
 					}
 				}
 
-				scoreUpdater.updateResiduals(newLambda);
-				// Interaction- and inertiaResiduals are updated by reference.
-				regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();
+				scoreUpdater.updateResiduals(newLambda); // by reference
 			}
 		}
 		this.shareOfDetScoreImprovingReplanners = ((double) scoreImprovingReplanners) / allPersonIdsShuffled.size();
