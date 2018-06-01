@@ -194,6 +194,20 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		this.congestionProportionalWeighting = congestionProportionalWeighting;
 	}
 
+	// -------------------- randomizeIfNoImprovement --------------------
+
+	private boolean randomizeIfNoImprovement = false;
+
+	@StringGetter("randomizeIfNoImprovement")
+	public boolean getRandomizeIfNoImprovement() {
+		return this.randomizeIfNoImprovement;
+	}
+
+	@StringSetter("randomizeIfNoImprovement")
+	public void setRandomizeIfNoImprovement(final boolean randomizeIfNoImprovement) {
+		this.randomizeIfNoImprovement = randomizeIfNoImprovement;
+	}
+
 	// -------------------- CUSTOM STUFF --------------------
 
 	private TimeDiscretization myTimeDiscretization = null;

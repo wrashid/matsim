@@ -57,7 +57,6 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareNever
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareScoreImprovingReplanners;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformReplanningObjectiveFunctionValue;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformityExcess;
-import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UnweightedCountDifferences2;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.WeightedCountDifferences2;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.ConfigUtils;
@@ -171,7 +170,6 @@ public class SearchAccelerator
 		this.statsWriter.addSearchStatistic(new FinalObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new ShareScoreImprovingReplanners());
 		this.statsWriter.addSearchStatistic(new UniformityExcess());
-		this.statsWriter.addSearchStatistic(new UnweightedCountDifferences2());
 		this.statsWriter.addSearchStatistic(new WeightedCountDifferences2());
 		this.statsWriter.addSearchStatistic(new ReplanningBootstrap());
 	}
@@ -207,11 +205,13 @@ public class SearchAccelerator
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
 
-//		for (Person person : this.services.getScenario().getPopulation().getPersons().values()) {
-//			if (person.getPlans().size() > 1) {
-//				throw new RuntimeException("person " + person.getId() + " has " + person.getPlans().size() + " plans");
-//			}
-//		}
+		// for (Person person :
+		// this.services.getScenario().getPopulation().getPersons().values()) {
+		// if (person.getPlans().size() > 1) {
+		// throw new RuntimeException("person " + person.getId() + " has " +
+		// person.getPlans().size() + " plans");
+		// }
+		// }
 
 		if (this.mobsimSwitcher.isQSimIteration()) {
 			this.log("physical mobsim run in iteration " + event.getIteration() + " ends");
@@ -294,11 +294,14 @@ public class SearchAccelerator
 			 * 
 			 */
 
+			final AccelerationConfigGroup accConf = ConfigUtils.addOrGetModule(this.services.getConfig(),
+					AccelerationConfigGroup.class);
+
 			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters,
 					this.timeDiscr, event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
-					this.services.getScenario().getPopulation(), this.services.getLinkTravelTimes(), ConfigUtils
-							.addOrGetModule(this.services.getConfig(), AccelerationConfigGroup.class).getAccelerate(),
-					personId2deltaScore, deltaScoreTotal);
+					this.services.getScenario().getPopulation(), this.services.getLinkTravelTimes(),
+					accConf.getAccelerate(), personId2deltaScore, deltaScoreTotal,
+					accConf.getRandomizeIfNoImprovement());
 			this.replanners = replannerIdentifier.drawReplanners();
 
 			final List<Double> bootstrap;
@@ -315,8 +318,7 @@ public class SearchAccelerator
 					replannerIdentifier.getFinalObjectiveFunctionValue(), replannerIdentifier.getUniformityExcess(),
 					this.services.getLinkTravelTimes(),
 					replannerIdentifier.getExpectedUniformSamplingObjectiveFunctionValue(),
-					replannerIdentifier.getSumOfWeightedCountDifferences2(),
-					replannerIdentifier.getSumOfUnweightedCountDifferences2());
+					replannerIdentifier.getSumOfWeightedCountDifferences2());
 
 			this.statsWriter.writeToFile(this.analyzer);
 

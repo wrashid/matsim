@@ -38,18 +38,19 @@ public class CountIndicatorUtils {
 	private CountIndicatorUtils() {
 	}
 
-	public static <L> DynamicData<L> newUnweightedCounts(final TimeDiscretization timeDiscr,
-			final Collection<SpaceTimeIndicators<L>> allIndicators) {
-		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
-		for (SpaceTimeIndicators<L> indicators : allIndicators) {
-			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
-				for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
-					result.add(locObj, bin, 1.0);
-				}
-			}
-		}
-		return result;
-	}
+	// public static <L> DynamicData<L> newUnweightedCounts(final TimeDiscretization
+	// timeDiscr,
+	// final Collection<SpaceTimeIndicators<L>> allIndicators) {
+	// final DynamicData<L> result = new DynamicData<L>(timeDiscr);
+	// for (SpaceTimeIndicators<L> indicators : allIndicators) {
+	// for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
+	// for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
+	// result.add(locObj, bin, 1.0);
+	// }
+	// }
+	// }
+	// return result;
+	// }
 
 	public static <L> DynamicData<L> newWeightedCounts(final TimeDiscretization timeDiscr,
 			final Collection<SpaceTimeIndicators<L>> allIndicators, final ReplanningParameterContainer replParams,
@@ -76,17 +77,17 @@ public class CountIndicatorUtils {
 		return result;
 	}
 
-	public static <L> int count(final DynamicData<L> data, final double minVal) {
-		int result = 0;
-		for (L locObj : data.keySet()) {
-			for (int bin = 0; bin < data.getBinCnt(); bin++) {
-				if (data.getBinValue(locObj, bin) >= minVal) {
-					result++;
-				}
-			}
-		}
-		return result;
-	}
+	// public static <L> int count(final DynamicData<L> data, final double minVal) {
+	// int result = 0;
+	// for (L locObj : data.keySet()) {
+	// for (int bin = 0; bin < data.getBinCnt(); bin++) {
+	// if (data.getBinValue(locObj, bin) >= minVal) {
+	// result++;
+	// }
+	// }
+	// }
+	// return result;
+	// }
 
 	public static <L> double sumOfDifferences2(final DynamicData<L> counts1, final DynamicData<L> counts2) {
 		if (counts1.getBinCnt() != counts2.getBinCnt()) {

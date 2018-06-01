@@ -41,9 +41,6 @@ public class AccelerationAnalyzer {
 
 	// -------------------- MEMBERS --------------------
 
-	// private final String compareToUniformReplanningFileName =
-	// "acceleration_compare-to-uniform.csv";
-
 	private final ReplanningParameterContainer replParams;
 
 	private final TimeDiscretization timeDiscr;
@@ -84,20 +81,11 @@ public class AccelerationAnalyzer {
 
 	private Double sumOfWeightedCountDifferences2 = null;
 
-	private Double sumOfUnweightedCountDifferences2 = null;
-
 	// -------------------- CONSTRUCTION --------------------
 
 	AccelerationAnalyzer(final ReplanningParameterContainer replParams, final TimeDiscretization timeDiscr) {
 		this.replParams = replParams;
 		this.timeDiscr = timeDiscr;
-		// try {
-		// final Path path = Paths.get(this.compareToUniformReplanningFileName);
-		// Files.deleteIfExists(path);
-		// Files.createFile(path);
-		// } catch (IOException e) {
-		// throw new RuntimeException(e);
-		// }
 	}
 
 	// -------------------- TODO LOGGING GETTERS --------------------
@@ -166,11 +154,6 @@ public class AccelerationAnalyzer {
 		return this.sumOfWeightedCountDifferences2;
 	}
 	
-	public Double getSumOfUnweightedCountDifferences2() {
-		return this.sumOfUnweightedCountDifferences2;
-	}
-
-
 	// -------------------- IMPLEMENTATION --------------------
 
 	public void analyze(final Set<Id<Person>> allPersonIds,
@@ -179,7 +162,7 @@ public class AccelerationAnalyzer {
 			final Set<Id<Person>> replannerIds, final int iteration, final List<Double> bootstrap,
 			final Double uniformReplanningObjectiveFunctionValue, final Double shareOfScoreImprovingReplanners,
 			final Double finalObjectiveFunctionValue, final Double uniformityExcess, final TravelTime travelTimes,
-			final Double expectedUniformSamplingObjectiveFunctionValue, final Double sumOfWeightedCountDifferences2, final Double sumOfUnweightedCountDifferences2) {
+			final Double expectedUniformSamplingObjectiveFunctionValue, final Double sumOfWeightedCountDifferences2) {
 
 		this.bootstrap = bootstrap;
 		this.uniformReplanningObjectiveFunctionValue = uniformReplanningObjectiveFunctionValue;
@@ -189,7 +172,6 @@ public class AccelerationAnalyzer {
 		this.expectedUniformSamplingObjectiveFunctionValue = expectedUniformSamplingObjectiveFunctionValue;
 
 		this.sumOfWeightedCountDifferences2 = sumOfWeightedCountDifferences2;
-		this.sumOfUnweightedCountDifferences2 = sumOfUnweightedCountDifferences2;
 		
 		this.driversInPhysicalSim = driverId2physicalSimUsage.size();
 		this.driversInPseudoSim = driverId2pseudoSimUsage.size();
