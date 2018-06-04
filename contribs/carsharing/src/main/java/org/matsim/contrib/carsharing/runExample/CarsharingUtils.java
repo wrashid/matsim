@@ -43,7 +43,7 @@ public class CarsharingUtils {
 		CarsharingConfigGroup configGroupAll = new CarsharingConfigGroup();
 		config.addModule(configGroupAll);
 
-		config.addModule(new DvrpConfigGroup());
+		//config.addModule(new DvrpConfigGroup());
 		return config;
 
 	}
