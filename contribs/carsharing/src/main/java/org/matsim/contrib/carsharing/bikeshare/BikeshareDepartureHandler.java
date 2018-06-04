@@ -34,11 +34,16 @@ public class BikeshareDepartureHandler implements DepartureHandler {
 				final Leg accessLeg = (Leg) plan.getPlanElements().get(planElementsIndex);
 				final Leg leg = (Leg) plan.getPlanElements().get(planElementsIndex + 1);
 				final Leg egressLeg = (Leg) plan.getPlanElements().get(planElementsIndex + 2);
-				Id<Vehicle> bikeId = bikeFleet.getAndRemoveClosest(link.getCoord());
+				Id<Vehicle> bikeId = bikeFleet.getAndRemoveClosest(link.getCoord(), agent.getId());
+				if (bikeId == null)
+					agent.setStateToAbort(now);
 				Coord bikeCoord = this.bikeFleet.getBikeCoordMap().get(bikeId);
 				accessLeg.setTravelTime(10.0);
+				accessLeg.getRoute().setTravelTime(10.0);
 				leg.setTravelTime(5.0);
+				leg.getRoute().setTravelTime(5.0);
 				egressLeg.setTravelTime(0.0);
+				egressLeg.getRoute().setTravelTime(0.0);
 				
 			}
 
