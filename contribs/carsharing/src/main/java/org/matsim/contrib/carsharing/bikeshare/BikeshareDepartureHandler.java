@@ -10,6 +10,7 @@ import org.matsim.core.mobsim.framework.MobsimAgent;
 import org.matsim.core.mobsim.framework.PlanAgent;
 import org.matsim.core.mobsim.qsim.agents.WithinDayAgentUtils;
 import org.matsim.core.mobsim.qsim.interfaces.DepartureHandler;
+import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.vehicles.Vehicle;
 
 import com.google.inject.Inject;
@@ -38,10 +39,15 @@ public class BikeshareDepartureHandler implements DepartureHandler {
 				if (bikeId == null)
 					agent.setStateToAbort(now);
 				Coord bikeCoord = this.bikeFleet.getBikeCoordMap().get(bikeId);
-				accessLeg.setTravelTime(10.0);
-				accessLeg.getRoute().setTravelTime(10.0);
-				leg.setTravelTime(5.0);
-				leg.getRoute().setTravelTime(5.0);
+				//TODO: implement proper travel time estimates
+				double accessTime = CoordUtils.calcEuclideanDistance(link.getCoord(), bikeCoord) * 1.3 / 0.833;
+				
+				accessLeg.setTravelTime(accessTime);
+				accessLeg.getRoute().setTravelTime(accessTime);
+				
+				double travelTime = CoordUtils.calcEuclideanDistance(bikeCoord, network.getLinks().get(leg.getRoute().getEndLinkId()).getCoord()) * 1.3 / (14.0 / 3.6);
+				leg.setTravelTime(travelTime);
+				leg.getRoute().setTravelTime(travelTime);
 				egressLeg.setTravelTime(0.0);
 				egressLeg.getRoute().setTravelTime(0.0);
 				
