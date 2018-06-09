@@ -50,8 +50,6 @@ import org.matsim.contrib.carsharing.router.CarsharingRoute;
 import org.matsim.contrib.carsharing.router.CarsharingRouteFactory;
 import org.matsim.contrib.carsharing.runExample.CarsharingUtils;
 import org.matsim.contrib.carsharing.scoring.CarsharingScoringFunctionFactory;
-import org.matsim.contrib.dvrp.router.DvrpRoutingNetworkProvider;
-import org.matsim.contrib.dvrp.trafficmonitoring.DvrpTravelTimeModule;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
@@ -132,7 +130,7 @@ public class RelocationExample {
 		final AverageDemandRelocationListener averageDemandRelocationListener = new AverageDemandRelocationListener();
 		final VehicleChoiceAgent vehicleChoiceAgent = new VehicleChoiceAgentImpl();
 		controler.addOverridingModule(new RelocationQSimModule());
-		controler.addOverridingModule(new DvrpTravelTimeModule());
+		//controler.addOverridingModule(new DvrpTravelTimeModule());
 		// ===adding carsharing objects on supply and demand infrastructure ===
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
@@ -155,9 +153,9 @@ public class RelocationExample {
 				bind(MobismBeforeSimStepRelocationListener.class).asEagerSingleton();
 				bind(Network.class).annotatedWith(Names.named("carnetwork")).toInstance(networkFF);
 
-				bind(Network.class).annotatedWith(Names.named(DvrpRoutingNetworkProvider.DVRP_ROUTING)).to(Network.class);
-				bind(TravelTime.class).annotatedWith(Names.named("ff"))
-						.to(Key.get(TravelTime.class, Names.named(DvrpTravelTimeModule.DVRP_ESTIMATED)));
+		//		bind(Network.class).annotatedWith(Names.named(DvrpRoutingNetworkProvider.DVRP_ROUTING)).to(Network.class);
+		//		bind(TravelTime.class).annotatedWith(Names.named("ff"))
+		//				.to(Key.get(TravelTime.class, Names.named(DvrpTravelTimeModule.DVRP_ESTIMATED)));
 
 			}
 		});

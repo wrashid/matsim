@@ -45,8 +45,6 @@ import org.matsim.contrib.carsharing.replanning.RandomTripToCarsharingStrategy;
 import org.matsim.contrib.carsharing.router.CarsharingRoute;
 import org.matsim.contrib.carsharing.router.CarsharingRouteFactory;
 import org.matsim.contrib.carsharing.scoring.CarsharingScoringFunctionFactory;
-import org.matsim.contrib.dvrp.router.DvrpRoutingNetworkProvider;
-import org.matsim.contrib.dvrp.trafficmonitoring.DvrpTravelTimeModule;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
@@ -131,7 +129,7 @@ public class RunCarsharing {
 		final VehicleChoiceAgent vehicleChoiceAgent = new VehicleChoiceAgentImpl();
 		// ===adding carsharing objects on supply and demand infrastructure ===
 		controler.addOverridingModule(new CarsharingQSimModule());
-		controler.addOverridingModule(new DvrpTravelTimeModule());
+		//controler.addOverridingModule(new DvrpTravelTimeModule());
 
 		// bikeshare
 
@@ -174,12 +172,12 @@ public class RunCarsharing {
 				bind(CarsharingManagerInterface.class).to(CarsharingManagerNew.class);
 				bind(VehicleChoiceAgent.class).toInstance(vehicleChoiceAgent);
 				bind(DemandHandler.class).asEagerSingleton();
-				bind(Network.class).annotatedWith(Names.named(DvrpRoutingNetworkProvider.DVRP_ROUTING))
-						.to(Network.class);
+			//	bind(Network.class).annotatedWith(Names.named(DvrpRoutingNetworkProvider.DVRP_ROUTING))
+			//			.to(Network.class);
 
 				bind(Network.class).annotatedWith(Names.named("carnetwork")).toInstance(networkFF);
-				bind(TravelTime.class).annotatedWith(Names.named("ff"))
-						.to(Key.get(TravelTime.class, Names.named(DvrpTravelTimeModule.DVRP_ESTIMATED)));
+			//	bind(TravelTime.class).annotatedWith(Names.named("ff"))
+			//			.to(Key.get(TravelTime.class, Names.named(DvrpTravelTimeModule.DVRP_ESTIMATED)));
 			}
 
 		});

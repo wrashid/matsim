@@ -29,7 +29,6 @@ import org.matsim.contrib.carsharing.config.CarsharingConfigGroup;
 import org.matsim.contrib.carsharing.config.FreeFloatingConfigGroup;
 import org.matsim.contrib.carsharing.config.OneWayCarsharingConfigGroup;
 import org.matsim.contrib.carsharing.config.TwoWayCarsharingConfigGroup;
-import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.FacilitiesConfigGroup;
@@ -59,8 +58,7 @@ public class RunCarsharingIT {
 				new FreeFloatingConfigGroup(), 
 				new OneWayCarsharingConfigGroup(), 
 				new TwoWayCarsharingConfigGroup(),
-				new CarsharingConfigGroup(),
-				new DvrpConfigGroup()) ;
+				new CarsharingConfigGroup()) ;
 
 		config.controler().setOutputDirectory( utils.getOutputDirectory() );
 		config.controler().setOverwriteFileSetting( OverwriteFileSetting.overwriteExistingFiles );

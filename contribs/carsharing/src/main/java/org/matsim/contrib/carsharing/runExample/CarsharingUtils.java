@@ -19,7 +19,6 @@ import org.matsim.contrib.carsharing.manager.supply.costs.CostsCalculatorContain
 import org.matsim.contrib.carsharing.router.FreeFloatingRoutingModule;
 import org.matsim.contrib.carsharing.router.OneWayCarsharingRoutingModule;
 import org.matsim.contrib.carsharing.router.TwoWayCarsharingRoutingModule;
-import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.router.MainModeIdentifier;
