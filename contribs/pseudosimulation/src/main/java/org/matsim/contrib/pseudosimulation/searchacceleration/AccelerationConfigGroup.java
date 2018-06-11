@@ -46,19 +46,37 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		super(GROUP_NAME);
 	}
 
-	// -------------------- accelerate --------------------
+	// -------------------- mode --------------------
+	
+	public static enum ModeType {
+		accelerate, off, hani
+	};
 
-	private boolean accelerate = false;
-
-	@StringGetter("accelerate")
-	public boolean getAccelerate() {
-		return this.accelerate;
+	private ModeType modeTypeField = null;
+	
+	@StringGetter("mode")
+	public ModeType getModeTypeField() {
+		return this.modeTypeField;
 	}
 
-	@StringSetter("accelerate")
-	public void setAccelerate(boolean accelerate) {
-		this.accelerate = accelerate;
+	@StringSetter("mode")
+	public void setModeTypeField(final ModeType modeTypeField) {
+		this.modeTypeField = modeTypeField;
 	}
+	
+//	// -------------------- accelerate --------------------
+//
+//	private boolean accelerate = false;
+//
+//	@StringGetter("accelerate")
+//	public boolean getAccelerate() {
+//		return this.accelerate;
+//	}
+//
+//	@StringSetter("accelerate")
+//	public void setAccelerate(boolean accelerate) {
+//		this.accelerate = accelerate;
+//	}
 
 	// -------------------- startTime_s --------------------
 
@@ -178,6 +196,20 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	@StringSetter("relativeCongestionThreshold")
 	public void setRelativeCongestionThreshold(final double relativeCongestionThreshold) {
 		this.relativeCongestionTreshold = relativeCongestionThreshold;
+	}
+
+	// -------------------- relativeCongestionTreshold --------------------
+
+	private double minReplanningRate = Double.NaN;
+
+	@StringGetter("minReplanningRate")
+	public double getMinReplanningRate() {
+		return this.minReplanningRate;
+	}
+
+	@StringSetter("minReplanningRate")
+	public void setMinReplanningRate(final double minReplanningRate) {
+		this.minReplanningRate = minReplanningRate;
 	}
 
 	// -------------------- congestionProportionalWeighting --------------------

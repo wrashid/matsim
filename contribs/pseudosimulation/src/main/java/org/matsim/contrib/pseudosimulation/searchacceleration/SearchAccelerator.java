@@ -300,8 +300,8 @@ public class SearchAccelerator
 			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters,
 					this.timeDiscr, event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
 					this.services.getScenario().getPopulation(), this.services.getLinkTravelTimes(),
-					accConf.getAccelerate(), personId2deltaScore, deltaScoreTotal,
-					accConf.getRandomizeIfNoImprovement());
+					accConf.getModeTypeField(), personId2deltaScore, deltaScoreTotal,
+					accConf.getRandomizeIfNoImprovement(), accConf.getMinReplanningRate());
 			this.replanners = replannerIdentifier.drawReplanners();
 
 			final List<Double> bootstrap;

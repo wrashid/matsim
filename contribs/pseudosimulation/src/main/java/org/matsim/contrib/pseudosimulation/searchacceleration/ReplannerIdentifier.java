@@ -21,6 +21,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -53,8 +54,10 @@ class ReplannerIdentifier {
 	private final double meanLambda; // somewhat redundant
 	private final double delta; // somewhat redundant
 	private final TravelTime travelTimes;
-	private final boolean accelerate;
+	private final AccelerationConfigGroup.ModeType modeTypeField;
+	// private final boolean accelerate;
 	private final boolean randomizeIfNoImprovement;
+	private final double minReplanningRate;
 
 	private final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalLinkUsage;
 	private final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pseudoSimLinkUsage;
@@ -79,20 +82,24 @@ class ReplannerIdentifier {
 			final TimeDiscretization timeDiscretization, final int iteration,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalLinkUsage,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pseudoSimLinkUsage,
-			final Population population, final TravelTime travelTimes, final boolean accelerate,
+			final Population population, final TravelTime travelTimes,
+			final AccelerationConfigGroup.ModeType modeTypeField,
+			// final boolean accelerate,
 			final Map<Id<Person>, Double> personId2UtilityChange, final double totalUtilityChange,
-			final boolean randomizeIfNoImprovement) {
+			final boolean randomizeIfNoImprovement, final double minReplanningRate) {
 
 		this.replanningParameters = replanningParameters;
 		this.driverId2physicalLinkUsage = driverId2physicalLinkUsage;
 		this.driverId2pseudoSimLinkUsage = driverId2pseudoSimLinkUsage;
 		this.population = population;
 		this.travelTimes = travelTimes;
-		this.accelerate = accelerate;
+		this.modeTypeField = modeTypeField;
+		// this.accelerate = accelerate;
 		this.personId2utilityChange = personId2UtilityChange;
 		this.totalUtilityChange = totalUtilityChange;
 		this.randomizeIfNoImprovement = randomizeIfNoImprovement;
-		
+		this.minReplanningRate = minReplanningRate;
+
 		this.meanLambda = this.replanningParameters.getMeanLambda(iteration);
 
 		this.currentWeightedCounts = CountIndicatorUtils.newWeightedCounts(timeDiscretization,
@@ -111,8 +118,10 @@ class ReplannerIdentifier {
 		this.meanLambda = parent.meanLambda;
 		this.delta = parent.delta;
 		this.travelTimes = parent.travelTimes;
-		this.accelerate = parent.accelerate;
+		// this.accelerate = parent.accelerate;
+		this.modeTypeField = parent.modeTypeField;
 		this.personId2utilityChange = parent.personId2utilityChange;
+		this.minReplanningRate = parent.minReplanningRate;
 
 		this.driverId2physicalLinkUsage = parent.driverId2physicalLinkUsage;
 		this.driverId2pseudoSimLinkUsage = parent.driverId2pseudoSimLinkUsage;
@@ -167,12 +176,54 @@ class ReplannerIdentifier {
 		final List<Id<Person>> allPersonIdsShuffled = new ArrayList<>(this.population.getPersons().keySet());
 		Collections.shuffle(allPersonIdsShuffled);
 
+		// >>>>> HANI >>>>>
+
+		final Set<Id<Person>> haniReplannerIds;
+		if (AccelerationConfigGroup.ModeType.hani == this.modeTypeField) {
+			final List<Map.Entry<Id<Person>, Double>> person2utilityGainEntries = new ArrayList<>(
+					this.personId2utilityChange.entrySet());
+			final Comparator<Map.Entry<Id<Person>, Double>> byUtility = new Comparator() {
+				@Override
+				public int compare(Object o1, Object o2) {
+					final Map.Entry<Id<Person>, Double> entry1 = (Map.Entry<Id<Person>, Double>) o1;
+					final Map.Entry<Id<Person>, Double> entry2 = (Map.Entry<Id<Person>, Double>) o2;
+					if (entry1.getValue() > entry2.getValue()) {
+						return -1;
+					} else if (entry1.getValue() < entry2.getValue()) {
+						return 1;
+					} else {
+						return 0;
+					}
+				}
+			};
+			Collections.sort(person2utilityGainEntries, byUtility);
+			haniReplannerIds = new LinkedHashSet<>();
+			for (int i = 0; i < this.meanLambda * this.personId2utilityChange.size(); i++) {
+				haniReplannerIds.add(person2utilityGainEntries.get(i).getKey());
+			}
+			System.out.println(haniReplannerIds);
+		} else {
+			haniReplannerIds = null;
+		}
+
+		// <<<<< HANI <<<<<
+
+		// final Set<Id<Person>> minReplanners = new LinkedHashSet<>();
+		// for (Id<Person> personId : allPersonIdsShuffled) {
+		// if (MatsimRandom.getRandom().nextDouble() < this.minReplanningRate) {
+		// minReplanners.add(personId);
+		// allPersonIdsShuffled.remove(personId);
+		// }
+		// }
+
 		this.score = this.getUniformReplanningObjectiveFunctionValue();
 		this.expectedUniformSamplingObjectiveFunctionValue = this.getUniformReplanningObjectiveFunctionValue();
 
 		int scoreImprovingReplanners = 0;
 
+		int i = 0;
 		for (Id<Person> driverId : allPersonIdsShuffled) {
+			i++;
 
 			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(
 					this.driverId2physicalLinkUsage.get(driverId), this.driverId2pseudoSimLinkUsage.get(driverId),
@@ -189,8 +240,25 @@ class ReplannerIdentifier {
 				scoreImprovingReplanners++;
 			}
 
-			if (this.accelerate && (scoreImprover || !this.randomizeIfNoImprovement)) {
-				// TODO the scoreImprover condition is here only to deal with very large deltas
+			if (((double) i) / allPersonIdsShuffled.size() < this.minReplanningRate) {
+
+				newLambda = 1.0;
+				replanners.add(driverId);
+				this.score += scoreUpdater.getScoreChangeIfOne();
+
+			} else if (AccelerationConfigGroup.ModeType.hani == this.modeTypeField) {
+
+				if (haniReplannerIds.contains(driverId)) {
+					newLambda = 1.0;
+					replanners.add(driverId);
+					this.score += scoreUpdater.getScoreChangeIfOne();
+				} else {
+					newLambda = 0;
+					this.score += scoreUpdater.getScoreChangeIfZero();
+				}
+
+			} else if ((AccelerationConfigGroup.ModeType.accelerate == this.modeTypeField)
+					&& (scoreImprover || !this.randomizeIfNoImprovement)) {
 
 				if (scoreUpdater.getScoreChangeIfOne() < scoreUpdater.getScoreChangeIfZero()) {
 					newLambda = 1.0;

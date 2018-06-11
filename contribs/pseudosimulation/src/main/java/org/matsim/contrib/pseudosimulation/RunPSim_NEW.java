@@ -140,7 +140,7 @@ public class RunPSim_NEW {
 	}
 
 	public void run() {
-		
+
 		for (AbstractModule module : this.overridingModules) {
 			this.matsimControler.addOverridingModule(module);
 		}
@@ -182,13 +182,13 @@ public class RunPSim_NEW {
 		final RunPSim_NEW pSim = new RunPSim_NEW(config, pSimConfigGroup, accelerationConfigGroup);
 
 		// the following for best response
-//		final RemoveAllButSelectedPlan br = new RemoveAllButSelectedPlan();
-//		pSim.overridingModules.add(new AbstractModule() {
-//			@Override
-//			public void install() {
-//				this.addControlerListenerBinding().toInstance(br);
-//			}
-//		});
+		final RemoveAllButSelectedPlan br = new RemoveAllButSelectedPlan();
+		pSim.overridingModules.add(new AbstractModule() {
+			@Override
+			public void install() {
+				this.addControlerListenerBinding().toInstance(br);
+			}
+		});
 
 		pSim.run();
 	}
