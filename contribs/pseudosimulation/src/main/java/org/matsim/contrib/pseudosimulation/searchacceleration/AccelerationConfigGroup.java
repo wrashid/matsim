@@ -47,13 +47,13 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	}
 
 	// -------------------- mode --------------------
-	
+
 	public static enum ModeType {
-		accelerate, off, hani
+		off, accelerate, mah2007, mah2009
 	};
 
 	private ModeType modeTypeField = null;
-	
+
 	@StringGetter("mode")
 	public ModeType getModeTypeField() {
 		return this.modeTypeField;
@@ -63,20 +63,20 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	public void setModeTypeField(final ModeType modeTypeField) {
 		this.modeTypeField = modeTypeField;
 	}
-	
-//	// -------------------- accelerate --------------------
-//
-//	private boolean accelerate = false;
-//
-//	@StringGetter("accelerate")
-//	public boolean getAccelerate() {
-//		return this.accelerate;
-//	}
-//
-//	@StringSetter("accelerate")
-//	public void setAccelerate(boolean accelerate) {
-//		this.accelerate = accelerate;
-//	}
+
+	// // -------------------- accelerate --------------------
+	//
+	// private boolean accelerate = false;
+	//
+	// @StringGetter("accelerate")
+	// public boolean getAccelerate() {
+	// return this.accelerate;
+	// }
+	//
+	// @StringSetter("accelerate")
+	// public void setAccelerate(boolean accelerate) {
+	// this.accelerate = accelerate;
+	// }
 
 	// -------------------- startTime_s --------------------
 
@@ -198,7 +198,10 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		this.relativeCongestionTreshold = relativeCongestionThreshold;
 	}
 
-	// -------------------- relativeCongestionTreshold --------------------
+	// -------------------- minReplanningRate --------------------
+
+	// TODO This should be called baselineReplanningRate because the "intelligent"
+	// re-planning comes on top of it.
 
 	private double minReplanningRate = Double.NaN;
 

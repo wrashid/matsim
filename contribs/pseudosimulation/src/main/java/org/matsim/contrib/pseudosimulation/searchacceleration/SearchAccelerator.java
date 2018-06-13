@@ -237,9 +237,13 @@ public class SearchAccelerator
 			 */
 			double deltaScoreTotal = 0.0;
 			final Map<Id<Person>, Double> personId2deltaScore = new LinkedHashMap<>();
+			final Map<Id<Person>, Double> personId2oldScore = new LinkedHashMap<>();
+			final Map<Id<Person>, Double> personId2newScore = new LinkedHashMap<>();
 			for (Person person : this.services.getScenario().getPopulation().getPersons().values()) {
 				final double oldScore = this.lastPhysicalPopulationState.getSelectedPlan(person.getId()).getScore();
+				personId2oldScore.put(person.getId(), oldScore);
 				final double newScore = person.getSelectedPlan().getScore();
+				personId2newScore.put(person.getId(), newScore);
 				final double deltaScore = newScore - oldScore;
 				personId2deltaScore.put(person.getId(), deltaScore);
 				deltaScoreTotal += deltaScore;
@@ -300,8 +304,8 @@ public class SearchAccelerator
 			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters,
 					this.timeDiscr, event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
 					this.services.getScenario().getPopulation(), this.services.getLinkTravelTimes(),
-					accConf.getModeTypeField(), personId2deltaScore, deltaScoreTotal,
-					accConf.getRandomizeIfNoImprovement(), accConf.getMinReplanningRate());
+					accConf.getModeTypeField(), personId2deltaScore, personId2oldScore, personId2newScore,
+					deltaScoreTotal, accConf.getRandomizeIfNoImprovement(), accConf.getMinReplanningRate());
 			this.replanners = replannerIdentifier.drawReplanners();
 
 			final List<Double> bootstrap;
