@@ -32,34 +32,71 @@ import org.matsim.core.gbl.MatsimRandom;
  */
 public class Mah2009Recipe implements ReplannerIdentifierRecipe {
 
-	private final Map<Id<Person>, Double> person2utilityGain;
+	// -------------------- CONSTANTS --------------------
 
-	private final double averageUtilityGain;
+	private final static double minGain = 1e-9;
+
+	// -------------------- MEMBERS --------------------
+
+	private final Map<Id<Person>, Double> person2utilityGain;
 
 	private final double meanLambda;
 
+	private final double replanProbaConstant;
+
+	// -------------------- CONSTRUCTION --------------------
+
 	public Mah2009Recipe(final Map<Id<Person>, Double> person2utilityGain, final double meanLambda) {
 
-		double averageUtilityGain = 0;
-		for (Double val : person2utilityGain.values()) {
-			averageUtilityGain += val;
-		}
-		averageUtilityGain /= person2utilityGain.size();
+		// TODO Inefficient; sort population according once beforehand.
 
-		final double averageUtilityGainThreshold = 1e-9;
-		if (averageUtilityGain < averageUtilityGainThreshold) {
-			throw new RuntimeException("average utility gain of " + averageUtilityGain + " is below threshold value of "
-					+ averageUtilityGainThreshold);
+		double tmpReplanProbaConstant = Double.NEGATIVE_INFINITY;
+		for (Double gain : person2utilityGain.values()) {
+			tmpReplanProbaConstant = Math.max(tmpReplanProbaConstant, 1.0 / meanLambda / Math.max(minGain, gain));
 		}
 
+		double replanProbaSum;
+		do {
+
+			double smallestInvalidUtilityGain = Double.POSITIVE_INFINITY;
+			int invalidCnt = 0;
+			replanProbaSum = 0.0;
+
+			for (Double gain : person2utilityGain.values()) {
+				final double truncatedGain = Math.max(minGain, gain);
+				final double proba = tmpReplanProbaConstant * meanLambda * truncatedGain;
+				replanProbaSum += Math.min(1.0, proba);
+				if (proba > 1.0) {
+					invalidCnt++;
+					smallestInvalidUtilityGain = Math.min(smallestInvalidUtilityGain, truncatedGain);
+				}
+			}
+
+			// System.out.println("c = " + replanProbaConstant + ", #invalid = " +
+			// invalidCnt
+			// + ", smallestInvalidUtilityGain = " + smallestInvalidUtilityGain + ", avg.
+			// repl. proba = "
+			// + (replanProbaSum / person2utilityGain.size()));
+
+			if (invalidCnt > 0) {
+				tmpReplanProbaConstant = (1.0 - 1e-9) / meanLambda / smallestInvalidUtilityGain;
+			}
+
+		} while (replanProbaSum > meanLambda * person2utilityGain.size());
+
+		// System.out.println("terminating");
+		// System.exit(0);
+
+		this.replanProbaConstant = tmpReplanProbaConstant;
 		this.person2utilityGain = person2utilityGain;
-		this.averageUtilityGain = averageUtilityGain;
 		this.meanLambda = meanLambda;
 	}
 
+	// --------------- IMPLEMENTATION OF ReplannerIdentifierRecipe ---------------
+
 	@Override
 	public boolean isReplanner(final Id<Person> personId, final double deltaScoreIfYes, final double deltaScoreIfNo) {
-		final double inclusionProba = this.meanLambda * this.person2utilityGain.get(personId) / this.averageUtilityGain;
-		return (MatsimRandom.getRandom().nextDouble() < inclusionProba);
+		final double replanProba = this.replanProbaConstant * this.meanLambda * this.person2utilityGain.get(personId);
+		return (MatsimRandom.getRandom().nextDouble() < replanProba);
 	}
 }

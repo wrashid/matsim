@@ -30,11 +30,17 @@ import org.matsim.core.gbl.MatsimRandom;
  */
 public class UniformReplanningRecipe implements ReplannerIdentifierRecipe {
 
+	// -------------------- CONSTANTS --------------------
+
 	private final double meanLambda;
+
+	// -------------------- CONSTRUCTION --------------------
 
 	public UniformReplanningRecipe(final double meanLambda) {
 		this.meanLambda = meanLambda;
 	}
+
+	// --------------- IMPLEMENTATION OF ReplannerIdentifierRecipe ---------------
 
 	@Override
 	public boolean isReplanner(final Id<Person> personId, final double deltaScoreIfYes, final double deltaScoreIfNo) {

@@ -37,10 +37,8 @@ import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStragetyProvider;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStrategy;
-import org.matsim.contrib.pseudosimulation.searchacceleration.ConstantReplanningParameters;
 import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
 import org.matsim.contrib.pseudosimulation.searchacceleration.SearchAccelerator;
-import org.matsim.contrib.pseudosimulation.searchacceleration.utils.RemoveAllButSelectedPlan;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimWaitTimeCalculator;
@@ -123,13 +121,15 @@ public class RunPSim_NEW {
 		// Re-planner selection.
 
 		final TimeDiscretization timeDiscr = accelerationConfigGroup.getTimeDiscretization();
-		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(
-				accelerationConfigGroup, this.scenario.getNetwork());
+		// final ReplanningParameterContainer replanningParameterProvider = new
+		// ConstantReplanningParameters(
+		// accelerationConfigGroup, this.scenario.getNetwork());
+		accelerationConfigGroup.setNetwork(this.scenario.getNetwork());
 		this.matsimControler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
 				this.bind(TimeDiscretization.class).toInstance(timeDiscr);
-				this.bind(ReplanningParameterContainer.class).toInstance(replanningParameterProvider);
+				this.bind(ReplanningParameterContainer.class).toInstance(accelerationConfigGroup);
 				this.bind(SearchAccelerator.class).in(Singleton.class);
 				this.addControlerListenerBinding().to(SearchAccelerator.class);
 				this.addEventHandlerBinding().to(SearchAccelerator.class);
@@ -182,13 +182,13 @@ public class RunPSim_NEW {
 		final RunPSim_NEW pSim = new RunPSim_NEW(config, pSimConfigGroup, accelerationConfigGroup);
 
 		// the following for best response
-//		final RemoveAllButSelectedPlan br = new RemoveAllButSelectedPlan();
-//		pSim.overridingModules.add(new AbstractModule() {
-//			@Override
-//			public void install() {
-//				this.addControlerListenerBinding().toInstance(br);
-//			}
-//		});
+		// final RemoveAllButSelectedPlan br = new RemoveAllButSelectedPlan();
+		// pSim.overridingModules.add(new AbstractModule() {
+		// @Override
+		// public void install() {
+		// this.addControlerListenerBinding().toInstance(br);
+		// }
+		// });
 
 		pSim.run();
 	}

@@ -19,15 +19,9 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.router.util.TravelTime;
 
-import floetteroed.utilities.Units;
+import floetteroed.utilities.TimeDiscretization;
 
 /**
  * 
@@ -36,34 +30,15 @@ import floetteroed.utilities.Units;
  */
 public interface ReplanningParameterContainer {
 
-	public static Map<Id<Link>, Double> newUniformLinkWeights(final Network network) {
-		final Map<Id<Link>, Double> weights = new LinkedHashMap<>();
-		for (Link link : network.getLinks().values()) {
-			weights.put(link.getId(), 1.0);
-		}
-		return weights;
-	}
-
-	public static Map<Id<Link>, Double> newOneOverCapacityLinkWeights(final Network network) {
-		final Map<Id<Link>, Double> weights = new LinkedHashMap<>();
-		for (Link link : network.getLinks().values()) {
-			final double cap_veh_h = link.getFlowCapacityPerSec() * Units.VEH_H_PER_VEH_S;
-			if (cap_veh_h <= 1e-6) {
-				throw new RuntimeException("link " + link.getId() + " has capacity " + cap_veh_h + " veh/h");
-			}
-			weights.put(link.getId(), 1.0 / cap_veh_h);
-		}
-		return weights;
-	}
-
-	public double getMeanLambda(int iteration);
-
-	public double getDelta(int iteration, Double deltaN2);
+	public TimeDiscretization getTimeDiscretization();
 	
-	public boolean isCongested(Object locObj, int timeBin, TravelTime travelTimes);
+	public double getMeanReplanningRate(int iteration);
+
+	public double getRegularizationWeight(int iteration, Double deltaN2);
 	
 	public double getWeight(Object locObj, int timeBin, TravelTime travelTimes);
-	
-	// public boolean isCongested(Object locObj, int time_s);
 
+	// only needed for analysis postprocessing
+	// public boolean isCongested(Object locObj, int timeBin, TravelTime travelTimes);
+	
 }

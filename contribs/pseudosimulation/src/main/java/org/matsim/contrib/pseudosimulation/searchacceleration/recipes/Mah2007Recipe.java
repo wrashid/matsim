@@ -38,23 +38,30 @@ import org.matsim.api.core.v01.population.Person;
  */
 public class Mah2007Recipe implements ReplannerIdentifierRecipe {
 
+	// -------------------- MEMBERS --------------------
+
 	private Set<Id<Person>> replannerIds = new LinkedHashSet<>();
 
-	private class ByUtilityComparator implements Comparator<Map.Entry<?, Double>> {
+	// -------------------- UTILITIES --------------------
+
+	private class ByUtilityGainComparator implements Comparator<Map.Entry<?, Double>> {
 		@Override
 		public int compare(final Entry<?, Double> o1, final Entry<?, Double> o2) {
 			return o2.getValue().compareTo(o1.getValue()); // largest values first
 		}
 	}
 
-	public Mah2007Recipe(final Map<Id<Person>, Double> personId2utilityChange, final double meanLambda) {
-		final List<Map.Entry<Id<Person>, Double>> entryList = new ArrayList<>(personId2utilityChange.entrySet());
-		Collections.sort(entryList, new ByUtilityComparator());
-		for (int i = 0; i < meanLambda * personId2utilityChange.size(); i++) {
+	// -------------------- CONSTRUCTION --------------------
+
+	public Mah2007Recipe(final Map<Id<Person>, Double> personId2utilityGain, final double meanLambda) {
+		final List<Map.Entry<Id<Person>, Double>> entryList = new ArrayList<>(personId2utilityGain.entrySet());
+		Collections.sort(entryList, new ByUtilityGainComparator());
+		for (int i = 0; i < meanLambda * personId2utilityGain.size(); i++) {
 			this.replannerIds.add(entryList.get(i).getKey());
 		}
-
 	}
+
+	// --------------- IMPLEMENTATION OF ReplannerIdentifierRecipe ---------------
 
 	@Override
 	public boolean isReplanner(final Id<Person> personId, final double deltaScoreIfYes, final double deltaScoreIfNo) {

@@ -43,14 +43,11 @@ import org.matsim.contrib.pseudosimulation.MobSimSwitcher;
 import org.matsim.contrib.pseudosimulation.PSimConfigGroup;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
-import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AnticipatedCongestedLinkShare;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPhysicalSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPseudoSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.EffectiveReplanningRate;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ExpectedUniformSamplingObjectiveFunctionValue;
-import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ExperiencedCongestedLinkShare;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.FinalObjectiveFunctionValue;
-import org.matsim.contrib.pseudosimulation.searchacceleration.logging.HypotheticalCongestedLinkShare;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RepeatedReplanningProba;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ReplanningBootstrap;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareNeverReplanned;
@@ -151,7 +148,7 @@ public class SearchAccelerator
 
 		this.matsimMobsimUsageListener = new LinkUsageListener(this.timeDiscr);
 
-		this.analyzer = new AccelerationAnalyzer(this.replanningParameters, this.timeDiscr);
+		this.analyzer = new AccelerationAnalyzer();
 
 		this.statsWriter = new StatisticsWriter<>(
 				new File(this.services.getConfig().controler().getOutputDirectory(), "acceleration.log").toString(),
@@ -162,9 +159,6 @@ public class SearchAccelerator
 		this.statsWriter.addSearchStatistic(new EffectiveReplanningRate());
 		this.statsWriter.addSearchStatistic(new RepeatedReplanningProba());
 		this.statsWriter.addSearchStatistic(new ShareNeverReplanned());
-		this.statsWriter.addSearchStatistic(new ExperiencedCongestedLinkShare());
-		this.statsWriter.addSearchStatistic(new HypotheticalCongestedLinkShare());
-		this.statsWriter.addSearchStatistic(new AnticipatedCongestedLinkShare());
 		this.statsWriter.addSearchStatistic(new ExpectedUniformSamplingObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new UniformReplanningObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new FinalObjectiveFunctionValue());
@@ -204,14 +198,6 @@ public class SearchAccelerator
 
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
-
-		// for (Person person :
-		// this.services.getScenario().getPopulation().getPersons().values()) {
-		// if (person.getPlans().size() > 1) {
-		// throw new RuntimeException("person " + person.getId() + " has " +
-		// person.getPlans().size() + " plans");
-		// }
-		// }
 
 		if (this.mobsimSwitcher.isQSimIteration()) {
 			this.log("physical mobsim run in iteration " + event.getIteration() + " ends");
@@ -305,7 +291,7 @@ public class SearchAccelerator
 					this.timeDiscr, event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
 					this.services.getScenario().getPopulation(), this.services.getLinkTravelTimes(),
 					accConf.getModeTypeField(), personId2deltaScore, personId2oldScore, personId2newScore,
-					deltaScoreTotal, accConf.getRandomizeIfNoImprovement(), accConf.getMinReplanningRate());
+					deltaScoreTotal, accConf.getRandomizeIfNoImprovement(), accConf.getBaselineReplanningRate());
 			this.replanners = replannerIdentifier.drawReplanners();
 
 			final List<Double> bootstrap;
@@ -316,11 +302,10 @@ public class SearchAccelerator
 			}
 
 			this.analyzer.analyze(this.services.getScenario().getPopulation().getPersons().keySet(),
-					this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages, this.replanners, event.getIteration(),
-					bootstrap, replannerIdentifier.getUniformReplanningObjectiveFunctionValue(),
+					this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages, this.replanners, bootstrap,
+					replannerIdentifier.getUniformReplanningObjectiveFunctionValue(),
 					replannerIdentifier.getShareOfScoreImprovingReplanners(),
 					replannerIdentifier.getFinalObjectiveFunctionValue(), replannerIdentifier.getUniformityExcess(),
-					this.services.getLinkTravelTimes(),
 					replannerIdentifier.getExpectedUniformSamplingObjectiveFunctionValue(),
 					replannerIdentifier.getSumOfWeightedCountDifferences2());
 

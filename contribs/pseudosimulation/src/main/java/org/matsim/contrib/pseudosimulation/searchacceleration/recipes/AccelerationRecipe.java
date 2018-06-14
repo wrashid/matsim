@@ -30,11 +30,15 @@ import org.matsim.core.gbl.MatsimRandom;
  */
 public class AccelerationRecipe implements ReplannerIdentifierRecipe {
 
+	// -------------------- MEMBERS --------------------
+
 	private final boolean randomizeIfNotScoreImprover;
 
 	private final double baselineLambda;
 
 	private final double meanLambda;
+
+	// -------------------- CONSTRUCTION --------------------
 
 	public AccelerationRecipe(final boolean randomizeIfNotScoreImprover, final double baselineLambda,
 			final double meanLambda) {
@@ -43,13 +47,15 @@ public class AccelerationRecipe implements ReplannerIdentifierRecipe {
 		this.meanLambda = meanLambda;
 	}
 
+	// --------------- IMPLEMENTATION OF AccelerationRecipe ---------------
+
 	@Override
 	public boolean isReplanner(final Id<Person> personId, final double deltaScoreIfYes, final double deltaScoreIfNo) {
 		if (MatsimRandom.getRandom().nextDouble() < this.baselineLambda) {
 			return true;
 		} else {
-			final boolean scoreImprover = (Math.min(deltaScoreIfYes, deltaScoreIfNo) < 0);
-			if (scoreImprover || !this.randomizeIfNotScoreImprover) {
+			final boolean isScoreReducer = (Math.min(deltaScoreIfYes, deltaScoreIfNo) < 0);
+			if (isScoreReducer || !this.randomizeIfNotScoreImprover) {
 				return (deltaScoreIfYes < deltaScoreIfNo);
 			} else { // !scoreImprover && randomizeIfNotScoreImprover
 				return (MatsimRandom.getRandom().nextDouble() < this.meanLambda);

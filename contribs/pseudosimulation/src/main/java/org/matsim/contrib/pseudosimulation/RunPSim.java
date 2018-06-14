@@ -21,7 +21,8 @@
 
 package org.matsim.contrib.pseudosimulation;
 
-import floetteroed.utilities.TimeDiscretization;
+import java.util.Iterator;
+
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Leg;
@@ -37,11 +38,12 @@ import org.matsim.contrib.pseudosimulation.distributed.listeners.events.transit.
 import org.matsim.contrib.pseudosimulation.mobsim.PSimProvider;
 import org.matsim.contrib.pseudosimulation.mobsim.SwitchingMobsimProvider;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
-import org.matsim.contrib.pseudosimulation.searchacceleration.*;
+import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
+import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStrategy;
+import org.matsim.contrib.pseudosimulation.searchacceleration.SearchAcceleratorModule;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimWaitTimeCalculator;
-import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
@@ -53,13 +55,14 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
 import org.matsim.pt.router.TransitRouter;
 
-import java.util.Iterator;
+import floetteroed.utilities.TimeDiscretization;
 
 /**
  * @author pieterfourie
- * <p>
- * A controler that alternates between the QSim and PSim for the mobility simulation.
- * Run this class with no arguments to get printed help listing current command line options.
+ *         <p>
+ *         A controler that alternates between the QSim and PSim for the
+ *         mobility simulation. Run this class with no arguments to get printed
+ *         help listing current command line options.
  */
 public class RunPSim {
 	private Config config;
@@ -72,24 +75,28 @@ public class RunPSim {
 
 	public RunPSim(Config config, PSimConfigGroup pSimConfigGroup) {
 		this.config = config;
-		this.scenario = ScenarioUtils.loadScenario(config);;
+		this.scenario = ScenarioUtils.loadScenario(config);
+		;
 
-		//The following line will make the controler use the events manager that doesn't check for event order.
-		//This is essential for pseudo-simulation as the PSim module generates events on a person-basis,
-		//not a system basis
+		// The following line will make the controler use the events manager that
+		// doesn't check for event order.
+		// This is essential for pseudo-simulation as the PSim module generates events
+		// on a person-basis,
+		// not a system basis
 		config.parallelEventHandling().setSynchronizeOnSimSteps(false);
 		config.parallelEventHandling().setNumberOfThreads(1);
 		AcceptIntendedReplanningStrategy.addOwnStrategySettings(config);
-		config.controler().setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
+		config.controler()
+				.setOverwriteFileSetting(OutputDirectoryHierarchy.OverwriteFileSetting.deleteDirectoryIfExists);
 		config.qsim().setEndTime(24 * 3600);
 
 		this.matsimControler = new Controler(scenario);
 		pSimConfigGroup.setIterationsPerCycle(50);
 
-		MobSimSwitcher mobSimSwitcher = new MobSimSwitcher(pSimConfigGroup,scenario);
+		MobSimSwitcher mobSimSwitcher = new MobSimSwitcher(pSimConfigGroup, scenario);
 		matsimControler.addControlerListener(mobSimSwitcher);
 
-		//yoyoyo this to ensure that a scenario  starts naive and transit-free
+		// yoyoyo this to ensure that a scenario starts naive and transit-free
 		{
 			config.transit().setUseTransit(false);
 
@@ -112,10 +119,11 @@ public class RunPSim {
 		final AccelerationConfigGroup accelerationConfig = ConfigUtils.addOrGetModule(config,
 				AccelerationConfigGroup.class);
 		final TimeDiscretization timeDiscr = accelerationConfig.getTimeDiscretization();
-		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(
-				accelerationConfig, scenario.getNetwork());
-		matsimControler.addOverridingModule(new SearchAcceleratorModule(timeDiscr, replanningParameterProvider));
-
+		// final ReplanningParameterContainer replanningParameterProvider = new
+		// ConstantReplanningParameters(
+		// accelerationConfig, scenario.getNetwork());
+		accelerationConfig.setNetwork(scenario.getNetwork());
+		matsimControler.addOverridingModule(new SearchAcceleratorModule(timeDiscr, accelerationConfig));
 
 		matsimControler.addOverridingModule(new AbstractModule() {
 			@Override
@@ -123,27 +131,28 @@ public class RunPSim {
 
 				bind(MobSimSwitcher.class).toInstance(mobSimSwitcher);
 				bindMobsim().toProvider(SwitchingMobsimProvider.class);
-//				if(config.transit().isUseTransit()) {
-					bind(TransitRouter.class).toProvider(TransitRouterEventsWSFactory.class);
-					bind(WaitTimeCalculator.class).to(PSimWaitTimeCalculator.class);
-					bind(WaitTime.class).toProvider(PSimWaitTimeCalculator.class);
-					bind(StopStopTimeCalculator.class).to(PSimStopStopTimeCalculator.class);
-					bind(StopStopTime.class).toProvider(PSimStopStopTimeCalculator.class);
-//				}
+				// if(config.transit().isUseTransit()) {
+				bind(TransitRouter.class).toProvider(TransitRouterEventsWSFactory.class);
+				bind(WaitTimeCalculator.class).to(PSimWaitTimeCalculator.class);
+				bind(WaitTime.class).toProvider(PSimWaitTimeCalculator.class);
+				bind(StopStopTimeCalculator.class).to(PSimStopStopTimeCalculator.class);
+				bind(StopStopTime.class).toProvider(PSimStopStopTimeCalculator.class);
+				// }
 				bind(TravelTimeCalculator.class).to(PSimTravelTimeCalculator.class);
 				bind(TravelTime.class).toProvider(PSimTravelTimeCalculator.class);
 				bind(PlanCatcher.class).toInstance(new PlanCatcher());
-				bind(PSimProvider.class).toInstance(new PSimProvider(scenario,matsimControler.getEvents()));
+				bind(PSimProvider.class).toInstance(new PSimProvider(scenario, matsimControler.getEvents()));
 			}
 		});
 
-//		LinkUsageListener linkUsageListener = new LinkUsageListener(new TimeDiscretization(0, 3600, 24));
-//		LinkUsageAnalyzer linkUsageAnalyzer = new LinkUsageAnalyzer(linkUsageListener,
-//				new ConstantReplanningParameters(0.1, 1.0), LinkUsageAnalyzer.newUniformLinkWeights(scenario.getNetwork()));
-//		matsimControler.getEvents().addHandler(linkUsageListener);
-//		matsimControler.addControlerListener(linkUsageAnalyzer);
-
-
+		// LinkUsageListener linkUsageListener = new LinkUsageListener(new
+		// TimeDiscretization(0, 3600, 24));
+		// LinkUsageAnalyzer linkUsageAnalyzer = new
+		// LinkUsageAnalyzer(linkUsageListener,
+		// new ConstantReplanningParameters(0.1, 1.0),
+		// LinkUsageAnalyzer.newUniformLinkWeights(scenario.getNetwork()));
+		// matsimControler.getEvents().addHandler(linkUsageListener);
+		// matsimControler.addControlerListener(linkUsageAnalyzer);
 
 	}
 
@@ -155,9 +164,8 @@ public class RunPSim {
 		PSimConfigGroup pSimConfigGroup = new PSimConfigGroup();
 		config.addModule(pSimConfigGroup);
 
-		new RunPSim(config,pSimConfigGroup).run();
+		new RunPSim(config, pSimConfigGroup).run();
 	}
-
 
 	public MatsimServices getMatsimControler() {
 		return matsimControler;
@@ -166,6 +174,5 @@ public class RunPSim {
 	public void run() {
 		matsimControler.run();
 	}
-
 
 }

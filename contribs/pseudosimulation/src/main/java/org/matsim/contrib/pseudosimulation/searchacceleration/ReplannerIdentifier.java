@@ -104,7 +104,7 @@ class ReplannerIdentifier {
 		this.randomizeIfNoImprovement = randomizeIfNoImprovement;
 		this.minReplanningRate = minReplanningRate;
 
-		this.meanLambda = this.replanningParameters.getMeanLambda(iteration);
+		this.meanLambda = this.replanningParameters.getMeanReplanningRate(iteration);
 
 		this.currentWeightedCounts = CountIndicatorUtils.newWeightedCounts(timeDiscretization,
 				this.driverId2physicalLinkUsage.values(), this.replanningParameters, this.travelTimes);
@@ -113,7 +113,7 @@ class ReplannerIdentifier {
 
 		this.sumOfWeightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(this.currentWeightedCounts,
 				this.upcomingWeightedCounts);
-		this.delta = this.replanningParameters.getDelta(iteration, this.sumOfWeightedCountDifferences2);
+		this.delta = this.replanningParameters.getRegularizationWeight(iteration, this.sumOfWeightedCountDifferences2);
 		this.w = 2.0 * this.meanLambda * (this.sumOfWeightedCountDifferences2 + this.delta) / this.totalUtilityChange;
 	}
 
@@ -167,22 +167,6 @@ class ReplannerIdentifier {
 		return this.sumOfWeightedCountDifferences2;
 	}
 
-	private double absoluteUtilityChange(final Id<Person> personId) {
-		// final double lowerScoreThreshold = 1e-9;
-		final double deltaScore = this.personId2utilityChange.get(personId);
-		if (deltaScore <= 0.0) {
-			return 0.0; // non-improvers do not get to re-plan
-		}
-		// final double newScore = this.personId2newUtility.get(personId);
-		// if (newScore < lowerScoreThreshold) { // negative scores don't work
-		// throw new RuntimeException("Score levels below " + lowerScoreThreshold + " =>
-		// "
-		// + AccelerationConfigGroup.ModeType.hani2009 + " does not work.");
-		// }
-		// return (deltaScore / newScore);
-		return deltaScore;
-	}
-
 	Set<Id<Person>> drawReplanners() {
 
 		// Initialize score residuals.
@@ -217,9 +201,7 @@ class ReplannerIdentifier {
 
 		int scoreImprovingReplanners = 0;
 
-		// int i = 0;
 		for (Id<Person> driverId : allPersonIdsShuffled) {
-			// i++;
 
 			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(
 					this.driverId2physicalLinkUsage.get(driverId), this.driverId2pseudoSimLinkUsage.get(driverId),
@@ -244,101 +226,6 @@ class ReplannerIdentifier {
 			} else {
 				this.score += scoreUpdater.getScoreChangeIfZero();
 			}
-
-			// if ((((double) i) / allPersonIdsShuffled.size() < this.minReplanningRate)
-			// || (overridingReplannerIds.contains(driverId))
-			// || ((AccelerationConfigGroup.ModeType.accelerate == this.modeTypeField) &&
-			// ((scoreImprover
-			// && (scoreUpdater.getScoreChangeIfOne() <
-			// scoreUpdater.getScoreChangeIfZero()))
-			// || (!scoreImprover && this.randomizeIfNoImprovement
-			// && ((MatsimRandom.getRandom().nextDouble() < this.meanLambda)))))) {
-			//
-			// newLambda = 1.0;
-			// replanners.add(driverId);
-			// this.score += scoreUpdater.getScoreChangeIfOne();
-			//
-			// } else {
-			//
-			// newLambda = 0.0;
-			// this.score += scoreUpdater.getScoreChangeIfZero();
-			//
-			// }
-
-			// if (overridingReplannerIds.contains(driverId)
-			// || (((double) i) / allPersonIdsShuffled.size() < this.minReplanningRate)) {
-			//
-			// newLambda = 1.0;
-			// replanners.add(driverId);
-			// this.score += scoreUpdater.getScoreChangeIfOne();
-			//
-			// // }
-			// // else if (AccelerationConfigGroup.ModeType.hani2007 == this.modeTypeField)
-			// {
-			// //
-			// // if (overridingReplannerIds.contains(driverId)) {
-			// // newLambda = 1.0;
-			// // replanners.add(driverId);
-			// // this.score += scoreUpdater.getScoreChangeIfOne();
-			// // } else {
-			// // newLambda = 0;
-			// // this.score += scoreUpdater.getScoreChangeIfZero();
-			// // }
-			//
-			// } else if (AccelerationConfigGroup.ModeType.accelerate == this.modeTypeField)
-			// {
-			//
-			// if (scoreImprover) {
-			//
-			// if (scoreUpdater.getScoreChangeIfOne() < scoreUpdater.getScoreChangeIfZero())
-			// {
-			// newLambda = 1.0;
-			// replanners.add(driverId);
-			// this.score += scoreUpdater.getScoreChangeIfOne();
-			// } else {
-			// newLambda = 0.0;
-			// this.score += scoreUpdater.getScoreChangeIfZero();
-			// }
-			//
-			// } else if (this.randomizeIfNoImprovement) {
-			//
-			// if (MatsimRandom.getRandom().nextDouble() < this.meanLambda) {
-			// newLambda = 1.0;
-			// replanners.add(driverId);
-			// this.score += scoreUpdater.getScoreChangeIfOne();
-			// } else {
-			// newLambda = 0.0;
-			// this.score += scoreUpdater.getScoreChangeIfZero();
-			// }
-			//
-			// }
-			//
-			// // if ((AccelerationConfigGroup.ModeType.accelerate == this.modeTypeField)
-			// // && (scoreImprover || !this.randomizeIfNoImprovement)) {
-			// //
-			// // if (scoreUpdater.getScoreChangeIfOne() <
-			// scoreUpdater.getScoreChangeIfZero())
-			// // {
-			// // newLambda = 1.0;
-			// // replanners.add(driverId);
-			// // this.score += scoreUpdater.getScoreChangeIfOne();
-			// // } else {
-			// // newLambda = 0.0;
-			// // this.score += scoreUpdater.getScoreChangeIfZero();
-			// // }
-			// // }
-			//
-			// } else if (AccelerationConfigGroup.ModeType.off == this.modeTypeField) {
-			//
-			// if (MatsimRandom.getRandom().nextDouble() < this.meanLambda) {
-			// newLambda = 1.0;
-			// replanners.add(driverId);
-			// this.score += scoreUpdater.getScoreChangeIfOne();
-			// } else {
-			// newLambda = 0.0;
-			// this.score += scoreUpdater.getScoreChangeIfZero();
-			// }
-			// }
 
 			scoreUpdater.updateResiduals(replanner ? 1.0 : 0.0); // interaction residual by reference
 			regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();

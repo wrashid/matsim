@@ -28,7 +28,7 @@ import floetteroed.utilities.statisticslogging.Statistic;
  * @author Gunnar Flötteröd
  *
  */
-public class ExperiencedCongestedLinkShare implements Statistic<AccelerationAnalyzer> {
+public class ExperiencedCongestedLinkShare_DEPRECATED implements Statistic<AccelerationAnalyzer> {
 
 	public static final String LABEL = "ExperiencedCongestedLinkShare";
 
@@ -39,7 +39,7 @@ public class ExperiencedCongestedLinkShare implements Statistic<AccelerationAnal
 
 	@Override
 	public String value(AccelerationAnalyzer acc) {
-		return Statistic.toString(acc.getExperiencedCongestedLinkShare());
+		return ""; // Statistic.toString(acc.getExperiencedCongestedLinkShare());
 	}
 
 }
