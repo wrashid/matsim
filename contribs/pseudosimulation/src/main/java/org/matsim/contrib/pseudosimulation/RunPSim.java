@@ -40,7 +40,6 @@ import org.matsim.contrib.pseudosimulation.mobsim.SwitchingMobsimProvider;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStrategy;
-import org.matsim.contrib.pseudosimulation.searchacceleration.SearchAcceleratorModule;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimWaitTimeCalculator;
@@ -116,14 +115,16 @@ public class RunPSim {
 			}
 		}
 
+		// THE CODE BELOW IS NO LONGER REFACTORED AND MOST LIKELY DYSFUNCTIONAL.
+		
 		final AccelerationConfigGroup accelerationConfig = ConfigUtils.addOrGetModule(config,
 				AccelerationConfigGroup.class);
 		final TimeDiscretization timeDiscr = accelerationConfig.getTimeDiscretization();
 		// final ReplanningParameterContainer replanningParameterProvider = new
 		// ConstantReplanningParameters(
 		// accelerationConfig, scenario.getNetwork());
-		accelerationConfig.setNetwork(scenario.getNetwork());
-		matsimControler.addOverridingModule(new SearchAcceleratorModule(timeDiscr, accelerationConfig));
+//		accelerationConfig.configure(scenario.getNetwork());
+		// matsimControler.addOverridingModule(new SearchAcceleratorModule());
 
 		matsimControler.addOverridingModule(new AbstractModule() {
 			@Override

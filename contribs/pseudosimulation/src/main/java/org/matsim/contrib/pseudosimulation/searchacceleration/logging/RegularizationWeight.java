@@ -19,7 +19,7 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationAnalyzer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
 
 import floetteroed.utilities.statisticslogging.Statistic;
 
@@ -28,9 +28,9 @@ import floetteroed.utilities.statisticslogging.Statistic;
  * @author Gunnar Flötteröd
  *
  */
-public class HypotheticalCongestedLinkShare_DEPRECATED implements Statistic<AccelerationAnalyzer> {
+public class RegularizationWeight implements Statistic<ReplannerIdentifier> {
 
-	public static final String LABEL = "HypotheticalCongestedLinkShare";
+	public static final String LABEL = "RegularizationWeight";
 
 	@Override
 	public String label() {
@@ -38,8 +38,8 @@ public class HypotheticalCongestedLinkShare_DEPRECATED implements Statistic<Acce
 	}
 
 	@Override
-	public String value(AccelerationAnalyzer arg0) {
-		return ""; // Statistic.toString(arg0.getHypotheticalCongestedLinkShare());
+	public String value(ReplannerIdentifier arg0) {
+		return Statistic.toString(arg0.getRegularizationWeight());
 	}
 
 }

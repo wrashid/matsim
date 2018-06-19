@@ -21,7 +21,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration.datastructures;
 
 import java.util.Map;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
 import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.DynamicData;
@@ -52,12 +52,8 @@ public class ScoreUpdater<L> {
 
 	private final double individualUtilityChange;
 
-
 	private final SpaceTimeCounts<L> individualWeightedChanges;
 
-	
-	
-	
 	private final double scoreChangeIfZero;
 
 	private final double scoreChangeIfOne;
@@ -68,8 +64,8 @@ public class ScoreUpdater<L> {
 
 	public ScoreUpdater(final SpaceTimeIndicators<L> currentIndicators, final SpaceTimeIndicators<L> upcomingIndicators,
 			final double meanLambda, final double w, final double delta, final DynamicData<L> interactionResiduals,
-			final double regularizationResidual, final ReplanningParameterContainer replParams,
-			final TravelTime travelTimes, final double individualUtilityChange) {
+			final double regularizationResidual, final AccelerationConfigGroup replParams, final TravelTime travelTimes,
+			final double individualUtilityChange, final double totalUtilityChange) {
 
 		this.interactionResiduals = interactionResiduals;
 		this.regularizationResidual = regularizationResidual;
@@ -91,7 +87,7 @@ public class ScoreUpdater<L> {
 			final double weightedIndividualChange = entry.getValue();
 			this.interactionResiduals.add(spaceObj, timeBin, -meanLambda * weightedIndividualChange);
 		}
-		
+
 		this.regularizationResidual -= meanLambda * this.individualUtilityChange;
 
 		// Compute individual score terms.
@@ -111,10 +107,10 @@ public class ScoreUpdater<L> {
 		// Compose the actual score change.
 
 		final double factor1 = sumOfWeightedIndividualChanges2
-				+ delta * this.individualUtilityChange * this.individualUtilityChange;
+				+ delta * Math.pow(this.individualUtilityChange / totalUtilityChange, 2.0);
 		final double factor2 = 2.0 * sumOfWeightedIndividualChangesTimesInteractionResiduals
-				- w * this.individualUtilityChange
-				+ 2.0 * delta * this.individualUtilityChange * this.regularizationResidual;
+				- w * this.individualUtilityChange + 2.0 * delta * (this.individualUtilityChange / totalUtilityChange)
+						* (this.regularizationResidual / totalUtilityChange);
 
 		this.scoreChangeIfOne = (1.0 - meanLambda * meanLambda) * factor1 + (1.0 - meanLambda) * factor2;
 		this.scoreChangeIfZero = (0.0 - meanLambda * meanLambda) * factor1 + (0.0 - meanLambda) * factor2;

@@ -1,10 +1,10 @@
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationAnalyzer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
 
 import floetteroed.utilities.statisticslogging.Statistic;
 
-public class RepeatedReplanningProba implements Statistic<AccelerationAnalyzer> {
+public class RepeatedReplanningProba implements Statistic<ReplannerIdentifier> {
 
 	public static final String REPEATED_REPLANNING_PROBA = "RepeatedReplanningProba";
 
@@ -14,7 +14,7 @@ public class RepeatedReplanningProba implements Statistic<AccelerationAnalyzer> 
 	}
 
 	@Override
-	public String value(AccelerationAnalyzer arg0) {
+	public String value(ReplannerIdentifier arg0) {
 		return Statistic.toString(arg0.getRepeatedReplanningProba());
 	}
 

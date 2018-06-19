@@ -36,13 +36,25 @@ import floetteroed.utilities.Units;
  * @author Gunnar Flötteröd
  *
  */
-public class AccelerationConfigGroup extends ReflectiveConfigGroup implements ReplanningParameterContainer {
+public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 
 	// ==================== MATSim-SPECIFICS ====================
 
 	// -------------------- CONSTANTS --------------------
 
 	public static final String GROUP_NAME = "acceleration";
+
+	// -------------------- CONSTRUCTION AND INITIALIZATION --------------------
+
+	public AccelerationConfigGroup() {
+		super(GROUP_NAME);
+	}
+
+	// TODO No way to access the network directly?
+	public void configure(final Network network, final int pSimIterations) {
+		this.network = network;
+		this.pSimIterations = pSimIterations;
+	}
 
 	// -------------------- mode --------------------
 
@@ -106,30 +118,58 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup implements Re
 
 	// -------------------- meanReplanningRate --------------------
 
-	private double meanReplanningRate = Double.NaN;
+	private double initialMeanReplanningRate = Double.NaN;
 
-	@StringGetter("meanReplanningRate")
-	public double getMeanReplanningRate() {
-		return this.meanReplanningRate;
+	@StringGetter("initialMeanReplanningRate")
+	public double getInitialMeanReplanningRate() {
+		return this.initialMeanReplanningRate;
 	}
 
-	@StringSetter("meanReplanningRate")
-	public void setBinCnt(double meanReplanningRate) {
-		this.meanReplanningRate = meanReplanningRate;
+	@StringSetter("initialMeanReplanningRate")
+	public void setInitialMeanReplanningRate(double initialMeanReplanningRate) {
+		this.initialMeanReplanningRate = initialMeanReplanningRate;
 	}
 
 	// -------------------- regularizationWeight --------------------
 
-	private double regularizationWeight = Double.NaN;
+	private double initialRegularizationWeight = Double.NaN;
 
-	@StringGetter("regularizationWeight")
-	public double getRegularizationWeight() {
-		return this.regularizationWeight;
+	@StringGetter("initialRegularizationWeight")
+	public double getInitialRegularizationWeight() {
+		return this.initialRegularizationWeight;
 	}
 
-	@StringSetter("regularizationWeight")
-	public void setRegularizationWeight(double regularizationWeight) {
-		this.regularizationWeight = regularizationWeight;
+	@StringSetter("initialRegularizationWeight")
+	public void setInitialRegularizationWeight(double initialRegularizationWeight) {
+		this.initialRegularizationWeight = initialRegularizationWeight;
+	}
+
+	// -------------------- replanningRateIterationExponent --------------------
+
+	private double replanningRateIterationExponent = Double.NaN;
+
+	@StringGetter("replanningRateIterationExponent")
+	public double getReplanningRateIterationExponent() {
+		return this.replanningRateIterationExponent;
+	}
+
+	@StringSetter("replanningRateIterationExponent")
+	public void setReplanningRateIterationExponent(double replanningRateIterationExponent) {
+		this.replanningRateIterationExponent = replanningRateIterationExponent;
+	}
+
+	// -------------------- replanningRateIterationExponent --------------------
+
+	private double regularizationIterationExponent = Double.NaN;
+
+	@StringGetter("regularizationIterationExponent")
+	public double getRegularizationIterationExponent() {
+		return this.regularizationIterationExponent;
+	}
+
+	@StringSetter("regularizationIterationExponent")
+	public void setRegularizationIterationExponent(double regularizationIterationExponent) {
+		this.regularizationIterationExponent = regularizationIterationExponent;
 	}
 
 	// -------------------- weighting --------------------
@@ -168,21 +208,6 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup implements Re
 		this.weightingField = weightingField;
 	}
 
-	// -------------------- relativeCongestionTreshold --------------------
-
-	// private double relativeCongestionTreshold = Double.NaN;
-	//
-	// @StringGetter("relativeCongestionThreshold")
-	// public double getRelativeCongestionThreshold() {
-	// return this.relativeCongestionTreshold;
-	// }
-	//
-	// @StringSetter("relativeCongestionThreshold")
-	// public void setRelativeCongestionThreshold(final double
-	// relativeCongestionThreshold) {
-	// this.relativeCongestionTreshold = relativeCongestionThreshold;
-	// }
-
 	// -------------------- baselineReplanningRate --------------------
 
 	private double baselineReplanningRate = Double.NaN;
@@ -196,21 +221,6 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup implements Re
 	public void setBaselineReplanningRate(final double baselineReplanningRate) {
 		this.baselineReplanningRate = baselineReplanningRate;
 	}
-
-	// -------------------- congestionProportionalWeighting --------------------
-
-	// private boolean congestionProportionalWeighting = false;
-	//
-	// @StringGetter("congestionProportionalWeighting")
-	// public boolean getCongestionProportionalWeighting() {
-	// return this.congestionProportionalWeighting;
-	// }
-	//
-	// @StringSetter("congestionProportionalWeighting")
-	// public void setCongestionProportionalWeighting(final boolean
-	// congestionProportionalWeighting) {
-	// this.congestionProportionalWeighting = congestionProportionalWeighting;
-	// }
 
 	// -------------------- randomizeIfNoImprovement --------------------
 
@@ -226,7 +236,7 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup implements Re
 		this.randomizeIfNoImprovement = randomizeIfNoImprovement;
 	}
 
-	// ========== IMPLEMENTATION OF ReplanningParameterContainer ==========
+	// ==================== SUPPLEMENTARY FUNCTIONALITY ====================
 
 	// -------------------- STATIC UTILITIES --------------------
 
@@ -252,46 +262,16 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup implements Re
 
 	// -------------------- MEMBERS --------------------
 
+	private int pSimIterations;
+
 	private Network network = null; // needs to be explicitly set
 
 	private TimeDiscretization myTimeDiscretization = null; // lazy initialization
 
 	private Map<Id<Link>, Double> linkWeights = null; // lazy initialization
 
-	// -------------------- CONSTRUCTION AND INITIALIZATION --------------------
+	// -------------------- IMPLEMENTATION --------------------
 
-	public AccelerationConfigGroup() {
-		super(GROUP_NAME);
-	}
-
-	public void setNetwork(final Network network) {
-		this.network = network;
-	}
-
-	// -------------------- INTERNALS --------------------
-
-	private Link linkFromLocObj(final Object linkId) {
-		if (!(linkId instanceof Id<?>)) {
-			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
-		}
-		final Link link = this.network.getLinks().get(linkId);
-		if (link == null) {
-			throw new RuntimeException(
-					"locObj (i.e. linkId) " + linkId + " does not refer to an existing network link");
-		}
-		return link;
-	}
-
-	private double congestionFactor(final Link link, int timeBin, final TravelTime travelTimes) {
-		final int time_s = this.getTimeDiscretization().getBinCenterTime_s(timeBin);
-		final double minimalTT_s = link.getLength() / link.getFreespeed(time_s);
-		final double realizedTT_s = travelTimes.getLinkTravelTime(link, time_s, null, null);
-		return (realizedTT_s / Math.max(minimalTT_s, 1e-9));
-	}
-
-	// -------------------- INTERFACE IMPLEMENTATION --------------------
-
-	@Override
 	public TimeDiscretization getTimeDiscretization() {
 		if (this.myTimeDiscretization == null) {
 			this.myTimeDiscretization = new TimeDiscretization(this.getStartTime_s(), this.getBinSize_s(),
@@ -300,35 +280,24 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup implements Re
 		return this.myTimeDiscretization;
 	}
 
-	@Override
 	public double getMeanReplanningRate(int iteration) {
-		return this.getMeanReplanningRate();
+		return this.getInitialMeanReplanningRate()
+				* Math.pow(1.0 + iteration / this.pSimIterations, this.getReplanningRateIterationExponent());
 	}
 
-	@Override
 	public double getRegularizationWeight(int iteration, Double deltaN2) {
+		double result = Math.pow(1.0 + iteration / this.pSimIterations, this.getRegularizationIterationExponent())
+				* this.getInitialRegularizationWeight();
 		if (this.getRegularizationType() == RegularizationType.absolute) {
-			return this.getRegularizationWeight();
+			// Nothing to do, only here to check for unknown regularization types.
 		} else if (this.getRegularizationType() == RegularizationType.relative) {
-			return this.getRegularizationWeight() * this.getMeanReplanningRate(iteration) * deltaN2;
+			result *= deltaN2;
 		} else {
 			throw new RuntimeException("Unknown regularizationType: " + this.getRegularizationType());
 		}
+		return result;
 	}
 
-	// @Override
-	// public boolean isCongested(Object linkId, int timeBin, TravelTime
-	// travelTimes) {
-	// if (!(linkId instanceof Id<?>)) {
-	// throw new RuntimeException("linkId is of type " +
-	// linkId.getClass().getSimpleName());
-	// }
-	// final Link link = this.network.getLinks().get(linkId);
-	// return (this.congestionFactor(link, timeBin, travelTimes) >=
-	// this.relativeCongestionTreshold);
-	// }
-
-	@Override
 	public double getWeight(Object linkId, int bin, TravelTime travelTimes) {
 		if (this.linkWeights == null) {
 			if (this.weightingField == LinkWeighting.uniform) {
@@ -342,16 +311,8 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup implements Re
 		if (!(linkId instanceof Id<?>)) {
 			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
 		}
-		// if (this.isCongested(linkId, bin, travelTimes)) {
-		// if (this.getCongestionProportionalWeighting()) {
-		// return this.linkWeights.get(linkId) *
-		// this.congestionFactor(this.linkFromLocObj(linkId), bin, travelTimes);
-		// } else {
-		return this.linkWeights.get(linkId);
-		// }
-		// } else {
-		// return 0.0;
-		// }
-	}
 
+		return this.linkWeights.get(linkId);
+
+	}
 }

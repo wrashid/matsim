@@ -37,7 +37,6 @@ import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStragetyProvider;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStrategy;
-import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
 import org.matsim.contrib.pseudosimulation.searchacceleration.SearchAccelerator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
@@ -53,8 +52,6 @@ import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
 import org.matsim.pt.router.TransitRouter;
 
 import com.google.inject.Singleton;
-
-import floetteroed.utilities.TimeDiscretization;
 
 /**
  * @author pieterfourie
@@ -118,18 +115,12 @@ public class RunPSim_NEW {
 			}
 		}
 
-		// Re-planner selection.
+		// Installing logic for selection of replanning agents.
 
-		final TimeDiscretization timeDiscr = accelerationConfigGroup.getTimeDiscretization();
-		// final ReplanningParameterContainer replanningParameterProvider = new
-		// ConstantReplanningParameters(
-		// accelerationConfigGroup, this.scenario.getNetwork());
-		accelerationConfigGroup.setNetwork(this.scenario.getNetwork());
+		accelerationConfigGroup.configure(this.scenario.getNetwork(), pSimConfigGroup.getIterationsPerCycle());
 		this.matsimControler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
-				this.bind(TimeDiscretization.class).toInstance(timeDiscr);
-				this.bind(ReplanningParameterContainer.class).toInstance(accelerationConfigGroup);
 				this.bind(SearchAccelerator.class).in(Singleton.class);
 				this.addControlerListenerBinding().to(SearchAccelerator.class);
 				this.addEventHandlerBinding().to(SearchAccelerator.class);
@@ -169,7 +160,6 @@ public class RunPSim_NEW {
 		AcceptIntendedReplanningStrategy.addOwnStrategySettings(config);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 		config.qsim().setEndTime(30 * 3600);
-		// config.controler().setCreateGraphs(false);
 
 		/*
 		 * Run pSim/acceleration.

@@ -24,7 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
 import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.Tuple;
@@ -52,7 +52,7 @@ class SpaceTimeCounts<L> {
 
 	// -------------------- CONSTRUCTION --------------------
 
-	SpaceTimeCounts(final SpaceTimeIndicators<L> parent, final ReplanningParameterContainer replParams,
+	SpaceTimeCounts(final SpaceTimeIndicators<L> parent, final AccelerationConfigGroup replParams,
 			final TravelTime travelTimes) {
 		if (parent != null) {
 			for (int timeBin = 0; timeBin < parent.getTimeBinCnt(); timeBin++) {

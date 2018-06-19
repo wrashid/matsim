@@ -19,7 +19,7 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationAnalyzer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
 
 import floetteroed.utilities.statisticslogging.Statistic;
 
@@ -28,7 +28,7 @@ import floetteroed.utilities.statisticslogging.Statistic;
  * @author Gunnar Flötteröd
  *
  */
-public class ExpectedUniformSamplingObjectiveFunctionValue implements Statistic<AccelerationAnalyzer> {
+public class ExpectedUniformSamplingObjectiveFunctionValue implements Statistic<ReplannerIdentifier> {
 
 	public static final String LABEL = "ExpectedUniformSamplingObjectiveFunctionValue";
 
@@ -38,7 +38,7 @@ public class ExpectedUniformSamplingObjectiveFunctionValue implements Statistic<
 	}
 
 	@Override
-	public String value(AccelerationAnalyzer arg0) {
+	public String value(ReplannerIdentifier arg0) {
 		return Statistic.toString(arg0.getExpectedUniformSamplingObjectiveFunctionValue());
 	}
 

@@ -21,12 +21,11 @@ package org.matsim.contrib.pseudosimulation.searchacceleration.datastructures;
 
 import java.util.Collection;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
 import org.matsim.contrib.pseudosimulation.searchacceleration.utils.SetUtils;
 import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.DynamicData;
-import floetteroed.utilities.TimeDiscretization;
 
 /**
  * 
@@ -52,10 +51,9 @@ public class CountIndicatorUtils {
 	// return result;
 	// }
 
-	public static <L> DynamicData<L> newWeightedCounts(final TimeDiscretization timeDiscr,
-			final Collection<SpaceTimeIndicators<L>> allIndicators, final ReplanningParameterContainer replParams,
-			final TravelTime travelTimes) {
-		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
+	public static <L> DynamicData<L> newWeightedCounts(final Collection<SpaceTimeIndicators<L>> allIndicators,
+			final AccelerationConfigGroup replParams, final TravelTime travelTimes) {
+		final DynamicData<L> result = new DynamicData<L>(replParams.getTimeDiscretization());
 		for (SpaceTimeIndicators<L> indicators : allIndicators) {
 			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
 				for (L locObj : indicators.getVisitedSpaceObjects(bin)) {

@@ -23,7 +23,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -48,8 +48,9 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInP
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.EffectiveReplanningRate;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ExpectedUniformSamplingObjectiveFunctionValue;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.FinalObjectiveFunctionValue;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.MeanReplanningRate;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RegularizationWeight;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RepeatedReplanningProba;
-import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ReplanningBootstrap;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareNeverReplanned;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareScoreImprovingReplanners;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformReplanningObjectiveFunctionValue;
@@ -69,7 +70,6 @@ import org.matsim.core.replanning.StrategyManager;
 
 import com.google.inject.Inject;
 
-import floetteroed.utilities.TimeDiscretization;
 import floetteroed.utilities.statisticslogging.StatisticsWriter;
 import floetteroed.utilities.statisticslogging.TimeStampStatistic;
 
@@ -82,16 +82,14 @@ import floetteroed.utilities.statisticslogging.TimeStampStatistic;
 public class SearchAccelerator
 		implements StartupListener, IterationEndsListener, LinkEnterEventHandler, VehicleEntersTrafficEventHandler {
 
+	// -------------------- CONSTANTS --------------------
+
+	private static final Logger log = Logger.getLogger(Controler.class);
+
 	// -------------------- INJECTED MEMBERS --------------------
 
 	@Inject
 	private MatsimServices services;
-
-	@Inject
-	private TimeDiscretization timeDiscr;
-
-	@Inject
-	private ReplanningParameterContainer replanningParameters;
 
 	/*
 	 * We know if we are in a pSim iteration or in a "real" iteration. The
@@ -105,22 +103,17 @@ public class SearchAccelerator
 
 	// -------------------- NON-INJECTED MEMBERS --------------------
 
-	private final int bootstrapReplications = 0;
-
-	private void log(final Object msg) {
-		Logger.getLogger(Controler.class).info("[Acceleration] " + msg);
-	}
-
 	private Set<Id<Person>> replanners = null;
+
+	// the following only for bookkeeping
+	private final Set<Id<Person>> everReplanners = new LinkedHashSet<>();
+	private final Set<Id<Person>> lastReplanners = new LinkedHashSet<>();
 
 	// Delegate for mobsim listening. Created upon startup.
 	private LinkUsageListener matsimMobsimUsageListener = null;
 
 	// Created upon startup
-	private StatisticsWriter<AccelerationAnalyzer> statsWriter = null;
-
-	// Created upon startup
-	private AccelerationAnalyzer analyzer = null;
+	private StatisticsWriter<ReplannerIdentifier> statsWriter = null;
 
 	private PopulationState hypotheticalPopulationState = null;
 
@@ -131,6 +124,10 @@ public class SearchAccelerator
 	}
 
 	// -------------------- HELPERS --------------------
+
+	private AccelerationConfigGroup replanningParameters() {
+		return ConfigUtils.addOrGetModule(this.services.getConfig(), AccelerationConfigGroup.class);
+	}
 
 	private void setWeightOfHypotheticalReplanning(final double weight) {
 		final StrategyManager strategyManager = this.services.getStrategyManager();
@@ -146,14 +143,14 @@ public class SearchAccelerator
 	@Override
 	public void notifyStartup(final StartupEvent event) {
 
-		this.matsimMobsimUsageListener = new LinkUsageListener(this.timeDiscr);
-
-		this.analyzer = new AccelerationAnalyzer();
+		this.matsimMobsimUsageListener = new LinkUsageListener(this.replanningParameters().getTimeDiscretization());
 
 		this.statsWriter = new StatisticsWriter<>(
 				new File(this.services.getConfig().controler().getOutputDirectory(), "acceleration.log").toString(),
 				false);
 		this.statsWriter.addSearchStatistic(new TimeStampStatistic<>());
+		this.statsWriter.addSearchStatistic(new MeanReplanningRate());
+		this.statsWriter.addSearchStatistic(new RegularizationWeight());
 		this.statsWriter.addSearchStatistic(new DriversInPhysicalSim());
 		this.statsWriter.addSearchStatistic(new DriversInPseudoSim());
 		this.statsWriter.addSearchStatistic(new EffectiveReplanningRate());
@@ -165,14 +162,12 @@ public class SearchAccelerator
 		this.statsWriter.addSearchStatistic(new ShareScoreImprovingReplanners());
 		this.statsWriter.addSearchStatistic(new UniformityExcess());
 		this.statsWriter.addSearchStatistic(new WeightedCountDifferences2());
-		this.statsWriter.addSearchStatistic(new ReplanningBootstrap());
 	}
 
 	// -------------------- IMPLEMENTATION OF EventHandlers --------------------
 
 	@Override
 	public void reset(final int iteration) {
-		this.log("reset of event handling in iteration " + iteration);
 		this.matsimMobsimUsageListener.reset(iteration);
 	}
 
@@ -193,14 +188,14 @@ public class SearchAccelerator
 
 	private int pseudoSimIterationCnt = 0;
 
-	// for testing
+	// A safeguard.
 	private boolean nextMobsimIsExpectedToBePhysical = true;
 
 	@Override
 	public void notifyIterationEnds(final IterationEndsEvent event) {
 
 		if (this.mobsimSwitcher.isQSimIteration()) {
-			this.log("physical mobsim run in iteration " + event.getIteration() + " ends");
+			log.info("physical mobsim run in iteration " + event.getIteration() + " ends");
 			if (!this.nextMobsimIsExpectedToBePhysical) {
 				throw new RuntimeException("Did not expect a physical mobsim run!");
 			}
@@ -208,7 +203,7 @@ public class SearchAccelerator
 			this.lastPhysicalLinkUsages = this.matsimMobsimUsageListener.getAndClearIndicators();
 			this.pseudoSimIterationCnt = 0;
 		} else {
-			this.log("pseudoSim run in iteration " + event.getIteration() + " ends");
+			log.info("pseudoSim run in iteration " + event.getIteration() + " ends");
 			if (this.nextMobsimIsExpectedToBePhysical) {
 				throw new RuntimeException("Expected a physical mobsim run!");
 			}
@@ -250,16 +245,14 @@ public class SearchAccelerator
 			 */
 
 			final EventsManager eventsManager = EventsUtils.createEventsManager();
-			final LinkUsageListener pSimLinkUsageListener = new LinkUsageListener(this.timeDiscr);
+			final LinkUsageListener pSimLinkUsageListener = new LinkUsageListener(
+					this.replanningParameters().getTimeDiscretization());
 			eventsManager.addHandler(pSimLinkUsageListener);
 			final PSim pSim = new PSim(this.services.getScenario(), eventsManager, selectedHypotheticalPlans,
 					this.services.getLinkTravelTimes());
 			pSim.run();
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> lastPseudoSimLinkUsages = pSimLinkUsageListener
 					.getAndClearIndicators();
-
-			this.log("observed " + this.lastPhysicalLinkUsages.size() + " physical drivers");
-			this.log("observed " + lastPseudoSimLinkUsages.size() + " drivers in pSim");
 
 			/*
 			 * Memorize the most recent hypothetical population state re-set the population
@@ -287,29 +280,18 @@ public class SearchAccelerator
 			final AccelerationConfigGroup accConf = ConfigUtils.addOrGetModule(this.services.getConfig(),
 					AccelerationConfigGroup.class);
 
-			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters,
-					this.timeDiscr, event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
+			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters(),
+					event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
 					this.services.getScenario().getPopulation(), this.services.getLinkTravelTimes(),
 					accConf.getModeTypeField(), personId2deltaScore, personId2oldScore, personId2newScore,
 					deltaScoreTotal, accConf.getRandomizeIfNoImprovement(), accConf.getBaselineReplanningRate());
 			this.replanners = replannerIdentifier.drawReplanners();
 
-			final List<Double> bootstrap;
-			if (this.bootstrapReplications > 0) {
-				bootstrap = replannerIdentifier.bootstrap(this.bootstrapReplications);
-			} else {
-				bootstrap = null;
-			}
+			replannerIdentifier.analyze(this.services.getScenario().getPopulation().getPersons().keySet(),
+					this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages, this.replanners, this.everReplanners,
+					this.lastReplanners);
 
-			this.analyzer.analyze(this.services.getScenario().getPopulation().getPersons().keySet(),
-					this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages, this.replanners, bootstrap,
-					replannerIdentifier.getUniformReplanningObjectiveFunctionValue(),
-					replannerIdentifier.getShareOfScoreImprovingReplanners(),
-					replannerIdentifier.getFinalObjectiveFunctionValue(), replannerIdentifier.getUniformityExcess(),
-					replannerIdentifier.getExpectedUniformSamplingObjectiveFunctionValue(),
-					replannerIdentifier.getSumOfWeightedCountDifferences2());
-
-			this.statsWriter.writeToFile(this.analyzer);
+			this.statsWriter.writeToFile(replannerIdentifier);
 
 			this.nextMobsimIsExpectedToBePhysical = true;
 			this.setWeightOfHypotheticalReplanning(1e9);
@@ -325,7 +307,7 @@ public class SearchAccelerator
 	// -------------------- REPLANNING FUNCTIONALITY --------------------
 
 	public void replan(final HasPlansAndId<Plan, Person> person) {
-		if (this.replanners.contains(person.getId())) {
+		if ((this.replanners != null) && this.replanners.contains(person.getId())) {
 			// This replaces the entire choice set and not just the selected plan. Why not.
 			this.hypotheticalPopulationState.set(person);
 		}

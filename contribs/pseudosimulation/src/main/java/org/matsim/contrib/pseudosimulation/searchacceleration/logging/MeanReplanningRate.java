@@ -19,7 +19,7 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationAnalyzer;
+import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
 
 import floetteroed.utilities.statisticslogging.Statistic;
 
@@ -28,18 +28,18 @@ import floetteroed.utilities.statisticslogging.Statistic;
  * @author Gunnar Flötteröd
  *
  */
-public class ExperiencedCongestedLinkShare_DEPRECATED implements Statistic<AccelerationAnalyzer> {
+public class MeanReplanningRate implements Statistic<ReplannerIdentifier> {
 
-	public static final String LABEL = "ExperiencedCongestedLinkShare";
-
+	public static final String LABEL = "MeanReplanningRate";
+	
 	@Override
 	public String label() {
 		return LABEL;
 	}
 
 	@Override
-	public String value(AccelerationAnalyzer acc) {
-		return ""; // Statistic.toString(acc.getExperiencedCongestedLinkShare());
+	public String value(ReplannerIdentifier arg0) {
+		return Statistic.toString(arg0.getMeanReplanningRate());
 	}
 
 }
