@@ -1,3 +1,21 @@
+/* *********************************************************************** *
+ * project: org.matsim.*
+ * *********************************************************************** *
+ *                                                                         *
+ * copyright       : (C) 2018 by the members listed in the COPYING,        *
+ *                   LICENSE and WARRANTY file.                            *
+ * email           : info at matsim dot org                                *
+ *                                                                         *
+ * *********************************************************************** *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *   See also COPYING, LICENSE and WARRANTY file                           *
+ *                                                                         *
+ * *********************************************************************** */
+
 /**
  * 
  */
@@ -17,24 +35,22 @@ import org.matsim.core.utils.misc.Time;
  * 
  * @author wlbean
  * 
- * FIXME Again, multiple ways of getting things done. I started cleaning up 
- * 		 constructor.
  * FIXME Receiver is both at Order and ReceiverOrder level. Necessary?
  */
 
 public class Order {
 	final private Logger log = Logger.getLogger(Order.class);
 
-	private final Id<Order> orderId;
-	private final String orderName;
-	private final Receiver receiver;
-	private final ReceiverProduct receiverProduct;
-	private final Double orderQuantity;
-	private final Double serviceTime;
+	private Id<Order> orderId;
+	private String orderName;
+	private Receiver receiver;
+	private ReceiverProduct receiverProduct;
+	private Double orderQuantity;
+	private Double serviceTime;
 	
 	
 	/* protected */ 
-	Order(Id<Order> orderId, String orderName, Receiver receiver, 
+	/*Order(Id<Order> orderId, String orderName, Receiver receiver, 
 			ReceiverProduct receiverProduct, Double orderQuantity, Double serviceTime){
 		this.orderId = orderId;
 		this.orderName = orderName;
@@ -42,6 +58,15 @@ public class Order {
 		this.receiverProduct = receiverProduct;
 		this.orderQuantity = orderQuantity;
 		this.serviceTime = serviceTime;
+	}*/
+	
+	private Order(Builder builder){
+		this.orderId = builder.orderId;
+		this.orderName = builder.orderName;
+		this.orderQuantity = builder.orderQuantity;
+		this.receiver = builder.receiver;
+		this.receiverProduct = builder.receiverProduct;
+		this.serviceTime = builder.serviceTime;
 	}
 
 
@@ -131,9 +156,13 @@ public class Order {
 		 * Returns a new instance of a receiver order.
 		 */
 	
-		public static Builder newInstance(Id<Order> orderId, Receiver receiver, ReceiverProduct receiverProduct){
+		 public static Builder newInstance(Id<Order> orderId, Receiver receiver, ReceiverProduct receiverProduct){
 			return new Builder(orderId, receiver, receiverProduct);
 		}
+		
+		//public static Builder newInstance(){
+		//	return new Builder();
+		//}
 	
 		private Receiver receiver;
 		private Id<Order> orderId;
@@ -149,6 +178,9 @@ public class Order {
 			this.receiverProduct = receiverProduct;
 		}
 	
+		//private Builder(){
+		//}
+		
 		/**
 		 * Sets the delivery service time.
 		 * @param serviceTime
@@ -165,10 +197,10 @@ public class Order {
 			return this;
 		}
 		
-		public Builder setOrderName(String name) {
-			this.orderName = name;
-			return this;
-		}
+		//public Builder setOrderName(String name) {
+		//	this.orderName = name;
+		//	return this;
+		//}
 		
 	
 		/**
@@ -192,9 +224,15 @@ public class Order {
 			return this;
 		}
 	
+		
 		public Order build(){
+			return new Order(this);
+		}
+		/*public Order build(){
 			return new Order(orderId, orderName, receiver, receiverProduct, orderQuantity, serviceTime);
 		}
+		*/
+
 		
 		public Order buildWithCalculatedOrderQuantity() {
 			this.calculateOrderQuantity();

@@ -1,3 +1,21 @@
+/* *********************************************************************** *
+ * project: org.matsim.*
+ * *********************************************************************** *
+ *                                                                         *
+ * copyright       : (C) 2018 by the members listed in the COPYING,        *
+ *                   LICENSE and WARRANTY file.                            *
+ * email           : info at matsim dot org                                *
+ *                                                                         *
+ * *********************************************************************** *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *   See also COPYING, LICENSE and WARRANTY file                           *
+ *                                                                         *
+ * *********************************************************************** */
+
 /**
  * 
  */
@@ -17,21 +35,21 @@ import org.matsim.contrib.freight.receiver.reorderPolicy.SSReorderPolicy;
  */
 public class ReceiverProduct {
 
-	public static ReceiverProduct newInstance(){
-		return new ReceiverProduct();		
-	}
+	// static ReceiverProduct newInstance(){
+	//	return new ReceiverProduct();		
+	//}
 	
-	private ReorderPolicy policy = new SSReorderPolicy(100000.0, 500000.0);
-	private double stockOnHand = 0.0;
+	private ReorderPolicy policy; // = new SSReorderPolicy(100000.0, 500000.0);
+	private double stockOnHand;// = 0.0;
 	//private final Id<Link> locationId;
 	//private Id<ProductType> typeId;
 	private ProductType productType;
 	//private double reqCap;
 	//private String descr;
 	
-	ReceiverProduct(){
-		super();
-	}
+	//ReceiverProduct(){
+	//	super();
+	//}
 	
 	private ReceiverProduct(Builder builder){
 		//this.locationId = builder.locationId;
@@ -69,9 +87,9 @@ public class ReceiverProduct {
 		return stockOnHand;
 	}
 	
-	public void setStockOnHand(double stockOnHand) {
-		this.stockOnHand = stockOnHand;
-	}
+	//public void setStockOnHand(double stockOnHand) {
+	//	this.stockOnHand = stockOnHand;
+	//}
 	
 	
 	/**
@@ -97,6 +115,7 @@ public class ReceiverProduct {
 	 * XML file means that you must read the ReceiverProduct first, BEFORE you 
 	 * get to the ReorderPolicy. 
 	 */
+	
 	public static class Builder {
 		
 		/**
