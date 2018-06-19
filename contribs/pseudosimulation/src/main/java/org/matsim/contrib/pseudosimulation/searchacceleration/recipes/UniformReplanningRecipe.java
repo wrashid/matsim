@@ -17,29 +17,34 @@
  * contact: gunnar.flotterod@gmail.com
  *
  */
-package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
+package org.matsim.contrib.pseudosimulation.searchacceleration.recipes;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationAnalyzer;
-
-import floetteroed.utilities.statisticslogging.Statistic;
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.core.gbl.MatsimRandom;
 
 /**
  *
  * @author Gunnar Flötteröd
  *
  */
-public class ExperiencedCongestedLinkShare implements Statistic<AccelerationAnalyzer> {
+public class UniformReplanningRecipe implements ReplannerIdentifierRecipe {
 
-	public static final String LABEL = "ExperiencedCongestedLinkShare";
+	// -------------------- CONSTANTS --------------------
 
-	@Override
-	public String label() {
-		return LABEL;
+	private final double meanLambda;
+
+	// -------------------- CONSTRUCTION --------------------
+
+	public UniformReplanningRecipe(final double meanLambda) {
+		this.meanLambda = meanLambda;
 	}
 
+	// --------------- IMPLEMENTATION OF ReplannerIdentifierRecipe ---------------
+
 	@Override
-	public String value(AccelerationAnalyzer acc) {
-		return Statistic.toString(acc.getExperiencedCongestedLinkShare());
+	public boolean isReplanner(final Id<Person> personId, final double deltaScoreIfYes, final double deltaScoreIfNo) {
+		return (MatsimRandom.getRandom().nextDouble() < this.meanLambda);
 	}
 
 }

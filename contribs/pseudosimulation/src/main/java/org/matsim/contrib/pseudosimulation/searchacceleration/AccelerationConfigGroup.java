@@ -19,6 +19,7 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
@@ -28,32 +29,29 @@ import org.matsim.core.config.ReflectiveConfigGroup;
 import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.TimeDiscretization;
+import floetteroed.utilities.Units;
 
 /**
  *
  * @author Gunnar Flötteröd
  *
  */
-public class AccelerationConfigGroup extends ReflectiveConfigGroup {
+public class AccelerationConfigGroup extends ReflectiveConfigGroup implements ReplanningParameterContainer {
+
+	// ==================== MATSim-SPECIFICS ====================
 
 	// -------------------- CONSTANTS --------------------
 
 	public static final String GROUP_NAME = "acceleration";
 
-	// -------------------- CONSTRUCTION --------------------
-
-	public AccelerationConfigGroup() {
-		super(GROUP_NAME);
-	}
-
 	// -------------------- mode --------------------
-	
+
 	public static enum ModeType {
-		accelerate, off, hani
+		off, accelerate, mah2007, mah2009
 	};
 
 	private ModeType modeTypeField = null;
-	
+
 	@StringGetter("mode")
 	public ModeType getModeTypeField() {
 		return this.modeTypeField;
@@ -63,20 +61,6 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	public void setModeTypeField(final ModeType modeTypeField) {
 		this.modeTypeField = modeTypeField;
 	}
-	
-//	// -------------------- accelerate --------------------
-//
-//	private boolean accelerate = false;
-//
-//	@StringGetter("accelerate")
-//	public boolean getAccelerate() {
-//		return this.accelerate;
-//	}
-//
-//	@StringSetter("accelerate")
-//	public void setAccelerate(boolean accelerate) {
-//		this.accelerate = accelerate;
-//	}
 
 	// -------------------- startTime_s --------------------
 
@@ -186,45 +170,47 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 
 	// -------------------- relativeCongestionTreshold --------------------
 
-	private double relativeCongestionTreshold = Double.NaN;
+	// private double relativeCongestionTreshold = Double.NaN;
+	//
+	// @StringGetter("relativeCongestionThreshold")
+	// public double getRelativeCongestionThreshold() {
+	// return this.relativeCongestionTreshold;
+	// }
+	//
+	// @StringSetter("relativeCongestionThreshold")
+	// public void setRelativeCongestionThreshold(final double
+	// relativeCongestionThreshold) {
+	// this.relativeCongestionTreshold = relativeCongestionThreshold;
+	// }
 
-	@StringGetter("relativeCongestionThreshold")
-	public double getRelativeCongestionThreshold() {
-		return this.relativeCongestionTreshold;
+	// -------------------- baselineReplanningRate --------------------
+
+	private double baselineReplanningRate = Double.NaN;
+
+	@StringGetter("baselineReplanningRate")
+	public double getBaselineReplanningRate() {
+		return this.baselineReplanningRate;
 	}
 
-	@StringSetter("relativeCongestionThreshold")
-	public void setRelativeCongestionThreshold(final double relativeCongestionThreshold) {
-		this.relativeCongestionTreshold = relativeCongestionThreshold;
-	}
-
-	// -------------------- relativeCongestionTreshold --------------------
-
-	private double minReplanningRate = Double.NaN;
-
-	@StringGetter("minReplanningRate")
-	public double getMinReplanningRate() {
-		return this.minReplanningRate;
-	}
-
-	@StringSetter("minReplanningRate")
-	public void setMinReplanningRate(final double minReplanningRate) {
-		this.minReplanningRate = minReplanningRate;
+	@StringSetter("baselineReplanningRate")
+	public void setBaselineReplanningRate(final double baselineReplanningRate) {
+		this.baselineReplanningRate = baselineReplanningRate;
 	}
 
 	// -------------------- congestionProportionalWeighting --------------------
 
-	private boolean congestionProportionalWeighting = false;
-
-	@StringGetter("congestionProportionalWeighting")
-	public boolean getCongestionProportionalWeighting() {
-		return this.congestionProportionalWeighting;
-	}
-
-	@StringSetter("congestionProportionalWeighting")
-	public void setCongestionProportionalWeighting(final boolean congestionProportionalWeighting) {
-		this.congestionProportionalWeighting = congestionProportionalWeighting;
-	}
+	// private boolean congestionProportionalWeighting = false;
+	//
+	// @StringGetter("congestionProportionalWeighting")
+	// public boolean getCongestionProportionalWeighting() {
+	// return this.congestionProportionalWeighting;
+	// }
+	//
+	// @StringSetter("congestionProportionalWeighting")
+	// public void setCongestionProportionalWeighting(final boolean
+	// congestionProportionalWeighting) {
+	// this.congestionProportionalWeighting = congestionProportionalWeighting;
+	// }
 
 	// -------------------- randomizeIfNoImprovement --------------------
 
@@ -240,10 +226,72 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		this.randomizeIfNoImprovement = randomizeIfNoImprovement;
 	}
 
-	// -------------------- CUSTOM STUFF --------------------
+	// ========== IMPLEMENTATION OF ReplanningParameterContainer ==========
 
-	private TimeDiscretization myTimeDiscretization = null;
+	// -------------------- STATIC UTILITIES --------------------
 
+	public static Map<Id<Link>, Double> newUniformLinkWeights(final Network network) {
+		final Map<Id<Link>, Double> weights = new LinkedHashMap<>();
+		for (Link link : network.getLinks().values()) {
+			weights.put(link.getId(), 1.0);
+		}
+		return weights;
+	}
+
+	public static Map<Id<Link>, Double> newOneOverCapacityLinkWeights(final Network network) {
+		final Map<Id<Link>, Double> weights = new LinkedHashMap<>();
+		for (Link link : network.getLinks().values()) {
+			final double cap_veh_h = link.getFlowCapacityPerSec() * Units.VEH_H_PER_VEH_S;
+			if (cap_veh_h <= 1e-6) {
+				throw new RuntimeException("link " + link.getId() + " has capacity of " + cap_veh_h + " veh/h");
+			}
+			weights.put(link.getId(), 1.0 / cap_veh_h);
+		}
+		return weights;
+	}
+
+	// -------------------- MEMBERS --------------------
+
+	private Network network = null; // needs to be explicitly set
+
+	private TimeDiscretization myTimeDiscretization = null; // lazy initialization
+
+	private Map<Id<Link>, Double> linkWeights = null; // lazy initialization
+
+	// -------------------- CONSTRUCTION AND INITIALIZATION --------------------
+
+	public AccelerationConfigGroup() {
+		super(GROUP_NAME);
+	}
+
+	public void setNetwork(final Network network) {
+		this.network = network;
+	}
+
+	// -------------------- INTERNALS --------------------
+
+	private Link linkFromLocObj(final Object linkId) {
+		if (!(linkId instanceof Id<?>)) {
+			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
+		}
+		final Link link = this.network.getLinks().get(linkId);
+		if (link == null) {
+			throw new RuntimeException(
+					"locObj (i.e. linkId) " + linkId + " does not refer to an existing network link");
+		}
+		return link;
+	}
+
+	private double congestionFactor(final Link link, int timeBin, final TravelTime travelTimes) {
+		final int time_s = this.getTimeDiscretization().getBinCenterTime_s(timeBin);
+		final double minimalTT_s = link.getLength() / link.getFreespeed(time_s);
+		final double realizedTT_s = travelTimes.getLinkTravelTime(link, time_s, null, null);
+		return (realizedTT_s / Math.max(minimalTT_s, 1e-9));
+	}
+
+	// -------------------- INTERFACE IMPLEMENTATION --------------------
+
+	@Override
 	public TimeDiscretization getTimeDiscretization() {
 		if (this.myTimeDiscretization == null) {
 			this.myTimeDiscretization = new TimeDiscretization(this.getStartTime_s(), this.getBinSize_s(),
@@ -252,25 +300,58 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		return this.myTimeDiscretization;
 	}
 
-	public Map<Id<Link>, Double> newLinkWeights(final Network network) {
-		if (this.weightingField == LinkWeighting.uniform) {
-			return ReplanningParameterContainer.newUniformLinkWeights(network);
-		} else if (this.weightingField == LinkWeighting.oneOverCapacity) {
-			return ReplanningParameterContainer.newOneOverCapacityLinkWeights(network);
+	@Override
+	public double getMeanReplanningRate(int iteration) {
+		return this.getMeanReplanningRate();
+	}
+
+	@Override
+	public double getRegularizationWeight(int iteration, Double deltaN2) {
+		if (this.getRegularizationType() == RegularizationType.absolute) {
+			return this.getRegularizationWeight();
+		} else if (this.getRegularizationType() == RegularizationType.relative) {
+			return this.getRegularizationWeight() * this.getMeanReplanningRate(iteration) * deltaN2;
 		} else {
-			throw new RuntimeException("unkhandled link weighting \"" + this.weightingField + "\"");
+			throw new RuntimeException("Unknown regularizationType: " + this.getRegularizationType());
 		}
 	}
 
-	public double congestionFactor(final Link link, int timeBin, final TravelTime travelTimes) {
-		final int time_s = this.getTimeDiscretization().getBinCenterTime_s(timeBin);
-		final double minimalTT_s = link.getLength() / link.getFreespeed(time_s);
-		final double realizedTT_s = travelTimes.getLinkTravelTime(link, time_s, null, null);
-		return (realizedTT_s / Math.max(minimalTT_s, 1e-9));
-	}
+	// @Override
+	// public boolean isCongested(Object linkId, int timeBin, TravelTime
+	// travelTimes) {
+	// if (!(linkId instanceof Id<?>)) {
+	// throw new RuntimeException("linkId is of type " +
+	// linkId.getClass().getSimpleName());
+	// }
+	// final Link link = this.network.getLinks().get(linkId);
+	// return (this.congestionFactor(link, timeBin, travelTimes) >=
+	// this.relativeCongestionTreshold);
+	// }
 
-	public boolean isCongested(final Link link, int timeBin, final TravelTime travelTimes) {
-		return (this.congestionFactor(link, timeBin, travelTimes) >= this.relativeCongestionTreshold);
+	@Override
+	public double getWeight(Object linkId, int bin, TravelTime travelTimes) {
+		if (this.linkWeights == null) {
+			if (this.weightingField == LinkWeighting.uniform) {
+				this.linkWeights = newUniformLinkWeights(network);
+			} else if (this.weightingField == LinkWeighting.oneOverCapacity) {
+				this.linkWeights = newOneOverCapacityLinkWeights(network);
+			} else {
+				throw new RuntimeException("unhandled link weighting \"" + this.weightingField + "\"");
+			}
+		}
+		if (!(linkId instanceof Id<?>)) {
+			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
+		}
+		// if (this.isCongested(linkId, bin, travelTimes)) {
+		// if (this.getCongestionProportionalWeighting()) {
+		// return this.linkWeights.get(linkId) *
+		// this.congestionFactor(this.linkFromLocObj(linkId), bin, travelTimes);
+		// } else {
+		return this.linkWeights.get(linkId);
+		// }
+		// } else {
+		// return 0.0;
+		// }
 	}
 
 }

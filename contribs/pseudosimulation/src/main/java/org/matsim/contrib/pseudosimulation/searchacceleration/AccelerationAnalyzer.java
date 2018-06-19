@@ -28,9 +28,6 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
-import org.matsim.core.router.util.TravelTime;
-
-import floetteroed.utilities.TimeDiscretization;
 
 /**
  * 
@@ -41,10 +38,6 @@ public class AccelerationAnalyzer {
 
 	// -------------------- MEMBERS --------------------
 
-	private final ReplanningParameterContainer replParams;
-
-	private final TimeDiscretization timeDiscr;
-
 	private Integer driversInPseudoSim = null;
 
 	private Integer driversInPhysicalSim = null;
@@ -54,14 +47,6 @@ public class AccelerationAnalyzer {
 	private Double repeatedReplanningProba = null;
 
 	private Double shareNeverReplanned = null;
-
-	private Double congestedLinkShareOverall = null;
-
-	private Double hypotheticalCongestedLinkShare = null;
-
-	private Double experiencedCongestedLinkShare = null;
-
-	private Double anticipatedCongestedLinkShare = null;
 
 	private final Set<Id<Person>> everReplanners = new LinkedHashSet<>();
 
@@ -83,9 +68,7 @@ public class AccelerationAnalyzer {
 
 	// -------------------- CONSTRUCTION --------------------
 
-	AccelerationAnalyzer(final ReplanningParameterContainer replParams, final TimeDiscretization timeDiscr) {
-		this.replParams = replParams;
-		this.timeDiscr = timeDiscr;
+	AccelerationAnalyzer() {
 	}
 
 	// -------------------- TODO LOGGING GETTERS --------------------
@@ -110,22 +93,6 @@ public class AccelerationAnalyzer {
 		return this.shareNeverReplanned;
 	}
 
-	public Double getCongestedLinkShareOverall() {
-		return this.congestedLinkShareOverall;
-	}
-
-	public Double getHypotheticalCongestedLinkShare() {
-		return this.hypotheticalCongestedLinkShare;
-	}
-
-	public Double getExperiencedCongestedLinkShare() {
-		return this.experiencedCongestedLinkShare;
-	}
-
-	public Double getAnticipatedCongestedLinkShare() {
-		return this.anticipatedCongestedLinkShare;
-	}
-
 	public List<Double> getBootstrap() {
 		return this.bootstrap;
 	}
@@ -145,24 +112,23 @@ public class AccelerationAnalyzer {
 	public Double getUniformityExcess() {
 		return this.uniformityExcess;
 	}
-	
+
 	public Double getExpectedUniformSamplingObjectiveFunctionValue() {
 		return this.expectedUniformSamplingObjectiveFunctionValue;
 	}
-	
+
 	public Double getSumOfWeightedCountDifferences2() {
 		return this.sumOfWeightedCountDifferences2;
 	}
-	
+
 	// -------------------- IMPLEMENTATION --------------------
 
 	public void analyze(final Set<Id<Person>> allPersonIds,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalSimUsage,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pseudoSimUsage,
-			final Set<Id<Person>> replannerIds, final int iteration, final List<Double> bootstrap,
-			final Double uniformReplanningObjectiveFunctionValue, final Double shareOfScoreImprovingReplanners,
-			final Double finalObjectiveFunctionValue, final Double uniformityExcess, final TravelTime travelTimes,
-			final Double expectedUniformSamplingObjectiveFunctionValue, final Double sumOfWeightedCountDifferences2) {
+			final Set<Id<Person>> replannerIds, final List<Double> bootstrap, final Double uniformReplanningObjectiveFunctionValue,
+			final Double shareOfScoreImprovingReplanners, final Double finalObjectiveFunctionValue,
+			final Double uniformityExcess, final Double expectedUniformSamplingObjectiveFunctionValue, final Double sumOfWeightedCountDifferences2) {
 
 		this.bootstrap = bootstrap;
 		this.uniformReplanningObjectiveFunctionValue = uniformReplanningObjectiveFunctionValue;
@@ -172,7 +138,7 @@ public class AccelerationAnalyzer {
 		this.expectedUniformSamplingObjectiveFunctionValue = expectedUniformSamplingObjectiveFunctionValue;
 
 		this.sumOfWeightedCountDifferences2 = sumOfWeightedCountDifferences2;
-		
+
 		this.driversInPhysicalSim = driverId2physicalSimUsage.size();
 		this.driversInPseudoSim = driverId2pseudoSimUsage.size();
 
@@ -187,138 +153,5 @@ public class AccelerationAnalyzer {
 			this.repeatedReplanningProba = ((double) this.lastReplanners.size()) / lastReplannerCnt;
 		}
 		this.lastReplanners = new LinkedHashSet<>(replannerIds);
-
-		// final double meanLambda = this.replParams.getMeanLambda(iteration);
-		//
-		// final DynamicData<Id<Link>> uniformDeltaN = new
-		// DynamicData<>(this.timeDiscr);
-		// for (Id<Person> personId : allPersonIds) {
-		// for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
-		// if (driverId2pseudoSimUsage.containsKey(personId)) {
-		// for (Id<Link> newLink :
-		// driverId2pseudoSimUsage.get(personId).getVisitedSpaceObjects(timeBin)) {
-		// uniformDeltaN.add(newLink, timeBin, meanLambda);
-		// }
-		// }
-		// if (driverId2physicalSimUsage.containsKey(personId)) {
-		// for (Id<Link> oldLink :
-		// driverId2physicalSimUsage.get(personId).getVisitedSpaceObjects(timeBin)) {
-		// uniformDeltaN.add(oldLink, timeBin, -meanLambda);
-		// }
-		// }
-		// }
-		// }
-		//
-		// final DynamicData<Id<Link>> optimizedDeltaN = new
-		// DynamicData<>(this.timeDiscr);
-		// for (Id<Person> personId : replannerIds) {
-		// for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
-		// if (driverId2pseudoSimUsage.containsKey(personId)) {
-		// for (Id<Link> newLink :
-		// driverId2pseudoSimUsage.get(personId).getVisitedSpaceObjects(timeBin)) {
-		// optimizedDeltaN.add(newLink, timeBin, 1.0);
-		// }
-		// }
-		// if (driverId2physicalSimUsage.containsKey(personId)) {
-		// for (Id<Link> oldLink :
-		// driverId2physicalSimUsage.get(personId).getVisitedSpaceObjects(timeBin)) {
-		// optimizedDeltaN.add(oldLink, timeBin, -1.0);
-		// }
-		// }
-		// }
-		// }
-		//
-		// final List<Double> diffList = new ArrayList<>();
-		// for (Id<Link> linkId : SetUtils.union(uniformDeltaN.keySet(),
-		// optimizedDeltaN.keySet())) {
-		// double sum = 0;
-		// for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
-		// sum += (optimizedDeltaN.getBinValue(linkId, timeBin) -
-		// uniformDeltaN.getBinValue(linkId, timeBin));
-		// }
-		// if (Math.abs(sum) >= 1e-3) {
-		// diffList.add(sum);
-		// }
-		// }
-		// Collections.sort(diffList);
-		//
-		// if (diffList.size() > 0) {
-		// final Path path = Paths.get(this.compareToUniformReplanningFileName);
-		// try (BufferedWriter writer = Files.newBufferedWriter(path,
-		// StandardOpenOption.APPEND)) {
-		// writer.write(diffList.get(0).toString());
-		// for (int i = 1; i < diffList.size(); i++) {
-		// writer.write("," + diffList.get(i));
-		// }
-		// writer.newLine();
-		// } catch (Exception e) {
-		// throw new RuntimeException(e);
-		// }
-		// }
-
-		// congestion analysis
-
-		int hypotheticalVisitedCongestedLinkCnt = 0;
-		int totalHypotheticalVisitedLinkCnt = 0;
-
-		int experiencedVisitedCongestedLinkCnt = 0;
-		int totalExperiencedVisitedLinkCnt = 0;
-
-		int anticipatedVisitedCongestedLinkCnt = 0;
-		int totalAnticipatedVisitedLinkCnt = 0;
-
-		for (Id<Person> personId : allPersonIds) {
-
-			// hypothetical
-			final SpaceTimeIndicators<Id<Link>> hypotheticalTravelIndicators = driverId2pseudoSimUsage.get(personId);
-			if (hypotheticalTravelIndicators != null) {
-				for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
-					for (Id<Link> linkId : hypotheticalTravelIndicators.getVisitedSpaceObjects(timeBin)) {
-						totalHypotheticalVisitedLinkCnt++;
-						if (this.replParams.isCongested(linkId, timeBin, travelTimes)) {
-							hypotheticalVisitedCongestedLinkCnt++;
-						}
-					}
-				}
-			}
-
-			// experienced
-			final SpaceTimeIndicators<Id<Link>> experiencedTravelIndicators = driverId2physicalSimUsage.get(personId);
-			if (experiencedTravelIndicators != null) {
-				for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
-					for (Id<Link> linkId : experiencedTravelIndicators.getVisitedSpaceObjects(timeBin)) {
-						totalExperiencedVisitedLinkCnt++;
-						if (this.replParams.isCongested(linkId, timeBin, travelTimes)) {
-							experiencedVisitedCongestedLinkCnt++;
-						}
-					}
-				}
-			}
-
-			// anticipated
-			final SpaceTimeIndicators<Id<Link>> anticipatedTravelIndicators;
-			if (replannerIds.contains(personId)) {
-				anticipatedTravelIndicators = driverId2pseudoSimUsage.get(personId);
-			} else {
-				anticipatedTravelIndicators = driverId2physicalSimUsage.get(personId);
-			}
-			if (anticipatedTravelIndicators != null) {
-				for (int timeBin = 0; timeBin < this.timeDiscr.getBinCnt(); timeBin++) {
-					for (Id<Link> linkId : anticipatedTravelIndicators.getVisitedSpaceObjects(timeBin)) {
-						totalAnticipatedVisitedLinkCnt++;
-						if (this.replParams.isCongested(linkId, timeBin, travelTimes)) {
-							anticipatedVisitedCongestedLinkCnt++;
-						}
-					}
-				}
-			}
-		}
-
-		this.hypotheticalCongestedLinkShare = ((double) hypotheticalVisitedCongestedLinkCnt)
-				/ totalHypotheticalVisitedLinkCnt;
-		this.anticipatedCongestedLinkShare = ((double) anticipatedVisitedCongestedLinkCnt)
-				/ totalAnticipatedVisitedLinkCnt;
-		this.experiencedCongestedLinkShare = ((double) experiencedVisitedCongestedLinkCnt)
-				/ totalExperiencedVisitedLinkCnt;
 	}
 }

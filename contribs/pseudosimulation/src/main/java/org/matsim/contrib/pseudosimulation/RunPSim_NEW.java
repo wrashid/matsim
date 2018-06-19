@@ -22,12 +22,9 @@
 package org.matsim.contrib.pseudosimulation;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.population.*;
 import org.matsim.contrib.eventsBasedPTRouter.TransitRouterEventsWSFactory;
 import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTime;
 import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTimeCalculator;
@@ -40,10 +37,8 @@ import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStragetyProvider;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStrategy;
-import org.matsim.contrib.pseudosimulation.searchacceleration.ConstantReplanningParameters;
 import org.matsim.contrib.pseudosimulation.searchacceleration.ReplanningParameterContainer;
 import org.matsim.contrib.pseudosimulation.searchacceleration.SearchAccelerator;
-import org.matsim.contrib.pseudosimulation.searchacceleration.utils.RemoveAllButSelectedPlan;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimWaitTimeCalculator;
@@ -86,22 +81,6 @@ public class RunPSim_NEW {
 		this.config = config;
 		this.scenario = ScenarioUtils.loadScenario(config);
 
-		for (Person person : scenario.getPopulation().getPersons().values()) {
-			for (Plan plan : person.getPlans()) {
-				Iterator<PlanElement> iterator = plan.getPlanElements().iterator();
-				while (iterator.hasNext()) {
-					PlanElement planElement = iterator.next();
-					if (planElement instanceof Leg) {
-						Leg leg = (Leg) planElement;
-						leg.setRoute(null);
-						leg.setMode(TransportMode.car);
-					}
-
-				}
-			}
-
-		}
-
 		// The following line will make the controler use the events manager that
 		// doesn't check for event order.
 		// This is essential for pseudo-simulation as the PSim module generates events
@@ -142,13 +121,15 @@ public class RunPSim_NEW {
 		// Re-planner selection.
 
 		final TimeDiscretization timeDiscr = accelerationConfigGroup.getTimeDiscretization();
-		final ReplanningParameterContainer replanningParameterProvider = new ConstantReplanningParameters(
-				accelerationConfigGroup, this.scenario.getNetwork());
+		// final ReplanningParameterContainer replanningParameterProvider = new
+		// ConstantReplanningParameters(
+		// accelerationConfigGroup, this.scenario.getNetwork());
+		accelerationConfigGroup.setNetwork(this.scenario.getNetwork());
 		this.matsimControler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
 				this.bind(TimeDiscretization.class).toInstance(timeDiscr);
-				this.bind(ReplanningParameterContainer.class).toInstance(replanningParameterProvider);
+				this.bind(ReplanningParameterContainer.class).toInstance(accelerationConfigGroup);
 				this.bind(SearchAccelerator.class).in(Singleton.class);
 				this.addControlerListenerBinding().to(SearchAccelerator.class);
 				this.addEventHandlerBinding().to(SearchAccelerator.class);
@@ -182,7 +163,8 @@ public class RunPSim_NEW {
 		 */
 
 		final Config config;
-		config = ConfigUtils.loadConfig(args[0]);
+		config = ConfigUtils.loadConfig("/Users/GunnarF/NoBackup/data-workspace/searchacceleration"
+				+ "/rerun-2015-11-23a_No_Toll_large/matsim-config.xml");
 
 		AcceptIntendedReplanningStrategy.addOwnStrategySettings(config);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
@@ -200,13 +182,13 @@ public class RunPSim_NEW {
 		final RunPSim_NEW pSim = new RunPSim_NEW(config, pSimConfigGroup, accelerationConfigGroup);
 
 		// the following for best response
-//		final RemoveAllButSelectedPlan br = new RemoveAllButSelectedPlan();
-//		pSim.overridingModules.add(new AbstractModule() {
-//			@Override
-//			public void install() {
-//				this.addControlerListenerBinding().toInstance(br);
-//			}
-//		});
+		// final RemoveAllButSelectedPlan br = new RemoveAllButSelectedPlan();
+		// pSim.overridingModules.add(new AbstractModule() {
+		// @Override
+		// public void install() {
+		// this.addControlerListenerBinding().toInstance(br);
+		// }
+		// });
 
 		pSim.run();
 	}

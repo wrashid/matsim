@@ -28,19 +28,18 @@ import floetteroed.utilities.statisticslogging.Statistic;
  * @author Gunnar Flötteröd
  *
  */
-public class AnticipatedCongestedLinkShare implements Statistic<AccelerationAnalyzer> {
+public class HypotheticalCongestedLinkShare_DEPRECATED implements Statistic<AccelerationAnalyzer> {
 
-	public static final String LABEL = "AnticipatedCongestedLinkShare";
-	
+	public static final String LABEL = "HypotheticalCongestedLinkShare";
+
 	@Override
 	public String label() {
 		return LABEL;
 	}
 
 	@Override
-	public String value(final AccelerationAnalyzer acc) {
-		return Statistic.toString(acc.getAnticipatedCongestedLinkShare());
+	public String value(AccelerationAnalyzer arg0) {
+		return ""; // Statistic.toString(arg0.getHypotheticalCongestedLinkShare());
 	}
 
 }
-
