@@ -38,9 +38,13 @@ public class ConnectionScanRouterTest extends TransitRouterImplTest {
     public static Collection<Object> createRouterTypes() {
         Object[] router = new Object[]{
 //                "standard",
-//                "raptor",
-//                "connectionScan",
-//                "otp"
+                "connectionScan"
+                // expect 4 tests to fail.
+                // 2 because of lineSwitchUtility (connection scan does not support that)
+                // 1 because of travel-time-differences in nanoSeconds-range (CS does jet not support that either)
+                // 1 because in CS you cannot enter a vehicle the same second you start at a stop
+                // further issues that don't lead to failed tests here:
+                //
         };
         return Arrays.asList(router);
     }
