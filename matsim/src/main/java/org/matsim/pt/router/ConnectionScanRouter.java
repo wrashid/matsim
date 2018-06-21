@@ -1,8 +1,10 @@
 package org.matsim.pt.router;
 
+import com.google.inject.Singleton;
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.DefaultStopPaths;
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.PublicTransportRoute;
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.StopPaths;
+import edu.kit.ifv.mobitopp.publictransport.connectionscan.TransitNetwork;
 import edu.kit.ifv.mobitopp.publictransport.model.*;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.population.Leg;
@@ -25,6 +27,8 @@ import java.util.Optional;
 /**
  * @author gthunig on 17.10.2017.
  */
+
+@Singleton
 public class ConnectionScanRouter extends AbstractTransitRouter implements TransitRouter {
     private static final Logger log = Logger.getLogger(ConnectionScanRouter.class);
 
@@ -34,17 +38,16 @@ public class ConnectionScanRouter extends AbstractTransitRouter implements Trans
     private TransitRouterConfig trConfig;
 
     public ConnectionScanRouter(TransitRouterConfig config, TransitTravelDisutility travelDisutility,
-                                TransitSchedule transitSchedule) {
+                                TransitNetwork transitNetwork, MappingHandler mappingHandler) {
         super(config, travelDisutility);
-        init(config, transitSchedule);
+        init(config, transitNetwork, mappingHandler);
     }
 
-    private void init(TransitRouterConfig config, TransitSchedule transitSchedule) {
+    private void init(TransitRouterConfig config, TransitNetwork transitNetwork, MappingHandler mappingHandler) {
         trConfig = config;
-        NetworkConverter networkConverter = new NetworkConverter(transitSchedule, config, getTravelDisutility());
-        this.connectionScan = new edu.kit.ifv.mobitopp.publictransport.connectionscan.ConnectionScan(networkConverter.convert());
-        this.mappingHandler = networkConverter.getMappingHandler();
+        this.connectionScan = new edu.kit.ifv.mobitopp.publictransport.connectionscan.ConnectionScan(transitNetwork);
         this.transitPassengerRouteConverter = new TransitPassengerRouteConverter(mappingHandler);
+        this.mappingHandler = mappingHandler;
     }
 
 
@@ -103,14 +106,18 @@ public class ConnectionScanRouter extends AbstractTransitRouter implements Trans
                 accessArrivalTime, route.connections(),
                 0,0);
 
-        double pathTime = transitPassengerRoute.getTravelCost();
+        List<Leg> legList = convertPassengerRouteToLegList(departureTime, transitPassengerRoute, fromFacility.getCoord(), toFacility.getCoord(), person);
+
+        double pathTime = 0;
+        for (Leg leg : legList)
+            pathTime += leg.getTravelTime();
         double directWalkTime = getWalkTime(person, fromFacility.getCoord(), toFacility.getCoord());
 
         if (directWalkTime < pathTime) {
             return this.createDirectWalkLegList(person, fromFacility.getCoord(), toFacility.getCoord());
+        } else {
+            return legList;
         }
-
-        return convertPassengerRouteToLegList(departureTime, transitPassengerRoute, fromFacility.getCoord(), toFacility.getCoord(), person);
     }
 
     @Deprecated //extension radius is not working correctly, but do we even need this method?
