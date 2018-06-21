@@ -180,7 +180,7 @@ public class ReceiverImpl implements Receiver {
 	@Override
 	public boolean isInTimeWindow(double time) {
 		if(this.timeWindows.isEmpty()) {
-			log.warn("No time windows are set! Assuming any time is uitable.");
+			log.warn("No time windows are set! Assuming any time is suitable.");
 			return true;
 		}
 		
