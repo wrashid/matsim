@@ -142,15 +142,17 @@ public class Receivers implements Attributable{
 	 */
 	public void linkReceiverOrdersToCarriers(Carriers carriers) {
 		for(Receiver receiver : this.receiverMap.values()) {
-			for(ReceiverOrder order : receiver.getPlans()) {
-				/* Check that the carrier actually exists. */
-				if(!carriers.getCarriers().containsKey(order.getCarrierId())) {
-					throw new RuntimeException("Cannot find carrier \"" 
-							+ order.getCarrierId().toString() + "\" for receiver \"" 
-							+ receiver.getId().toString() + "\"'s order. ");
+			for(ReceiverPlan plan : receiver.getPlans()) {
+				for(ReceiverOrder order : plan.getReceiverOrders()) {
+					/* Check that the carrier actually exists. */
+					if(!carriers.getCarriers().containsKey(order.getCarrierId())) {
+						throw new RuntimeException("Cannot find carrier \"" 
+								+ order.getCarrierId().toString() + "\" for receiver \"" 
+								+ receiver.getId().toString() + "\"'s order. ");
+					}
+					
+					order.setCarrier(carriers.getCarriers().get(order.getCarrierId()));
 				}
-
-				order.setCarrier(carriers.getCarriers().get(order.getCarrierId()));
 			}
 		}
 	}

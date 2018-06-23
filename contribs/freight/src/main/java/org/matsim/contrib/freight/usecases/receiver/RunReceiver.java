@@ -80,13 +80,14 @@ public class RunReceiver {
 			run(i);
 		}
 	}
-
-
+	
+	
 	public static void run(int run) {
+		/*TODO We may want to fix this up to rather use the FreightScenario. */
 		String outputfolder = String.format("./output/run_%03d/", run);
 		new File(outputfolder).mkdirs();
-
-		ReceiverChessboardScenario.createChessboardScenario(SEED_BASE*run, run);
+		
+		ReceiverChessboardScenario.createChessboardScenario(SEED_BASE*run, run, true);
 
 		/* Read basic scenario elements. */
 		Config config = ConfigUtils.loadConfig(outputfolder + "config.xml");

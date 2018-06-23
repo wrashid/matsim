@@ -68,9 +68,9 @@ ReplanningListener, BeforeMobsimListener {
 	@Override
 	public void notifyReplanning(ReplanningEvent event) {
 	
-		GenericStrategyManager<ReceiverOrder, Receiver> stratMan = stratManFac.createReceiverStrategyManager();
+		GenericStrategyManager<ReceiverPlan, Receiver> stratMan = stratManFac.createReceiverStrategyManager();
 		
-		Collection<HasPlansAndId<ReceiverOrder, Receiver>> receiverCollection = new ArrayList<>();
+		Collection<HasPlansAndId<ReceiverPlan, Receiver>> receiverCollection = new ArrayList<>();
 		
 		for(Receiver receiver : receivers.getReceivers().values()){
 			receiverCollection.add(receiver);
@@ -86,7 +86,7 @@ ReplanningListener, BeforeMobsimListener {
 	
 	@Override
 	public void notifyScoring(ScoringEvent event) {
-	this.tracker.scoreSelectedOrders();
+	this.tracker.scoreSelectedPlans();
 	}
 
 	@Override

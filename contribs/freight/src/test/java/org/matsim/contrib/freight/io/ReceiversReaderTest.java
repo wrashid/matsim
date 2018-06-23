@@ -30,6 +30,7 @@ import org.matsim.contrib.freight.receiver.Order;
 import org.matsim.contrib.freight.receiver.ProductType;
 import org.matsim.contrib.freight.receiver.Receiver;
 import org.matsim.contrib.freight.receiver.ReceiverOrder;
+import org.matsim.contrib.freight.receiver.ReceiverPlan;
 import org.matsim.contrib.freight.receiver.ReceiverProduct;
 import org.matsim.contrib.freight.receiver.Receivers;
 import org.matsim.contrib.freight.receiver.reorderPolicy.ReorderPolicy;
@@ -91,7 +92,11 @@ public class ReceiversReaderTest {
 		
 		/* (Receiver)Orders */
 		Assert.assertEquals("Wrong number of orders/plans", 1, r1.getPlans().size());
-		ReceiverOrder ro = r1.getPlans().get(0);
+		ReceiverPlan plan = r1.getPlans().get(0);
+		Assert.assertTrue("Singular plan should be selected", plan.isSelected());
+		ReceiverOrder ro = plan.getReceiverOrder(Id.create("Carrier1", Carrier.class));
+		Assert.assertNotNull("Should find ReceiverOrder.", ro);
+		
 		Assert.assertTrue("Wrong carrier", ro.getCarrierId().equals(Id.create("Carrier1", Carrier.class)));
 		Assert.assertTrue("Wrong receiver", ro.getReceiverId().equals(Id.create("1", Receiver.class)));
 		Assert.assertNull("Should not have score now", ro.getScore());

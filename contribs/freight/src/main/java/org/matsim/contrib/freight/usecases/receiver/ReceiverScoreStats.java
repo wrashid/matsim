@@ -10,6 +10,7 @@ import java.util.Locale;
 import org.apache.log4j.Logger;
 import org.matsim.contrib.freight.receiver.Receiver;
 import org.matsim.contrib.freight.receiver.ReceiverOrder;
+import org.matsim.contrib.freight.receiver.ReceiverPlan;
 import org.matsim.contrib.freight.receiver.Receivers;
 import org.matsim.core.controler.events.IterationEndsEvent;
 import org.matsim.core.controler.events.ShutdownEvent;
@@ -97,46 +98,57 @@ public class ReceiverScoreStats implements StartupListener, IterationEndsListene
 				double bestScore = Double.NEGATIVE_INFINITY;
 				double sumScores = 0.0;
 				double cntScores = 0;
-				for (ReceiverOrder order : receiver.getPlans()) {
-
-					if (order.getScore() == null) {
-						continue;
-					}
-					double score = order.getScore();
-
-					// worst plan
-					if (worstPlan == null) {
-						worstPlan = order;
-						worstScore = score;
-					} else if (score < worstScore) {
-						worstPlan = order;
-						worstScore = score;
-					}
-
-					// best plan
-					if (bestPlan == null) {
-						bestPlan = order;
-						bestScore = score;
-					} else if (score > bestScore) {
-						bestPlan = order;
-						bestScore = score;
-					}
-
-					// avg. score
-					sumScores += score;
-					cntScores++;
-
-					// executed plan?
-					if (receiver.getSelectedPlan().equals(order)) {
-						sumExecutedScores += score;
-						nofExecutedScores++;
+				
+				/*
+				 * FIXME This probably requires some re-doing. I (JWJ) changed
+				 * the code so that each PLAN is scored... but I think it should 
+				 * probable just be the SELECTED plan that is scored, right? 
+				 */
+				for(ReceiverPlan plan : receiver.getPlans()) {
+					for(ReceiverOrder order : plan.getReceiverOrders()) {
+						if (order.getScore() == null) {
+							continue;
+						}
+						Double score = order.getScore();
+						if (score == null) {
+							continue;
+						}
+						
+						// worst plan
+						if (worstPlan == null) {
+							worstPlan = order;
+							worstScore = score;
+						} else if (score < worstScore) {
+							worstPlan = order;
+							worstScore = score;
+						}
+						
+						// best plan
+						if (bestPlan == null) {
+							bestPlan = order;
+							bestScore = score;
+						} else if (score > bestScore) {
+							bestPlan = order;
+							bestScore = score;
+						}
+						
+						// avg. score
+						sumScores += score;
+						cntScores++;
+						
+						// executed plan?
+						if (receiver.getSelectedPlan().equals(order)) {
+							sumExecutedScores += score;
+							nofExecutedScores++;
 //						if (plan.getType() == Plan.Type.CAR) {
 //							nofExecutedIvPlans ++;
 //						}
 //						else if (plan.getType() == Plan.Type.PT) {
 //							nofExecutedOevPlans++;
 //						}
+						}
 					}
+					
 				}
 
 				if (worstPlan != null) {

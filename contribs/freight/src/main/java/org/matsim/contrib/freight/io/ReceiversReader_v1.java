@@ -36,6 +36,7 @@ import org.matsim.contrib.freight.receiver.ProductType;
 import org.matsim.contrib.freight.receiver.Receiver;
 import org.matsim.contrib.freight.receiver.ReceiverImpl;
 import org.matsim.contrib.freight.receiver.ReceiverOrder;
+import org.matsim.contrib.freight.receiver.ReceiverPlan;
 import org.matsim.contrib.freight.receiver.ReceiverProduct;
 import org.matsim.contrib.freight.receiver.Receivers;
 import org.matsim.contrib.freight.receiver.reorderPolicy.ReorderPolicy;
@@ -62,7 +63,7 @@ public class ReceiversReader_v1 extends MatsimXmlParser implements MatsimReader 
 	private final static String TIME_WINDOW = "timeWindow";
 	private final static String PRODUCT = "product";
 	private final static String REORDER_POLICY = "reorderPolicy";
-	private final static String ORDERS = "orders";
+	private final static String PLAN = "plan";
 	private final static String ORDER = "order";
 	private final static String ITEM = "item";
 
@@ -77,6 +78,8 @@ public class ReceiversReader_v1 extends MatsimXmlParser implements MatsimReader 
 	private final static String ATTR_PRODUCT_ID = "id";
 	private final static String ATTR_PRODUCT_ONHAND = "onHand";
 	private final static String ATTR_REORDER_POLICY_NAME = "name";
+	private final static String ATTR_PLAN_SCORE = "score";
+	private final static String ATTR_PLAN_SELECTED = "selected";
 	private final static String ATTR_ORDER_CARRIER = "carrierId";
 	private final static String ATTR_ITEM_ID = "id";
 	private final static String ATTR_ITEM_NAME = "name";
@@ -92,6 +95,8 @@ public class ReceiversReader_v1 extends MatsimXmlParser implements MatsimReader 
 	private TimeWindow currentTimeWindow = null;
 	private Id<Carrier> currentOrderCarrierId = null;
 	private List<Order> currentOrders = null;
+	private ReceiverPlan.Builder currentPlanBuilder = null;
+	private Boolean currentPlanSelected = null;
 	private ReceiverProduct.Builder currentProductBuilder = null;
 
 	private final Receivers receivers;
@@ -143,8 +148,8 @@ public class ReceiversReader_v1 extends MatsimXmlParser implements MatsimReader 
 		case REORDER_POLICY:
 			startReorderPolicy(atts);
 			break;
-		case ORDERS:
-			startOrders();
+		case PLAN:
+			startPlan(atts);
 			break;
 		case ORDER:
 			startOrder(atts);
@@ -177,6 +182,9 @@ public class ReceiversReader_v1 extends MatsimXmlParser implements MatsimReader 
 			break;
 		case ORDER:
 			endOrder();
+			break;
+		case PLAN:
+			endPlan();
 			break;
 		case RECEIVERS:
 			counter.printCounter();
@@ -235,8 +243,29 @@ public class ReceiversReader_v1 extends MatsimXmlParser implements MatsimReader 
 		}
 	}
 	
-	private void startOrders() {
+	private void startPlan(Attributes atts) {
 		this.currentOrders = new ArrayList<Order>();
+		currentPlanBuilder = ReceiverPlan.Builder.newInstance().setReceiver(currentReceiver);
+		
+		String score = atts.getValue(ATTR_PLAN_SCORE);
+		if(score != null) {
+			currentPlanBuilder = currentPlanBuilder.setScore(Double.parseDouble(score));
+		}
+		
+		String selected = atts.getValue(ATTR_PLAN_SELECTED);
+		if(selected.equalsIgnoreCase("yes")) {
+			currentPlanSelected = true;
+		} else if (selected.equalsIgnoreCase("no")) {
+			currentPlanSelected = false;
+		} else {
+			throw new IllegalArgumentException("Unknown plan selection state \"" + selected + "\"");
+		}
+		currentPlanBuilder = currentPlanBuilder.setSelected(currentPlanSelected);
+	}
+	
+	private void endPlan() {
+		ReceiverPlan plan = currentPlanBuilder.build();
+		currentReceiver.addPlan(plan);
 	}
 
 	private void startOrder(Attributes atts) {
@@ -246,7 +275,7 @@ public class ReceiversReader_v1 extends MatsimXmlParser implements MatsimReader 
 	
 	private void endOrder() {
 		ReceiverOrder order = new ReceiverOrder(currentReceiver.getId(), currentOrders, currentOrderCarrierId);
-		currentReceiver.setSelectedPlan(order);
+		currentPlanBuilder = currentPlanBuilder.addReceiverOrder(order);
 	}
 	
 	private void startItem(Attributes atts) {

@@ -31,10 +31,9 @@ import org.matsim.utils.objectattributes.attributable.Attributable;
  * A receiver.
  * 
  * @author wlbean
- *
  */
 
-public interface Receiver extends HasPlansAndId<ReceiverOrder, Receiver>, Attributable {
+public interface Receiver extends HasPlansAndId<ReceiverPlan, Receiver>, Attributable {
 
 	/**
 	 * Gets the receiverId.
@@ -56,7 +55,7 @@ public interface Receiver extends HasPlansAndId<ReceiverOrder, Receiver>, Attrib
 	 * Gets a collection of receiver orders.
 	 */
 	@Override
-	public abstract List<ReceiverOrder> getPlans();
+	public abstract List<ReceiverPlan> getPlans();
 
 	/**
 	 * Gets a collection of receiver products.
@@ -75,13 +74,13 @@ public interface Receiver extends HasPlansAndId<ReceiverOrder, Receiver>, Attrib
 	 * Gets the selected receiver order.
 	 */
 	@Override
-	public abstract ReceiverOrder getSelectedPlan();
+	public abstract ReceiverPlan getSelectedPlan();
 
 	/**
 	 * Set the selected receiver order.
 	 */
 	@Override
-	public abstract void setSelectedPlan(ReceiverOrder selectedOrder);
+	public abstract void setSelectedPlan(ReceiverPlan plan);
 
 	/**
 	 * TODO (2018/04, jwj & wlb): currently we assume that time windows are set per receiver, and not per

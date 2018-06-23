@@ -4,8 +4,8 @@
 package org.matsim.contrib.freight.usecases.receiver;
 
 import org.matsim.contrib.freight.receiver.Receiver;
-import org.matsim.contrib.freight.receiver.ReceiverOrder;
 import org.matsim.contrib.freight.receiver.ReceiverOrderStrategyManagerFactory;
+import org.matsim.contrib.freight.receiver.ReceiverPlan;
 import org.matsim.core.replanning.GenericPlanStrategy;
 import org.matsim.core.replanning.GenericPlanStrategyImpl;
 import org.matsim.core.replanning.GenericStrategyManager;
@@ -21,11 +21,11 @@ public class MyReceiverOrderStrategyManagerFactorImpl implements ReceiverOrderSt
 	 * @see org.matsim.contrib.freight.receiver.ReceiverOrderStrategyManagerFactory#createReceiverStrategyManager()
 	 */
 	@Override
-	public GenericStrategyManager<ReceiverOrder, Receiver> createReceiverStrategyManager() {
-		final GenericStrategyManager<ReceiverOrder, Receiver> stratMan = new GenericStrategyManager<>();
+	public GenericStrategyManager<ReceiverPlan, Receiver> createReceiverStrategyManager() {
+		final GenericStrategyManager<ReceiverPlan, Receiver> stratMan = new GenericStrategyManager<>();
 		stratMan.setMaxPlansPerAgent(5);
 		{
-			GenericPlanStrategy<ReceiverOrder, Receiver> strategy = new GenericPlanStrategyImpl<>(new ExpBetaPlanChanger<ReceiverOrder, Receiver>(1.));
+			GenericPlanStrategy<ReceiverPlan, Receiver> strategy = new GenericPlanStrategyImpl<>(new ExpBetaPlanChanger<ReceiverPlan, Receiver>(1.));
 			stratMan.addStrategy(strategy, null, 1.0);
 
 		}

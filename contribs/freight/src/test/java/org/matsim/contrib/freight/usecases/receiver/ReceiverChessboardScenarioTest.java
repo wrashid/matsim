@@ -1,10 +1,8 @@
 /* *********************************************************************** *
  * project: org.matsim.*
- * ReceiversWriterTest.java
- *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2009 by the members listed in the COPYING,        *
+ * copyright       : (C) 2018 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -17,31 +15,26 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
-
-package org.matsim.contrib.freight.io;
+  
+package org.matsim.contrib.freight.usecases.receiver;
 
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 import org.matsim.contrib.freight.receiver.FreightScenario;
-import org.matsim.contrib.freight.usecases.receiver.ReceiverChessboardScenario;
-import org.matsim.testcases.MatsimTestUtils;
 
-public class ReceiversWriterTest {
+public class ReceiverChessboardScenarioTest {
 
-	@Rule public MatsimTestUtils utils = new MatsimTestUtils();
-	
 	@Test
-	public void testV1() {
-		FreightScenario fs = ReceiverChessboardScenario.createChessboardScenario(1l, 1, false);
+	public void testCreateChessboardScenario() {
 		
-		/* Now the receiver is 'complete', and we can write it to file. */
+		FreightScenario fs = null;
 		try {
-			new ReceiversWriter(fs.getReceivers()).writeV1(utils.getOutputDirectory() + "receivers.xml");
+			fs = ReceiverChessboardScenario.createChessboardScenario(1l, 1, false);
 		} catch (Exception e) {
-			e.printStackTrace();
-			Assert.fail("Should write without exception.");
+			Assert.fail("Should create the scenario without exceptions.");
 		}
+		
+		/* TODO Test the various elements. */
 	}
 
 }

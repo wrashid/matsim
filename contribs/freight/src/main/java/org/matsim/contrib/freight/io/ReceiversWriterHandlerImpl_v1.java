@@ -31,6 +31,7 @@ import org.matsim.contrib.freight.receiver.Order;
 import org.matsim.contrib.freight.receiver.ProductType;
 import org.matsim.contrib.freight.receiver.Receiver;
 import org.matsim.contrib.freight.receiver.ReceiverOrder;
+import org.matsim.contrib.freight.receiver.ReceiverPlan;
 import org.matsim.contrib.freight.receiver.ReceiverProduct;
 import org.matsim.contrib.freight.receiver.Receivers;
 import org.matsim.contrib.freight.receiver.reorderPolicy.ReorderPolicy;
@@ -120,13 +121,20 @@ public class ReceiversWriterHandlerImpl_v1 implements ReceiversWriterHandler {
 	}
 
 	@Override
-	public void startOrders(BufferedWriter out) throws IOException {
-		out.write("\t\t<orders>\n");
+	public void startPlan(ReceiverPlan plan, BufferedWriter out) throws IOException {
+		Double score = plan.getScore();
+		String selected = plan.isSelected() ? "yes" : "no";
+		
+		out.write("\t\t<plan");
+		if(score != null) {
+			out.write(" score=\"" + score + "\"");
+		}
+		out.write(" selected=\"" + selected + "\">\n");
 	}
 
 	@Override
-	public void endOrders(BufferedWriter out) throws IOException {
-		out.write("\t\t</orders>\n");
+	public void endPlan(BufferedWriter out) throws IOException {
+		out.write("\t\t</plan>\n");
 	}
 
 	@Override

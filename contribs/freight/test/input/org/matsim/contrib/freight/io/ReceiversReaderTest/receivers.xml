@@ -13,7 +13,7 @@
 
 	<!-- =========================================================================================== -->
 
-	<receiver id="1" linkId="j(4,5)R">
+	<receiver id="1" linkId="j(2,8)R">
 		<timeWindow start="10:00:00" end="14:00:00"/>
 		<product id="P1" onHand="0.00">
 			<reorderPolicy name="(s,S)">
@@ -31,17 +31,17 @@
 				</attributes>
 			</reorderPolicy>
 		</product>
-		<orders>
+		<plan selected="yes">
 			<order carrierId="Carrier1">
 				<item id="Order1" name="service" productId="P1" quantity="1000" serviceTime="00:30:00"/>
 				<item id="Order2" name="service" productId="P2" quantity="2000" serviceTime="00:30:00"/>
 			</order>
-		</orders>
+		</plan>
 	</receiver>
 
 	<!-- =========================================================================================== -->
 
-	<receiver id="2" linkId="j(2,8)R">
+	<receiver id="2" linkId="i(9,1)R">
 		<timeWindow start="08:00:00" end="12:00:00"/>
 		<product id="P1" onHand="0.00">
 			<reorderPolicy name="(s,S)">
@@ -59,12 +59,12 @@
 				</attributes>
 			</reorderPolicy>
 		</product>
-		<orders>
+		<plan selected="yes">
 			<order carrierId="Carrier1">
 				<item id="Order3" name="service" productId="P1" quantity="800" serviceTime="01:00:00"/>
 				<item id="Order4" name="service" productId="P2" quantity="1500" serviceTime="01:00:00"/>
 			</order>
-		</orders>
+		</plan>
 	</receiver>
 
 	<!-- =========================================================================================== -->

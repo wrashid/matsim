@@ -1,10 +1,8 @@
 /* *********************************************************************** *
  * project: org.matsim.*
- * ReceiversWriterTest.java
- *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2009 by the members listed in the COPYING,        *
+ * copyright       : (C) 2018 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -17,31 +15,37 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
-
-package org.matsim.contrib.freight.io;
+  
+/**
+ * 
+ */
+package org.matsim.contrib.freight.receiver;
 
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.matsim.contrib.freight.receiver.FreightScenario;
-import org.matsim.contrib.freight.usecases.receiver.ReceiverChessboardScenario;
-import org.matsim.testcases.MatsimTestUtils;
+import org.matsim.api.core.v01.Id;
+import org.matsim.contrib.freight.receiver.ReceiverPlan.Builder;
 
-public class ReceiversWriterTest {
 
-	@Rule public MatsimTestUtils utils = new MatsimTestUtils();
-	
+public class ReceiverPlanTest {
+
 	@Test
-	public void testV1() {
-		FreightScenario fs = ReceiverChessboardScenario.createChessboardScenario(1l, 1, false);
-		
-		/* Now the receiver is 'complete', and we can write it to file. */
-		try {
-			new ReceiversWriter(fs.getReceivers()).writeV1(utils.getOutputDirectory() + "receivers.xml");
-		} catch (Exception e) {
-			e.printStackTrace();
-			Assert.fail("Should write without exception.");
-		}
+	public void testBuilderOne() {
+		Builder builder = Builder.newInstance();
+		ReceiverPlan plan = builder.build();
+		Assert.assertNull("Receiver Id should be null", plan.getScore());
+		Assert.assertNull("Score should be null", plan.getScore());
 	}
 
+	@Test
+	public void testBuilderTwo() {
+		Receiver receiver = ReceiverImpl.newInstance(Id.create("1", Receiver.class));
+		Builder builder = Builder.newInstance();
+		ReceiverPlan plan = builder.setReceiver(receiver).build();
+		Assert.assertEquals("Wrong receiver Id", Id.create("1", Receiver.class), plan.getReceiver().getId());
+		Assert.assertNull("Score should be null", plan.getScore());
+	}
+	
+	/* TODO Add tests to check ReceiverOrders */
+	
 }

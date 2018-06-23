@@ -50,11 +50,14 @@ import org.matsim.contrib.freight.io.ReceiversWriter;
 import org.matsim.contrib.freight.jsprit.MatsimJspritFactory;
 import org.matsim.contrib.freight.jsprit.NetworkBasedTransportCosts;
 import org.matsim.contrib.freight.jsprit.NetworkRouter;
+import org.matsim.contrib.freight.receiver.FreightScenario;
+import org.matsim.contrib.freight.receiver.MutableFreightScenario;
 import org.matsim.contrib.freight.receiver.Order;
 import org.matsim.contrib.freight.receiver.ProductType;
 import org.matsim.contrib.freight.receiver.Receiver;
 import org.matsim.contrib.freight.receiver.ReceiverImpl;
 import org.matsim.contrib.freight.receiver.ReceiverOrder;
+import org.matsim.contrib.freight.receiver.ReceiverPlan;
 import org.matsim.contrib.freight.receiver.ReceiverProduct;
 import org.matsim.contrib.freight.receiver.Receivers;
 import org.matsim.contrib.freight.receiver.reorderPolicy.SSReorderPolicy;
@@ -82,25 +85,42 @@ public class ReceiverChessboardScenario {
 	/**
 	 * Build the entire chessboard example.
 	 */
-	public static void createChessboardScenario(long seed, int run) {
+	public static FreightScenario createChessboardScenario(long seed, int run, boolean write) {
 		Scenario sc = setupChessboardScenario(seed, run);
-		Receivers receivers = createChessboardReceivers(sc);
 		Carriers carriers = createChessboardCarriers(sc);
-		createReceiverOrders(receivers, carriers);
-
-		//		new CarrierPlanXmlWriterV2(carriers).write("/Users/jwjoubert/Downloads/carrierFile.xml");
+		
+		MutableFreightScenario fs = new MutableFreightScenario(sc, carriers);
+		
+		createAndAddChessboardReceivers(fs);
+		createReceiverOrders(fs);
 
 		/* Let jsprit do its magic and route the given receiver orders. */
-		generateCarrierPlan(carriers, sc.getNetwork());
-
+		generateCarrierPlan(fs.getCarriers(), fs.getScenario().getNetwork());
+		
+		if(write) {
+			writeFreightScenario(fs);
+		}
+		
+		/* Link the carriers to the receivers. */
+		fs.getReceivers().linkReceiverOrdersToCarriers(fs.getCarriers());
+		
+		return fs;
+	}
+	
+	private static void writeFreightScenario(FreightScenario fs) {
 		/* Write the necessary bits to file. */
-		String outputFolder = sc.getConfig().controler().getOutputDirectory();
+		String outputFolder = fs.getScenario().getConfig().controler().getOutputDirectory();
 		outputFolder += outputFolder.endsWith("/") ? "" : "/";
 		new File(outputFolder).mkdirs();
+		
+		new ConfigWriter(fs.getScenario().getConfig()).write(outputFolder + "config.xml");
+		new CarrierPlanXmlWriterV2(fs.getCarriers()).write(outputFolder + "carriers.xml");
+		new ReceiversWriter(fs.getReceivers()).write(outputFolder + "receivers.xml");
 
-		new ConfigWriter(sc.getConfig()).write(outputFolder + "config.xml");
-		new CarrierPlanXmlWriterV2(carriers).write(outputFolder + "carriers.xml");
-		new ReceiversWriter(receivers).write(outputFolder + "receivers.xml");
+		/* Write the vehicle types. FIXME This will have to change so that vehicle
+		 * types lie at the Carriers level, and not per Carrier. In this scenario 
+		 * there luckily is only a single Carrier. */
+		new CarrierVehicleTypeWriter(CarrierVehicleTypes.getVehicleTypes(fs.getCarriers())).write(outputFolder + "carrierVehicleTypes.xml");
 	}
 
 	/**
@@ -147,7 +167,10 @@ public class ReceiverChessboardScenario {
 	}
 
 
-	public static void createReceiverOrders(Receivers receivers, Carriers carriers) {
+	public static void createReceiverOrders(FreightScenario fs) {
+		Carriers carriers = fs.getCarriers();
+		Receivers receivers = fs.getReceivers();
+		
 		Carrier carrierOne = carriers.getCarriers().get(Id.create("Carrier1", Carrier.class));
 
 		/* Create generic product types */
@@ -185,7 +208,8 @@ public class ReceiverChessboardScenario {
 
 		/* Combine product orders into single receiver order for a specific carrier. */
 		ReceiverOrder receiver1order = new ReceiverOrder(receiverOne.getId(), r1orders, carrierOne.getId());
-		receiverOne.setSelectedPlan(receiver1order);
+		ReceiverPlan receiverOnePlan = ReceiverPlan.Builder.newInstance().setReceiver(receiverOne).addReceiverOrder(receiver1order).build();
+		receiverOne.setSelectedPlan(receiverOnePlan);
 
 		/* Convert receiver orders to initial carrier services. */
 		for(Order order : receiver1order.getReceiverOrders()){
@@ -214,7 +238,8 @@ public class ReceiverChessboardScenario {
 
 		/* Combine product orders into single receiver order for a specific carrier. */
 		ReceiverOrder receiver2order = new ReceiverOrder(receiverTwo.getId(), r2orders, carrierOne.getId());
-		receiverTwo.setSelectedPlan(receiver2order);
+		ReceiverPlan receiverTwoPlan = ReceiverPlan.Builder.newInstance().setReceiver(receiverTwo).addReceiverOrder(receiver2order).build();
+		receiverTwo.setSelectedPlan(receiverTwoPlan);
 
 		/* Convert receiver orders to initial carrier services. */
 		for(Order order : receiver2order.getReceiverOrders()){
@@ -253,8 +278,8 @@ public class ReceiverChessboardScenario {
 	}
 
 
-	public static Receivers createChessboardReceivers(Scenario sc) {
-		Network network = sc.getNetwork();
+	public static void createAndAddChessboardReceivers(MutableFreightScenario fs) {
+		Network network = fs.getScenario().getNetwork();
 
 		/* Create first receiver */
 		Id<Link> receiverOneLocation = selectRandomLink(network);
@@ -277,7 +302,7 @@ public class ReceiverChessboardScenario {
 		
 		receivers.addReceiver(receiverOne);
 		receivers.addReceiver(receiverTwo);
-		return receivers;
+		fs.setReceivers(receivers);
 	}
 
 	public static Carriers createChessboardCarriers(Scenario sc) {
@@ -326,9 +351,6 @@ public class ReceiverChessboardScenario {
 		CarrierVehicleTypes types = new CarrierVehicleTypes();
 		types.getVehicleTypes().put(typeLight.getId(), typeLight);
 		types.getVehicleTypes().put(typeHeavy.getId(), typeHeavy);
-		String folder = sc.getConfig().controler().getOutputDirectory();
-		folder += folder.endsWith("/") ? "" : "/";
-		new CarrierVehicleTypeWriter(types).write(folder + "carrierVehicleTypes.xml");
 
 		Carriers carriers = new Carriers();
 		carriers.addCarrier(carrier);

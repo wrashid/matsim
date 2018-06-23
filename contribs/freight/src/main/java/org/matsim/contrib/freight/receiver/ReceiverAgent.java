@@ -22,6 +22,7 @@
 package org.matsim.contrib.freight.receiver;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.contrib.freight.carrier.Carrier;
 import org.matsim.core.scoring.ScoringFunction;
 
 /**
@@ -51,31 +52,40 @@ public class ReceiverAgent {
 	 * orders delivered by the carrier). This is not really realistic, and will 
 	 * be changed in the future.
 	 *
-	 * @author wlbean
+	 * FIXME: JWJ (23/6/2018): I'm not quite sure what the purpose of this 
+	 * method is. I've updated it so that the plan's cost is simply the sum
+	 * of all individual order's costs.
+	 *
+	 * @author wlbean, jwjoubert
 	 */
 	
-	public void scoreSelectedOrder() {
-		double cost = 0;
+	public void scoreSelectedPlan() {
+		double cost = 0.0;
 			
-		if (receiver.getSelectedPlan() == null){
-		return;
-		}
-		
-		/* TODO We need to find the carrier in a different way to find the Carrier.
-		 * If we read the receivers from file, we have no way to get the 
-		 * Carrier from there. There must be an explicit call to first link
-		 * the carriers and receivers. */
-		if(receiver.getSelectedPlan().getCarrier().getSelectedPlan() == null){
+		ReceiverPlan selectedPlan = receiver.getSelectedPlan();
+		if (selectedPlan == null) {
 			return;
 		}
 		
+		for(ReceiverOrder ro : selectedPlan.getReceiverOrders()) {
+			
+			/* TODO We need to find the carrier in a different way to find the Carrier.
+			 * If we read the receivers from file, we have no way to get the 
+			 * Carrier from there. There must be an explicit call to first link
+			 * the carriers and receivers. */
+			Carrier thisCarrier = ro.getCarrier();
+			if(thisCarrier.getSelectedPlan() == null) {
+				continue;
+			}
+			
+			double thisCost = ro.getCarrier().getSelectedPlan().getScore();
+			cost += thisCost;
+		}
 		
-		cost = receiver.getSelectedPlan().getCarrier().getSelectedPlan().getScore();
 		scorFunc.addMoney(cost);
 		scorFunc.finish();
 		receiver.getSelectedPlan().setScore(scorFunc.getScore());
 		return;
-		
 	}
 	
 	
@@ -87,8 +97,6 @@ public class ReceiverAgent {
 	public Id<Receiver> getId() {
 		return id;
 	}
-	
-	
 
 
 }

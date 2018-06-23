@@ -32,6 +32,7 @@ import org.matsim.contrib.freight.receiver.Order;
 import org.matsim.contrib.freight.receiver.ProductType;
 import org.matsim.contrib.freight.receiver.Receiver;
 import org.matsim.contrib.freight.receiver.ReceiverOrder;
+import org.matsim.contrib.freight.receiver.ReceiverPlan;
 import org.matsim.contrib.freight.receiver.ReceiverProduct;
 import org.matsim.contrib.freight.receiver.Receivers;
 import org.matsim.core.api.internal.MatsimWriter;
@@ -108,10 +109,9 @@ public class ReceiversWriter extends MatsimXmlWriter implements MatsimWriter{
 				}
 				
 				/* Build receiver orders. */
-				List<ReceiverOrder> orders = receiver.getPlans();
-				if(orders.size() > 0) {
-					handler.startOrders(writer);
-					for(ReceiverOrder order : orders) {
+				for(ReceiverPlan plan : receiver.getPlans()) {
+					handler.startPlan(plan, writer);
+					for(ReceiverOrder order : plan.getReceiverOrders()) {
 						handler.startOrder(order, writer);
 						for(Order item : order.getReceiverOrders()) {
 							handler.startItem(item, writer);
@@ -119,7 +119,7 @@ public class ReceiversWriter extends MatsimXmlWriter implements MatsimWriter{
 						}
 						handler.endOrder(writer);
 					}
-					handler.endOrders(writer);
+					handler.endPlan(writer);
 				}
 				
 				handler.endReceiver(writer);

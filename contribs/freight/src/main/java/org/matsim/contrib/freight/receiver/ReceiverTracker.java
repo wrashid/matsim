@@ -38,42 +38,38 @@ public class ReceiverTracker implements EventHandler {
 
 	private final Receivers receivers;
 	private final Collection<ReceiverAgent> receiverAgents = new ArrayList<ReceiverAgent>();
-	
+
 	public ReceiverTracker(Receivers receivers, ReceiverScoringFunctionFactory scorFuncFac){
 		this.receivers = receivers;
 		createReceiverAgents(scorFuncFac);
 	}
-	
-	/*
+
+	/**
 	 * Scores the selected receiver order.
 	 */
-
-
-	public void scoreSelectedOrders() {
+	public void scoreSelectedPlans() {
 		for (Receiver receiver : receivers.getReceivers().values()){
 			ReceiverAgent rAgent = findReceiver(receiver.getId());
-			rAgent.scoreSelectedOrder();
+			rAgent.scoreSelectedPlan();
 		}		
 	}
-		
-	
-	/*
+
+
+	/**
 	 * Creates the list of all receiver agents.
 	 */
-	
 	private void createReceiverAgents(ReceiverScoringFunctionFactory scorFuncFac) {
-			for (Receiver receiver: receivers.getReceivers().values()){
-				ScoringFunction receiverScorFunc = scorFuncFac.createScoringFunction(receiver);
-				ReceiverAgent rAgent = new ReceiverAgent(receiver, receiverScorFunc);
-				receiverAgents.add(rAgent);
-			}
+		for (Receiver receiver: receivers.getReceivers().values()){
+			ScoringFunction receiverScorFunc = scorFuncFac.createScoringFunction(receiver);
+			ReceiverAgent rAgent = new ReceiverAgent(receiver, receiverScorFunc);
+			receiverAgents.add(rAgent);
+		}
 	}
-	
-	
-	/*
+
+
+	/**
 	 * Find a particular receiver agent in the list of receiver agents.
 	 */
-	
 	private ReceiverAgent findReceiver(Id<Receiver> id) {
 		for (ReceiverAgent rAgent : receiverAgents){
 			if (rAgent.getId().equals(id)){
@@ -82,6 +78,6 @@ public class ReceiverTracker implements EventHandler {
 		}
 		return null;
 	}
-	
+
 
 }

@@ -54,32 +54,33 @@ public class ReceiverImpl implements Receiver {
 	}
 	
 	private final Id<Receiver> id;
-	private final List<ReceiverOrder> orders;
+	private final List<ReceiverPlan> plans;
 	private final List<ReceiverProduct> products;
-	private ReceiverOrder selectedOrder;
+	private ReceiverPlan selectedPlan;
 	
 	private ReceiverImpl(final Id<Receiver> id){
 		super();
 		this.id = id;
-		this.orders = new ArrayList<ReceiverOrder>();
+		this.plans = new ArrayList<ReceiverPlan>();
 		this.products = new ArrayList<ReceiverProduct>();
 	}
 	
-	
-	
-	
-	
 
 	@Override
-	public boolean addPlan(ReceiverOrder order) {
-		throw new RuntimeException("not implemented");
+	public boolean addPlan(ReceiverPlan plan) {
+		if(!plans.contains(plan)) {
+			plans.add(plan);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
-	public ReceiverOrder createCopyOfSelectedPlanAndMakeSelected() {
-		ReceiverOrder order = selectedOrder.createCopy();
-		this.setSelectedPlan(order);
-		return order;
+	public ReceiverPlan createCopyOfSelectedPlanAndMakeSelected() {
+		ReceiverPlan plan = selectedPlan.createCopy();
+		this.setSelectedPlan(plan);
+		return plan;
 	}
 	
 
@@ -88,8 +89,8 @@ public class ReceiverImpl implements Receiver {
 	 */
 
 	@Override
-	public boolean removePlan(ReceiverOrder order) {
-		return this.orders.remove(order);
+	public boolean removePlan(ReceiverPlan plan) {
+		return this.plans.remove(plan);
 	}
 
 	/*
@@ -106,8 +107,8 @@ public class ReceiverImpl implements Receiver {
 	 */
 	
 	@Override
-	public List<ReceiverOrder> getPlans() {
-		return orders;
+	public List<ReceiverPlan> getPlans() {
+		return plans;
 	}
 
 	/*
@@ -120,8 +121,8 @@ public class ReceiverImpl implements Receiver {
 	}
 
 	@Override
-	public ReceiverOrder getSelectedPlan() {
-		return selectedOrder;
+	public ReceiverPlan getSelectedPlan() {
+		return this.selectedPlan;
 	}
 	
 	
@@ -131,9 +132,15 @@ public class ReceiverImpl implements Receiver {
 	 */
 
 	@Override
-	public void setSelectedPlan(ReceiverOrder selectedOrder) {
-		if(!orders.contains(selectedOrder)) orders.add(selectedOrder);
-		this.selectedOrder = selectedOrder;		
+	public void setSelectedPlan(ReceiverPlan selectedPlan) {
+		/* Unselected all other plans. */
+		for(ReceiverPlan plan : this.plans) {
+			plan.setSelected(false);
+		}
+
+		selectedPlan.setSelected(true);
+		if(!plans.contains(selectedPlan)) plans.add(selectedPlan);
+		this.selectedPlan = selectedPlan;	
 	}
 
 	/**

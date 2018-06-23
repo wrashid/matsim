@@ -31,6 +31,7 @@ import org.matsim.contrib.freight.receiver.Order;
 import org.matsim.contrib.freight.receiver.ProductType;
 import org.matsim.contrib.freight.receiver.Receiver;
 import org.matsim.contrib.freight.receiver.ReceiverOrder;
+import org.matsim.contrib.freight.receiver.ReceiverPlan;
 import org.matsim.contrib.freight.receiver.ReceiverProduct;
 import org.matsim.contrib.freight.receiver.Receivers;
 import org.matsim.contrib.freight.receiver.reorderPolicy.ReorderPolicy;
@@ -69,9 +70,9 @@ public interface ReceiversWriterHandler {
 	public void startReorderPolicy(final ReorderPolicy policy, final BufferedWriter out) throws IOException;
 	public void endReorderPolicy(final BufferedWriter out) throws IOException;
 	
-	/* <orders> ... </orders> */
-	public void startOrders(final BufferedWriter out) throws IOException;
-	public void endOrders(final BufferedWriter out) throws IOException;
+	/* <plan> ... </plan> */
+	public void startPlan(final ReceiverPlan plan, final BufferedWriter out) throws IOException;
+	public void endPlan(final BufferedWriter out) throws IOException;
 	
 	/* <order> ... </order> */
 	public void startOrder(final ReceiverOrder order, final BufferedWriter out) throws IOException;
