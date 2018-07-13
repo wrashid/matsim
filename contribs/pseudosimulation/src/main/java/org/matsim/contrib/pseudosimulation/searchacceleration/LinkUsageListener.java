@@ -105,15 +105,6 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 	public void reset(int iteration) {
 		this.driverId2indicators.clear();
 		this.vehicleId2driverId.clear();
-		// // TODO Probably better to (i) remove replace "getAndClearIndicators" by a
-		// plain
-		// // getter and to clear here.
-		// if (this.driverId2indicators.size() > 0) {
-		// throw new RuntimeException("veh2indicators should be empty");
-		// }
-		// if (this.vehicleId2driverId.size() > 0) {
-		// throw new RuntimeException("vehicleId2driverId should be empty");
-		// }
 	}
 
 	@Override

@@ -27,6 +27,7 @@ import floetteroed.utilities.statisticslogging.Statistic;
  *
  * @author Gunnar Flötteröd
  *
+ * @deprecated No implementation available.
  */
 public class ExpectedUniformSamplingObjectiveFunctionValue implements Statistic<ReplannerIdentifier> {
 

@@ -149,14 +149,14 @@ public class SearchAccelerator
 				new File(this.services.getConfig().controler().getOutputDirectory(), "acceleration.log").toString(),
 				false);
 		this.statsWriter.addSearchStatistic(new TimeStampStatistic<>());
-		this.statsWriter.addSearchStatistic(new MeanReplanningRate());
-		this.statsWriter.addSearchStatistic(new RegularizationWeight());
 		this.statsWriter.addSearchStatistic(new DriversInPhysicalSim());
 		this.statsWriter.addSearchStatistic(new DriversInPseudoSim());
+		this.statsWriter.addSearchStatistic(new RegularizationWeight());
+		this.statsWriter.addSearchStatistic(new MeanReplanningRate());
 		this.statsWriter.addSearchStatistic(new EffectiveReplanningRate());
 		this.statsWriter.addSearchStatistic(new RepeatedReplanningProba());
 		this.statsWriter.addSearchStatistic(new ShareNeverReplanned());
-		this.statsWriter.addSearchStatistic(new ExpectedUniformSamplingObjectiveFunctionValue());
+		// this.statsWriter.addSearchStatistic(new ExpectedUniformSamplingObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new UniformReplanningObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new FinalObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new ShareScoreImprovingReplanners());

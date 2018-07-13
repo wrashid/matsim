@@ -48,6 +48,8 @@ public class ScoreUpdater<L> {
 
 	private final DynamicData<L> interactionResiduals;
 
+	private double inertiaResidual;
+
 	private double regularizationResidual;
 
 	private final double individualUtilityChange;
@@ -63,12 +65,14 @@ public class ScoreUpdater<L> {
 	// -------------------- CONSTRUCTION --------------------
 
 	public ScoreUpdater(final SpaceTimeIndicators<L> currentIndicators, final SpaceTimeIndicators<L> upcomingIndicators,
-			final double meanLambda, final double w, final double delta, final DynamicData<L> interactionResiduals,
-			final double regularizationResidual, final AccelerationConfigGroup replParams, final TravelTime travelTimes,
-			final double individualUtilityChange, final double totalUtilityChange) {
+			final double meanLambda, final double beta, final double delta, final DynamicData<L> interactionResiduals,
+			final double inertiaResidual, final double regularizationResidual, final AccelerationConfigGroup replParams,
+			final TravelTime travelTimes, final double individualUtilityChange, final double totalUtilityChange) {
 
 		this.interactionResiduals = interactionResiduals;
+		this.inertiaResidual = inertiaResidual;
 		this.regularizationResidual = regularizationResidual;
+
 		this.individualUtilityChange = individualUtilityChange;
 
 		/*
@@ -88,7 +92,9 @@ public class ScoreUpdater<L> {
 			this.interactionResiduals.add(spaceObj, timeBin, -meanLambda * weightedIndividualChange);
 		}
 
-		this.regularizationResidual -= meanLambda * this.individualUtilityChange;
+		this.inertiaResidual -= (1.0 - meanLambda) * this.individualUtilityChange;
+
+		this.regularizationResidual -= meanLambda;
 
 		// Compute individual score terms.
 
@@ -104,16 +110,49 @@ public class ScoreUpdater<L> {
 					* this.interactionResiduals.getBinValue(spaceObj, timeBin);
 		}
 
+		final double sumOfInteractionResiduals2 = CountIndicatorUtils.sumOfEntries2(this.interactionResiduals);
+
 		// Compose the actual score change.
 
-		final double factor1 = sumOfWeightedIndividualChanges2
-				+ delta * Math.pow(this.individualUtilityChange / totalUtilityChange, 2.0);
-		final double factor2 = 2.0 * sumOfWeightedIndividualChangesTimesInteractionResiduals
-				- w * this.individualUtilityChange + 2.0 * delta * (this.individualUtilityChange / totalUtilityChange)
-						* (this.regularizationResidual / totalUtilityChange);
+		final double expectedScoreIfOne = this.expectedScore(1.0, sumOfWeightedIndividualChanges2,
+				sumOfWeightedIndividualChangesTimesInteractionResiduals, sumOfInteractionResiduals2,
+				individualUtilityChange, inertiaResidual, regularizationResidual, beta, delta);
+		final double expectedScoreIfZero = this.expectedScore(0.0, sumOfWeightedIndividualChanges2,
+				sumOfWeightedIndividualChangesTimesInteractionResiduals, sumOfInteractionResiduals2,
+				individualUtilityChange, inertiaResidual, regularizationResidual, beta, delta);
+		final double expectedScoreIfMean = this.expectedScore(meanLambda, sumOfWeightedIndividualChanges2,
+				sumOfWeightedIndividualChangesTimesInteractionResiduals, sumOfInteractionResiduals2,
+				individualUtilityChange, inertiaResidual, regularizationResidual, beta, delta);
 
-		this.scoreChangeIfOne = (1.0 - meanLambda * meanLambda) * factor1 + (1.0 - meanLambda) * factor2;
-		this.scoreChangeIfZero = (0.0 - meanLambda * meanLambda) * factor1 + (0.0 - meanLambda) * factor2;
+		this.scoreChangeIfOne = expectedScoreIfOne - expectedScoreIfMean;
+		this.scoreChangeIfZero = expectedScoreIfZero - expectedScoreIfMean;
+	}
+
+	private double expectedScore(final double lambda, final double sumOfWeightedIndividualChanges2,
+			final double sumOfWeightedIndividualChangesTimesInteractionResiduals,
+			final double sumOfInteractionResiduals2, final double individualUtilityChange, final double inertiaResidual,
+			final double regularizationResidual, final double beta, final double delta) {
+		return this.expectedInteraction(lambda, sumOfWeightedIndividualChanges2,
+				sumOfWeightedIndividualChangesTimesInteractionResiduals, sumOfInteractionResiduals2)
+				+ beta * this.expectedInertia(lambda, individualUtilityChange, inertiaResidual)
+				+ delta * this.expectedRegularization(lambda, regularizationResidual);
+	}
+
+	private double expectedInteraction(final double lambda, final double sumOfWeightedIndividualChanges2,
+			final double sumOfWeightedIndividualChangesTimesInteractionResiduals,
+			final double sumOfInteractionResiduals2) {
+		return lambda * lambda * sumOfWeightedIndividualChanges2
+				+ 2.0 * lambda * sumOfWeightedIndividualChangesTimesInteractionResiduals + sumOfInteractionResiduals2;
+	}
+
+	private double expectedInertia(final double lambda, final double individualUtilityChange,
+			final double inertiaResidual) {
+		return (1.0 - lambda) * individualUtilityChange + inertiaResidual;
+	}
+
+	private double expectedRegularization(final double lambda, final double regularizationResidual) {
+		return lambda * lambda + 2.0 * lambda * regularizationResidual
+				+ regularizationResidual * regularizationResidual;
 	}
 
 	// -------------------- IMPLEMENTATION --------------------
@@ -129,9 +168,18 @@ public class ScoreUpdater<L> {
 			final int timeBin = entry.getKey().getB();
 			this.interactionResiduals.add(spaceObj, timeBin, newLambda * entry.getValue());
 		}
-		this.regularizationResidual += newLambda * this.individualUtilityChange;
+		this.inertiaResidual += (1.0 - newLambda) * this.individualUtilityChange;
+		this.regularizationResidual += newLambda;
 	}
+
 	// -------------------- GETTERS --------------------
+
+	public double getUpdatedInertiaResidual() {
+		if (!this.residualsUpdated) {
+			throw new RuntimeException("Residuals have not yet updated.");
+		}
+		return this.inertiaResidual;
+	}
 
 	public double getUpdatedRegularizationResidual() {
 		if (!this.residualsUpdated) {

@@ -154,8 +154,7 @@ public class RunPSim_NEW {
 		 */
 
 		final Config config;
-		config = ConfigUtils.loadConfig("/Users/GunnarF/NoBackup/data-workspace/searchacceleration"
-				+ "/rerun-2015-11-23a_No_Toll_large/matsim-config.xml");
+		config = ConfigUtils.loadConfig(args[0]);
 
 		AcceptIntendedReplanningStrategy.addOwnStrategySettings(config);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);

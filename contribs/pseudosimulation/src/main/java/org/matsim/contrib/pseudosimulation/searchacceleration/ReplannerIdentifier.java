@@ -64,7 +64,7 @@ public class ReplannerIdentifier {
 	private final DynamicData<Id<Link>> upcomingWeightedCounts;
 
 	private final double sumOfWeightedCountDifferences2;
-	private final double w;
+	private final double beta;
 
 	private final Map<Id<Person>, Double> personId2utilityChange;
 	private final Map<Id<Person>, Double> personId2newUtility;
@@ -73,7 +73,6 @@ public class ReplannerIdentifier {
 
 	private Double shareOfScoreImprovingReplanners = null;
 	private Double score = null;
-	private Double expectedUniformSamplingObjectiveFunctionValue = null;
 
 	private Integer driversInPseudoSim = null;
 
@@ -125,8 +124,9 @@ public class ReplannerIdentifier {
 		return this.score;
 	}
 
+	@Deprecated
 	public Double getExpectedUniformSamplingObjectiveFunctionValue() {
-		return this.expectedUniformSamplingObjectiveFunctionValue;
+		return null;
 	}
 
 	public Double getSumOfWeightedCountDifferences2() {
@@ -171,8 +171,7 @@ public class ReplannerIdentifier {
 		this.currentLambda = this.replanningParameters.getMeanReplanningRate(iteration);
 		this.currentDelta = this.replanningParameters.getRegularizationWeight(iteration,
 				this.sumOfWeightedCountDifferences2);
-		this.w = 2.0 * this.currentLambda * (this.sumOfWeightedCountDifferences2 + this.currentDelta)
-				/ this.totalUtilityChange;
+		this.beta = 2.0 * this.currentLambda * this.sumOfWeightedCountDifferences2 / this.totalUtilityChange;
 	}
 
 	// -------------------- IMPLEMENTATION --------------------
@@ -183,7 +182,8 @@ public class ReplannerIdentifier {
 
 		final DynamicData<Id<Link>> interactionResiduals = CountIndicatorUtils
 				.newWeightedDifference(this.upcomingWeightedCounts, this.currentWeightedCounts, this.currentLambda);
-		double regularizationResidual = this.currentLambda * this.totalUtilityChange;
+		double inertiaResidual = (1.0 - this.currentLambda) * this.totalUtilityChange;
+		double regularizationResidual = 0; // this.currentLambda * this.totalUtilityChange;
 
 		// Select the replanning recipe.
 
@@ -208,7 +208,6 @@ public class ReplannerIdentifier {
 		Collections.shuffle(allPersonIdsShuffled);
 
 		this.score = this.getUniformReplanningObjectiveFunctionValue();
-		this.expectedUniformSamplingObjectiveFunctionValue = this.getUniformReplanningObjectiveFunctionValue();
 
 		int scoreImprovingReplanners = 0;
 
@@ -216,23 +215,12 @@ public class ReplannerIdentifier {
 
 			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(
 					this.driverId2physicalLinkUsage.get(driverId), this.driverId2pseudoSimLinkUsage.get(driverId),
-					this.currentLambda, this.w, this.currentDelta, interactionResiduals, regularizationResidual,
-					this.replanningParameters, this.travelTimes, this.personId2utilityChange.get(driverId),
-					this.totalUtilityChange);
-
-			this.expectedUniformSamplingObjectiveFunctionValue += this.currentLambda
-					* scoreUpdater.getScoreChangeIfOne()
-					+ (1.0 - this.currentLambda) * scoreUpdater.getScoreChangeIfZero();
-
-			final boolean scoreImprover = (Math.min(scoreUpdater.getScoreChangeIfOne(),
-					scoreUpdater.getScoreChangeIfZero()) < 0);
-			if (scoreImprover) {
-				scoreImprovingReplanners++;
-			}
+					this.currentLambda, this.beta, this.currentDelta, interactionResiduals, inertiaResidual,
+					regularizationResidual, this.replanningParameters, this.travelTimes,
+					this.personId2utilityChange.get(driverId), this.totalUtilityChange);
 
 			final boolean replanner = recipe.isReplanner(driverId, scoreUpdater.getScoreChangeIfOne(),
 					scoreUpdater.getScoreChangeIfZero());
-
 			if (replanner) {
 				replanners.add(driverId);
 				this.score += scoreUpdater.getScoreChangeIfOne();
@@ -240,7 +228,12 @@ public class ReplannerIdentifier {
 				this.score += scoreUpdater.getScoreChangeIfZero();
 			}
 
+			if (Math.min(scoreUpdater.getScoreChangeIfOne(), scoreUpdater.getScoreChangeIfZero()) < 0) {
+				scoreImprovingReplanners++;
+			}
+
 			scoreUpdater.updateResiduals(replanner ? 1.0 : 0.0); // interaction residual by reference
+			inertiaResidual = scoreUpdater.getUpdatedInertiaResidual();
 			regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();
 		}
 
