@@ -60,6 +60,9 @@ import com.google.inject.Singleton;
  */
 public class RunPSim_NEW {
 
+	// debugging
+	private final static boolean useAcceleration = true;
+
 	private Config config;
 	private Scenario scenario;
 	private TransitPerformanceRecorder transitPerformanceRecorder;
@@ -117,21 +120,23 @@ public class RunPSim_NEW {
 
 		// Installing logic for selection of replanning agents.
 
-		accelerationConfigGroup.configure(this.scenario.getNetwork(), pSimConfigGroup.getIterationsPerCycle());
-		this.matsimControler.addOverridingModule(new AbstractModule() {
-			@Override
-			public void install() {
-				this.bind(SearchAccelerator.class).in(Singleton.class);
-				this.addControlerListenerBinding().to(SearchAccelerator.class);
-				this.addEventHandlerBinding().to(SearchAccelerator.class);
-				this.addPlanStrategyBinding(AcceptIntendedReplanningStrategy.STRATEGY_NAME)
-						.toProvider(AcceptIntendedReplanningStragetyProvider.class);
-			}
-		});
+		if (useAcceleration) {
+			accelerationConfigGroup.configure(this.scenario.getNetwork(), pSimConfigGroup.getIterationsPerCycle());
+			this.matsimControler.addOverridingModule(new AbstractModule() {
+				@Override
+				public void install() {
+					this.bind(SearchAccelerator.class).in(Singleton.class);
+					this.addControlerListenerBinding().to(SearchAccelerator.class);
+					this.addEventHandlerBinding().to(SearchAccelerator.class);
+					this.addPlanStrategyBinding(AcceptIntendedReplanningStrategy.STRATEGY_NAME)
+							.toProvider(AcceptIntendedReplanningStragetyProvider.class);
+				}
+			});
+		}
 	}
 
 	public void run() {
-
+		
 		for (AbstractModule module : this.overridingModules) {
 			this.matsimControler.addOverridingModule(module);
 		}
@@ -156,7 +161,10 @@ public class RunPSim_NEW {
 		final Config config;
 		config = ConfigUtils.loadConfig(args[0]);
 
-		AcceptIntendedReplanningStrategy.addOwnStrategySettings(config);
+		if (useAcceleration) {
+			AcceptIntendedReplanningStrategy.addOwnStrategySettings(config);
+		}
+
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
 		config.qsim().setEndTime(30 * 3600);
 
@@ -165,6 +173,7 @@ public class RunPSim_NEW {
 		 */
 
 		final PSimConfigGroup pSimConfigGroup = ConfigUtils.addOrGetModule(config, PSimConfigGroup.class);
+
 		final AccelerationConfigGroup accelerationConfigGroup = ConfigUtils.addOrGetModule(config,
 				AccelerationConfigGroup.class);
 

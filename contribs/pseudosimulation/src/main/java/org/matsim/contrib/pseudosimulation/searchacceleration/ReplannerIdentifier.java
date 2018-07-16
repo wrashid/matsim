@@ -83,6 +83,8 @@ public class ReplannerIdentifier {
 	private Double repeatedReplanningProba = null;
 
 	private Double shareNeverReplanned = null;
+	
+	private final double ttSum_h;
 
 	// -------------------- GETTERS (FOR LOGGING) --------------------
 
@@ -141,6 +143,10 @@ public class ReplannerIdentifier {
 		return this.currentDelta;
 	}
 
+	public double getTTSum_h() {
+		return this.ttSum_h;
+	}
+	
 	// -------------------- CONSTRUCTION --------------------
 
 	ReplannerIdentifier(final AccelerationConfigGroup replanningParameters, final int iteration,
@@ -149,8 +155,11 @@ public class ReplannerIdentifier {
 			final Population population, final TravelTime travelTimes,
 			final AccelerationConfigGroup.ModeType modeTypeField, final Map<Id<Person>, Double> personId2UtilityChange,
 			final Map<Id<Person>, Double> personId2oldUtility, final Map<Id<Person>, Double> personId2newUtility,
-			final double totalUtilityChange, final boolean randomizeIfNoImprovement, final double minReplanningRate) {
+			final double totalUtilityChange, final boolean randomizeIfNoImprovement, final double minReplanningRate,
+			final double ttSum_h) {
 
+		this.ttSum_h = ttSum_h;
+		
 		this.replanningParameters = replanningParameters;
 		this.driverId2physicalLinkUsage = driverId2physicalLinkUsage;
 		this.driverId2pseudoSimLinkUsage = driverId2pseudoSimLinkUsage;

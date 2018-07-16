@@ -46,13 +46,13 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.Spa
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPhysicalSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPseudoSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.EffectiveReplanningRate;
-import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ExpectedUniformSamplingObjectiveFunctionValue;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.FinalObjectiveFunctionValue;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.MeanReplanningRate;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RegularizationWeight;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RepeatedReplanningProba;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareNeverReplanned;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareScoreImprovingReplanners;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.TTSum;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformReplanningObjectiveFunctionValue;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformityExcess;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.WeightedCountDifferences2;
@@ -67,6 +67,7 @@ import org.matsim.core.controler.listener.StartupListener;
 import org.matsim.core.events.EventsUtils;
 import org.matsim.core.replanning.GenericPlanStrategy;
 import org.matsim.core.replanning.StrategyManager;
+import org.matsim.core.router.util.TravelTime;
 
 import com.google.inject.Inject;
 
@@ -100,6 +101,9 @@ public class SearchAccelerator
 	 */
 	@Inject
 	private MobSimSwitcher mobsimSwitcher;
+
+	@Inject
+	private TravelTime linkTravelTimes;
 
 	// -------------------- NON-INJECTED MEMBERS --------------------
 
@@ -156,12 +160,15 @@ public class SearchAccelerator
 		this.statsWriter.addSearchStatistic(new EffectiveReplanningRate());
 		this.statsWriter.addSearchStatistic(new RepeatedReplanningProba());
 		this.statsWriter.addSearchStatistic(new ShareNeverReplanned());
-		// this.statsWriter.addSearchStatistic(new ExpectedUniformSamplingObjectiveFunctionValue());
+		// this.statsWriter.addSearchStatistic(new
+		// ExpectedUniformSamplingObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new UniformReplanningObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new FinalObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new ShareScoreImprovingReplanners());
 		this.statsWriter.addSearchStatistic(new UniformityExcess());
 		this.statsWriter.addSearchStatistic(new WeightedCountDifferences2());
+		
+		this.statsWriter.addSearchStatistic(new TTSum());
 	}
 
 	// -------------------- IMPLEMENTATION OF EventHandlers --------------------
@@ -173,12 +180,16 @@ public class SearchAccelerator
 
 	@Override
 	public void handleEvent(final VehicleEntersTrafficEvent event) {
-		this.matsimMobsimUsageListener.handleEvent(event);
+		if (this.mobsimSwitcher.isQSimIteration()) {
+			this.matsimMobsimUsageListener.handleEvent(event);
+		}
 	}
 
 	@Override
 	public void handleEvent(final LinkEnterEvent event) {
-		this.matsimMobsimUsageListener.handleEvent(event);
+		if (this.mobsimSwitcher.isQSimIteration()) {
+			this.matsimMobsimUsageListener.handleEvent(event);
+		}
 	}
 
 	// --------------- IMPLEMENTATION OF IterationEndsListener ---------------
@@ -244,15 +255,50 @@ public class SearchAccelerator
 			 * Execute one pSim with the full population.
 			 */
 
-			final EventsManager eventsManager = EventsUtils.createEventsManager();
-			final LinkUsageListener pSimLinkUsageListener = new LinkUsageListener(
-					this.replanningParameters().getTimeDiscretization());
-			eventsManager.addHandler(pSimLinkUsageListener);
-			final PSim pSim = new PSim(this.services.getScenario(), eventsManager, selectedHypotheticalPlans,
-					this.services.getLinkTravelTimes());
-			pSim.run();
-			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> lastPseudoSimLinkUsages = pSimLinkUsageListener
-					.getAndClearIndicators();
+			// this.services.getLinkTravelTimes(); // Just to check if this has side
+			// effects.
+
+			// TESTING
+
+			// for (int i = 1; i <= 1000000; i++) {
+			// this.services.getLinkTravelTimes();
+			// System.out.println("instance " + i + ", remaining memory = " +
+			// Runtime.getRuntime().freeMemory());
+			// }
+
+			// TESTING
+
+			// if (this.linkTravelTimes == null) {
+			// this.linkTravelTimes = this.services.getLinkTravelTimes();
+			// }
+
+			double ttSum_h = 0;
+			for (Link link : this.services.getScenario().getNetwork().getLinks().values()) {
+				for (int time_s = 0; time_s < 24 * 3600; time_s += 15 * 60) {
+					ttSum_h += this.linkTravelTimes.getLinkTravelTime(link, time_s, null, null);
+				}
+			}
+			ttSum_h /= 3600;
+
+			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> lastPseudoSimLinkUsages;
+			{
+				final LinkUsageListener pSimLinkUsageListener = new LinkUsageListener(
+						this.replanningParameters().getTimeDiscretization());
+				final EventsManager eventsManager = EventsUtils.createEventsManager();
+				eventsManager.addHandler(pSimLinkUsageListener);
+				final PSim pSim = new PSim(this.services.getScenario(), eventsManager, selectedHypotheticalPlans,
+						// this.services.getLinkTravelTimes()
+						// new TravelTime() {
+						// @Override
+						// public double getLinkTravelTime(Link link, double time, Person person,
+						// Vehicle vehicle) {
+						// return link.getLength() / link.getFreespeed();
+						// }
+						// }
+						this.linkTravelTimes);
+				pSim.run();
+				lastPseudoSimLinkUsages = pSimLinkUsageListener.getAndClearIndicators();
+			}
 
 			/*
 			 * Memorize the most recent hypothetical population state re-set the population
@@ -282,9 +328,10 @@ public class SearchAccelerator
 
 			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters(),
 					event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
-					this.services.getScenario().getPopulation(), this.services.getLinkTravelTimes(),
+					this.services.getScenario().getPopulation(), null, // this.services.getLinkTravelTimes(),
 					accConf.getModeTypeField(), personId2deltaScore, personId2oldScore, personId2newScore,
-					deltaScoreTotal, accConf.getRandomizeIfNoImprovement(), accConf.getBaselineReplanningRate());
+					deltaScoreTotal, accConf.getRandomizeIfNoImprovement(), accConf.getBaselineReplanningRate(),
+					ttSum_h);
 			this.replanners = replannerIdentifier.drawReplanners();
 
 			replannerIdentifier.analyze(this.services.getScenario().getPopulation().getPersons().keySet(),

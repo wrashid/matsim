@@ -58,10 +58,24 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 
 	// -------------------- CONSTRUCTION --------------------
 
+	// TESTING
+//	private static int instanceCnt = 0;
+
+	// TESTING
+//	@Override
+//	public void finalize() {
+//		instanceCnt--;
+//	}
+
 	public LinkUsageListener(final TimeDiscretization timeDiscretization) {
 		this.timeDiscretization = timeDiscretization;
+//		instanceCnt++;
+//		if (instanceCnt > 2) {
+//			throw new RuntimeException("Just created a " + instanceCnt + "rd instance of " + LinkUsageListener.class.getSimpleName());
+//		}
 	}
 
+	
 	// -------------------- INTERNALS --------------------
 
 	private void registerLinkEntry(final Id<Link> linkId, final Id<Vehicle> vehicleId, final double time_s,
