@@ -51,7 +51,10 @@ public class CarsharingListener implements IterationEndsListener {
 			for (Id<Person> personId : agentRentalsMap.keySet()) {
 
 				for (RentalInfo i : agentRentalsMap.get(personId).getArr()) {
+					if (i.getVehId() == null)
+						continue;
 					CSVehicle vehicle = this.carsharingSupply.getAllVehicles().get(i.getVehId().toString());
+					
 					numberOfRentals++;
 					outLink.write(
 							personId + "," + i.toString() + "," + vehicle.getCompanyId() + "," + vehicle.getType());

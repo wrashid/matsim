@@ -10,6 +10,7 @@ import org.matsim.core.mobsim.framework.MobsimAgent;
 import org.matsim.core.mobsim.framework.PlanAgent;
 import org.matsim.core.mobsim.qsim.agents.WithinDayAgentUtils;
 import org.matsim.core.mobsim.qsim.interfaces.DepartureHandler;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.vehicles.Vehicle;
 
@@ -36,18 +37,33 @@ public class BikeshareDepartureHandler implements DepartureHandler {
 				final Leg leg = (Leg) plan.getPlanElements().get(planElementsIndex + 1);
 				final Leg egressLeg = (Leg) plan.getPlanElements().get(planElementsIndex + 2);
 				Id<Vehicle> bikeId = bikeFleet.getAndRemoveClosest(link.getCoord(), agent.getId());
-				if (bikeId == null)
+				//todo: if there is no bike in 500m replace it with walk
+				if (bikeId == null) {
 					agent.setStateToAbort(now);
+					return true;
+				}
 				Coord bikeCoord = this.bikeFleet.getBikeCoordMap().get(bikeId);
-				//TODO: implement proper travel time estimates
-				double accessTime = CoordUtils.calcEuclideanDistance(link.getCoord(), bikeCoord) * 1.3 / 0.833;
+
+				if (CoordUtils.calcEuclideanDistance(link.getCoord(), bikeCoord) > 500) {
+				//	agent.setStateToAbort(now);
+					//return the bike
+					this.bikeFleet.addBike(this.bikeFleet.getBikeCoordMap().get(bikeId), bikeId);
+					accessLeg.setMode("walk");
+					accessLeg.setTravelTime(CoordUtils.calcEuclideanDistance(link.getCoord(), network.getLinks().get(leg.getRoute().getEndLinkId()).getCoord()) * 1.05 / 1.38);
+					plan.getPlanElements().remove(planElementsIndex + 1);
+					plan.getPlanElements().remove(planElementsIndex + 2);
+					return true;
+				}
+					
+				double accessTime = CoordUtils.calcEuclideanDistance(link.getCoord(), bikeCoord) * 1.05 / 1.38;
 				
 				accessLeg.setTravelTime(accessTime);
 				accessLeg.getRoute().setTravelTime(accessTime);
-				
-				double travelTime = CoordUtils.calcEuclideanDistance(bikeCoord, network.getLinks().get(leg.getRoute().getEndLinkId()).getCoord()) * 1.3 / (14.0 / 3.6);
+				accessLeg.getRoute().setEndLinkId(NetworkUtils.getNearestLinkExactly(network, bikeCoord).getId());
+				double travelTime = CoordUtils.calcEuclideanDistance(bikeCoord, network.getLinks().get(leg.getRoute().getEndLinkId()).getCoord()) * 1.4 / 3.88;
 				leg.setTravelTime(travelTime);
 				leg.getRoute().setTravelTime(travelTime);
+				leg.getRoute().setStartLinkId(NetworkUtils.getNearestLinkExactly(network, bikeCoord).getId());
 				egressLeg.setTravelTime(0.0);
 				egressLeg.getRoute().setTravelTime(0.0);
 				

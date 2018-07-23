@@ -1,22 +1,21 @@
 package org.matsim.contrib.carsharing.manager.supply;
 
-import java.util.Collection;
 import java.util.Map;
 
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.carsharing.qsim.FreefloatingAreas;
 import org.matsim.contrib.carsharing.vehicles.CSVehicle;
-import org.matsim.contrib.carsharing.vehicles.FFVehicleImpl;
 import org.matsim.core.network.SearchableNetwork;
 import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.core.utils.geometry.CoordUtils;
-/** 
+
+/**
  * @author balac
  */
-public class FreeFloatingVehiclesContainer implements VehiclesContainer{	
-	
-	private QuadTree<CSVehicle> availableFFVehicleLocationQuadTree;	
+public class FreeFloatingVehiclesContainer implements VehiclesContainer {
+
+	private QuadTree<CSVehicle> availableFFVehicleLocationQuadTree;
 	private Map<String, CSVehicle> ffvehicleIdMap;
 	private Map<CSVehicle, Link> availableFFvehiclesMap;
 	private SearchableNetwork network;
@@ -24,11 +23,11 @@ public class FreeFloatingVehiclesContainer implements VehiclesContainer{
 
 	public FreeFloatingVehiclesContainer(QuadTree<CSVehicle> ffVehicleLocationQuadTree,
 			Map<String, CSVehicle> ffvehicleIdMap, Map<CSVehicle, Link> ffvehiclesMap) {
-		
+
 		this.availableFFVehicleLocationQuadTree = ffVehicleLocationQuadTree;
 		this.availableFFvehiclesMap = ffvehiclesMap;
 		this.ffvehicleIdMap = ffvehicleIdMap;
-		
+
 	}
 
 	public QuadTree<CSVehicle> getFfVehicleLocationQuadTree() {
@@ -61,23 +60,27 @@ public class FreeFloatingVehiclesContainer implements VehiclesContainer{
 
 	public boolean reserveVehicle(CSVehicle vehicle) {
 		Link link = this.availableFFvehiclesMap.get(vehicle);
+		synchronized (this.availableFFVehicleLocationQuadTree) {
 
-		if (link == null) {
-			return false;
+			if (link == null) {
+				return false;
+			}
+
+			Coord coord = link.getCoord();
+			this.availableFFvehiclesMap.remove(vehicle);
+			this.availableFFVehicleLocationQuadTree.remove(coord.getX(), coord.getY(), vehicle);
+
+			return true;
 		}
-
-		Coord coord = link.getCoord();
-		this.availableFFvehiclesMap.remove(vehicle);
-		this.availableFFVehicleLocationQuadTree.remove(coord.getX(), coord.getY(), vehicle);
-
-		return true;
 	}
 
 	public void parkVehicle(CSVehicle vehicle, Link link) {
 		Coord coord = link.getCoord();
-					
-		availableFFVehicleLocationQuadTree.put(coord.getX(), coord.getY(), vehicle);
-		availableFFvehiclesMap.put(vehicle, link);
+		synchronized (this.availableFFVehicleLocationQuadTree) {
+
+			availableFFVehicleLocationQuadTree.put(coord.getX(), coord.getY(), vehicle);
+			availableFFvehiclesMap.put(vehicle, link);
+		}
 	}
 
 	@Override
@@ -87,30 +90,20 @@ public class FreeFloatingVehiclesContainer implements VehiclesContainer{
 
 	@Override
 	public CSVehicle findClosestAvailableVehicle(Link startLink, String typeOfVehicle, double searchDistance) {
-		Collection<CSVehicle> location = 
-				availableFFVehicleLocationQuadTree.getDisk(startLink.getCoord().getX(), 
-						startLink.getCoord().getY(), searchDistance);
-		if (location.isEmpty()) return null;
 
-		CSVehicle closest = null;
-		double closestFound = searchDistance;
+		synchronized (this.availableFFVehicleLocationQuadTree) {
+			CSVehicle vehicle = availableFFVehicleLocationQuadTree.getClosest(startLink.getCoord().getX(),
+					startLink.getCoord().getY());
+			if (vehicle == null)
+				return null;
+			Coord coord = this.availableFFvehiclesMap.get(vehicle).getCoord();
+			if (CoordUtils.calcEuclideanDistance(startLink.getCoord(), coord) > searchDistance)
+				return null;
 
-		for (CSVehicle vehicle: location) {
-			if (vehicle.getType().equals(typeOfVehicle)) {
-				Link vehicleLink = this.availableFFvehiclesMap.get(vehicle);
+			return vehicle;
 
-				if (vehicleLink != null) {
-					Coord coord = this.availableFFvehiclesMap.get(vehicle).getCoord();
-
-					if (CoordUtils.calcEuclideanDistance(startLink.getCoord(), coord) < closestFound ) {
-						closest = vehicle;
-						closestFound = CoordUtils.calcEuclideanDistance(startLink.getCoord(), coord);
-					}
-				}
-			}
 		}
 
-		return closest;
 	}
 
 	@Override
@@ -138,6 +131,6 @@ public class FreeFloatingVehiclesContainer implements VehiclesContainer{
 
 	@Override
 	public void reserveParking(Link destinationLink) {
-		
+
 	}
 }

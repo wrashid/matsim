@@ -52,6 +52,8 @@ public class VehicleChoiceAgentImpl implements VehicleChoiceAgent {
 
 		double distance = -1.0;
 		CSVehicle chosenVehicle = null;
+		if (vehicleOptions.size() == 1)
+			return vehicleOptions.get(0);
 		for (CSVehicle vehicle : vehicleOptions) {
 
 			Link vehicleLocation = this.carsharingSupply.getAllVehicleLocations().get(vehicle);
@@ -73,6 +75,8 @@ public class VehicleChoiceAgentImpl implements VehicleChoiceAgent {
 		double maxUtility = Integer.MIN_VALUE;
 		double marginalUtilityOfMoney = ((PlanCalcScoreConfigGroup) scenario.getConfig().getModule("planCalcScore"))
 				.getMarginalUtilityOfMoney();
+		if (vehicleOptions.size() == 1)
+			return vehicleOptions.get(0);
 		for (CSVehicle vehicle : vehicleOptions) {
 			Link vehicleLocation = this.carsharingSupply.getCompany(vehicle.getCompanyId())
 					.getVehicleContainer(vehicle.getCsType()).getVehicleLocation(vehicle);
