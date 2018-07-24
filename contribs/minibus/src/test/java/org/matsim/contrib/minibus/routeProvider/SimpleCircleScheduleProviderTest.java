@@ -66,10 +66,12 @@ public class SimpleCircleScheduleProviderTest {
 		plan.setNVehicles(2);
 		TransitStopFacility startStop = tS.getFacilities().get(Id.create(pC.getPIdentifier() + "1424", TransitStopFacility.class));
 		TransitStopFacility endStop = tS.getFacilities().get(Id.create(pC.getPIdentifier() + "4434", TransitStopFacility.class));
-		ArrayList<TransitStopFacility> stopsToBeServed = new ArrayList<>();
-		stopsToBeServed.add(startStop);
-		stopsToBeServed.add(endStop);
-		plan.setStopsToBeServed(stopsToBeServed);
+		ArrayList<TransitStopFacility> stopsToBeServedForwardDirection = new ArrayList<>();
+		ArrayList<TransitStopFacility> stopsToBeServedReturnDirection = new ArrayList<>();
+		stopsToBeServedForwardDirection.add(startStop);
+		stopsToBeServedReturnDirection.add(endStop);
+		plan.setStopsToBeServedForwardDirection(stopsToBeServedForwardDirection);
+		plan.setStopsToBeServedReturnDirection(stopsToBeServedReturnDirection);
 		
 		ArrayList<Id<Link>> refIds = new ArrayList<>();
 		refIds.add(Id.create("1424", Link.class)); refIds.add(Id.create("2434", Link.class));

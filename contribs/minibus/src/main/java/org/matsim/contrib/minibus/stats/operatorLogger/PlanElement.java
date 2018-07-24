@@ -47,7 +47,8 @@ public final class PlanElement {
 	private final ArrayList<Tuple<Integer, Double>> budget;
 	private final double startTime;
 	private final double endTime;
-	private final ArrayList<Id<TransitStopFacility>> stopsToBeServed;
+	private final ArrayList<Id<TransitStopFacility>> stopsToBeServedForwardDirection;
+	private final ArrayList<Id<TransitStopFacility>> stopsToBeServedReturnDirection;
 	private final ArrayList<Id<Link>> linksServed;
 	
 	private PlanElement parentPlan;
@@ -80,7 +81,8 @@ public final class PlanElement {
 		
 		this.startTime = logElement.getStartTime();
 		this.endTime = logElement.getEndTime();
-		this.stopsToBeServed = logElement.getStopsToBeServed();
+		this.stopsToBeServedForwardDirection = logElement.getStopsToBeServedForwardDirection();
+		this.stopsToBeServedReturnDirection = logElement.getStopsToBeServedReturnDirection();
 		this.linksServed = logElement.getLinksServed();
 	}
 	
@@ -136,8 +138,12 @@ public final class PlanElement {
 		return endTime;
 	}
 
-	public ArrayList<Id<TransitStopFacility>> getStopsToBeServed() {
-		return stopsToBeServed;
+	public ArrayList<Id<TransitStopFacility>> getStopsToBeServedForwardDirection() {
+		return stopsToBeServedForwardDirection;
+	}
+	
+	public ArrayList<Id<TransitStopFacility>> getStopsToBeServedReturnDirection() {
+		return stopsToBeServedReturnDirection;
 	}
 	
 	public ArrayList<Id<Link>> getLinksServed() {

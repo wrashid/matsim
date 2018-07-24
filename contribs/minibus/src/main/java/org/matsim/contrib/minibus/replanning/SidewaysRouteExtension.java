@@ -26,7 +26,6 @@ import com.vividsolutions.jts.operation.buffer.BufferOp;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
 
 import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.contrib.minibus.operator.Operator;
 import org.matsim.contrib.minibus.operator.PPlan;
@@ -54,10 +53,11 @@ public final class SidewaysRouteExtension extends AbstractPStrategyModule {
 	private final double bufferSize;
 	private final double ratio;
 	private final boolean excludeTermini;
+	private enum Direction {FORWARD, RETURN};
 	
 	public SidewaysRouteExtension(ArrayList<String> parameter) {
 		super();
-		if(parameter.size() != 3){
+		if(parameter.size() != 3 && parameter.size() != 4){
 			log.error("Parameter 1: Buffer size in meter");
 			log.error("Parameter 2: Ratio bufferSize to route's beeline length. If set to something very small, e.g. 0.01, the calculated buffer size may be smaller than the one specified in parameter 1. Parameter 1 will then be taken as minimal buffer size.");
 			log.error("Parameter 3: Remove buffer from termini - true/false");
@@ -71,13 +71,15 @@ public final class SidewaysRouteExtension extends AbstractPStrategyModule {
 	public PPlan run(Operator operator) {
 
 		PPlan oldPlan = operator.getBestPlan();
-		ArrayList<TransitStopFacility> currentStopsToBeServed = oldPlan.getStopsToBeServed();
+		ArrayList<TransitStopFacility> currentStopsToBeServedForwardDirection = oldPlan.getStopsToBeServedForwardDirection();
+		ArrayList<TransitStopFacility> currentStopsToBeServedReturnDirection = oldPlan.getStopsToBeServedReturnDirection();
+
+		TransitStopFacility baseStop = currentStopsToBeServedForwardDirection.get(0);
+		TransitStopFacility remoteStop = currentStopsToBeServedReturnDirection.get(0);
 		
-		TransitStopFacility baseStop = currentStopsToBeServed.get(0);
-		TransitStopFacility remoteStop = this.findStopWithLargestDistance(currentStopsToBeServed);
 		double bufferSizeBasedOnRatio = CoordUtils.calcEuclideanDistance(baseStop.getCoord(), remoteStop.getCoord()) * this.ratio;
 		
-		List<Geometry> lineStrings = this.createGeometryFromStops(currentStopsToBeServed, remoteStop);
+		List<Geometry> lineStrings = this.createGeometryFromStops(currentStopsToBeServedForwardDirection, currentStopsToBeServedReturnDirection);
 		Geometry buffer = this.createBuffer(lineStrings, Math.max(this.bufferSize, bufferSizeBasedOnRatio), this.excludeTermini);
 		
 		Set<Id<TransitStopFacility>> stopsUsed = this.getStopsUsed(oldPlan.getLine().getRoutes().values());
@@ -87,39 +89,35 @@ public final class SidewaysRouteExtension extends AbstractPStrategyModule {
 			return null;
 		}
 		
-		ArrayList<TransitStopFacility> newStopsToBeServed = this.addStopToExistingStops(baseStop, remoteStop, currentStopsToBeServed, newStop);
+		Map<Direction, ArrayList<TransitStopFacility>> newStopsToBeServed = this.addStopToExistingStops(baseStop, remoteStop, 
+				currentStopsToBeServedForwardDirection, currentStopsToBeServedReturnDirection, newStop);
 		
 		// create new plan
 		PPlan newPlan = new PPlan(operator.getNewPlanId(), this.getStrategyName(), oldPlan.getId());
 		newPlan.setNVehicles(1);
 		newPlan.setStartTime(oldPlan.getStartTime());
 		newPlan.setEndTime(oldPlan.getEndTime());
-		newPlan.setStopsToBeServed(newStopsToBeServed);
-		
+		newPlan.setStopsToBeServedForwardDirection(newStopsToBeServed.get(Direction.FORWARD));
+		newPlan.setStopsToBeServedReturnDirection(newStopsToBeServed.get(Direction.RETURN));
 		newPlan.setLine(operator.getRouteProvider().createTransitLineFromOperatorPlan(operator.getId(), newPlan));
 		
 		return newPlan;
 	}
 
 
-	private ArrayList<TransitStopFacility> addStopToExistingStops(TransitStopFacility baseStop, TransitStopFacility remoteStop, ArrayList<TransitStopFacility> currentStopsToBeServed, TransitStopFacility newStop) {
-		List<TransitStopFacility> markerStops = new LinkedList<>();
-		markerStops.add(baseStop);
-		markerStops.add(remoteStop);
+	private Map<Direction, ArrayList<TransitStopFacility>> addStopToExistingStops(TransitStopFacility baseStop, TransitStopFacility remoteStop, 
+			ArrayList<TransitStopFacility> currentStopsToBeServedForwardDirection, ArrayList<TransitStopFacility> currentStopsToBeServedReturnDirection, 
+			TransitStopFacility newStop) {
+		ArrayList<TransitStopFacility> newStopsToBeServedForwardDirection = new ArrayList<>(currentStopsToBeServedForwardDirection);
+		ArrayList<TransitStopFacility> newStopsToBeServedReturnDirection = new ArrayList<>(currentStopsToBeServedReturnDirection);
+
+		this.addNewStopBetweenTwoNearestExistingStops(newStopsToBeServedForwardDirection, newStop);
+		this.addNewStopBetweenTwoNearestExistingStops(newStopsToBeServedReturnDirection, newStop);
 		
-		List<ArrayList<TransitStopFacility>> subRoutes = this.cutRouteIntoSubRoutes(markerStops, currentStopsToBeServed);
-		for (ArrayList<TransitStopFacility> subRoute : subRoutes) {
-			this.addNewStopBetweenTwoNearestExistingStops(subRoute, newStop);
-		}
-		
-		// merger sub routes
-		ArrayList<TransitStopFacility> newStopsToBeServed = new ArrayList<>();
-		for (ArrayList<TransitStopFacility> subRoute : subRoutes) {
-			for (TransitStopFacility stop : subRoute) {
-				newStopsToBeServed.add(stop);
-			}
-		}
-		return newStopsToBeServed;
+		Map<Direction, ArrayList<TransitStopFacility>> result = new HashMap<>();
+		result.put(Direction.FORWARD, newStopsToBeServedForwardDirection);
+		result.put(Direction.RETURN, newStopsToBeServedReturnDirection);
+		return result;
 	}
 
 
@@ -168,20 +166,6 @@ public final class SidewaysRouteExtension extends AbstractPStrategyModule {
 		}
 		
 		return subRoutes;
-	}
-
-	private TransitStopFacility findStopWithLargestDistance(ArrayList<TransitStopFacility> stops) {
-		Coord startCoord = stops.get(0).getCoord();
-		double largestDistance = 0;
-		TransitStopFacility stopWithLargestDistance = stops.get(0);
-		for (TransitStopFacility transitStopFacility : stops) {
-			double currentDistance = CoordUtils.calcEuclideanDistance(startCoord, transitStopFacility.getCoord());
-			if (currentDistance > largestDistance) {
-				largestDistance = currentDistance;
-				stopWithLargestDistance = transitStopFacility;
-			}
-		}
-		return stopWithLargestDistance;
 	}
 
 	private Set<Id<TransitStopFacility>> getStopsUsed(Collection<TransitRoute> routes) {
@@ -234,30 +218,30 @@ public final class SidewaysRouteExtension extends AbstractPStrategyModule {
 	}
 
 
-	private List<Geometry> createGeometryFromStops(ArrayList<TransitStopFacility> stops, TransitStopFacility remoteStop) {
+	private List<Geometry> createGeometryFromStops(ArrayList<TransitStopFacility> stopsForwardDirection, ArrayList<TransitStopFacility> stopsReturnDirection) {
 		List<Geometry> geometries = new LinkedList<>();
 		
-		ArrayList<Coordinate> coords = new ArrayList<>();
-		for (TransitStopFacility stop : stops) {
-			if (stop.equals(remoteStop)) {
-				// terminate current line string
-				coords.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
-				Coordinate[] coordinates = coords.toArray(new Coordinate[coords.size()]);
-				Geometry lineString = new GeometryFactory().createLineString(coordinates);
-				geometries.add(lineString);
-				// create new line string
-				coords = new ArrayList<>();
-				coords.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
-			} else {
-				coords.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
-			}
+		// Forward direction
+		ArrayList<Coordinate> coordsForward = new ArrayList<>();
+		for (TransitStopFacility stop : stopsForwardDirection) {
+			coordsForward.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
 		}
-		// add first stop to close the circle
-		coords.add(new Coordinate(stops.get(0).getCoord().getX(), stops.get(0).getCoord().getY(), 0.0));
+		// add first stop of return direction to close the circle
+		coordsForward.add(new Coordinate(stopsReturnDirection.get(0).getCoord().getX(), stopsReturnDirection.get(0).getCoord().getY(), 0.0));
+		Coordinate[] coordinatesForward = coordsForward.toArray(new Coordinate[coordsForward.size()]);
+		Geometry lineStringForward = new GeometryFactory().createLineString(coordinatesForward);
+		geometries.add(lineStringForward);
 		
-		Coordinate[] coordinates = coords.toArray(new Coordinate[coords.size()]);
-		Geometry lineString = new GeometryFactory().createLineString(coordinates);
-		geometries.add(lineString);
+		// Return direction
+		ArrayList<Coordinate> coordsReturn = new ArrayList<>();
+		for (TransitStopFacility stop : stopsReturnDirection) {
+			coordsReturn.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
+		}
+		// add first stop of forward direction to close the circle
+		coordsReturn.add(new Coordinate(stopsForwardDirection.get(0).getCoord().getX(), stopsForwardDirection.get(0).getCoord().getY(), 0.0));
+		Coordinate[] coordinatesReturn = coordsReturn.toArray(new Coordinate[coordsReturn.size()]);
+		Geometry lineStringReturn = new GeometryFactory().createLineString(coordinatesReturn);
+		geometries.add(lineStringReturn);
 		return geometries;
 	}
 

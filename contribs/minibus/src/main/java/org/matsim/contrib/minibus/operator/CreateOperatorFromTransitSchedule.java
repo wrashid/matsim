@@ -41,6 +41,7 @@ import java.util.Map.Entry;
  * @author aneumann
  *
  */
+@Deprecated // It seems this class was meant do deal with back and forth routes and not with circle routes currently in use, gl 07-2018
 public final class CreateOperatorFromTransitSchedule implements PStrategy {
 	
 	private final static Logger log = Logger.getLogger(CreateOperatorFromTransitSchedule.class);
@@ -144,12 +145,13 @@ public final class CreateOperatorFromTransitSchedule implements PStrategy {
 		// resulting number of vehicles with the new headway
 		int nVehicles = (int) (departureOffset / headway);
 		
-		ArrayList<TransitStopFacility> stopsToBeServed = new ArrayList<>();
+		ArrayList<TransitStopFacility> stopsToBeServedForwardDirection = new ArrayList<>();
+		ArrayList<TransitStopFacility> stopsToBeServedReturnDirection = new ArrayList<>();
 		if (longestRouteH != null) {
 			for (TransitRouteStop routeStop : longestRouteH.getStops()) {
 				if (this.checkStopInServiceArea(routeStop.getStopFacility(), this.pConfig)) {
 					TransitStopFacility originalStopFacility = this.originalStops.get(routeStop.getStopFacility().getId().toString());
-					stopsToBeServed.add(originalStopFacility);
+					stopsToBeServedForwardDirection.add(originalStopFacility);
 				}
 			}
 		}
@@ -157,13 +159,14 @@ public final class CreateOperatorFromTransitSchedule implements PStrategy {
 			for (TransitRouteStop routeStop : longestRouteR.getStops()) {
 				if (this.checkStopInServiceArea(routeStop.getStopFacility(), this.pConfig)) {
 					TransitStopFacility originalStopFacility = this.originalStops.get(routeStop.getStopFacility().getId().toString());
-					stopsToBeServed.add(originalStopFacility);
+					stopsToBeServedReturnDirection.add(originalStopFacility);
 				}
 			}
 		}
 		
 		PPlan plan = new PPlan(id, this.getStrategyName(), PConstants.founderPlanId);
-		plan.setStopsToBeServed(stopsToBeServed);
+		plan.setStopsToBeServedForwardDirection(stopsToBeServedForwardDirection);
+		plan.setStopsToBeServedReturnDirection(stopsToBeServedReturnDirection);
 		plan.setStartTime(startTime);
 		plan.setEndTime(endTime);
 		plan.setNVehicles(nVehicles);

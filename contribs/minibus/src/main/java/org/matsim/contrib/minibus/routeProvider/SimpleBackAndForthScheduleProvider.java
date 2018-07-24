@@ -83,17 +83,17 @@ final class SimpleBackAndForthScheduleProvider implements PRouteProvider{
 	
 	@Override
 	public TransitLine createTransitLineFromOperatorPlan(Id<Operator> operatorId, PPlan plan){
-		return this.createTransitLine(Id.create(operatorId, TransitLine.class), plan.getStartTime(), plan.getEndTime(), plan.getNVehicles(), plan.getStopsToBeServed(), Id.create(plan.getId(), TransitRoute.class));
+		return this.createTransitLine(Id.create(operatorId, TransitLine.class), plan.getStartTime(), plan.getEndTime(), plan.getNVehicles(), plan.getStopsToBeServedForwardDirection(), plan.getStopsToBeServedReturnDirection(), Id.create(plan.getId(), TransitRoute.class));
 	}
 
-	private TransitLine createTransitLine(Id<TransitLine> pLineId, double startTime, double endTime, int numberOfVehicles, ArrayList<TransitStopFacility> stopsToBeServed, Id<TransitRoute> routeId){
-		if (stopsToBeServed.size() != 2) {
-			log.warn("This route provider can only handle as much as two stops. Please use a different route provider.");
+	private TransitLine createTransitLine(Id<TransitLine> pLineId, double startTime, double endTime, int numberOfVehicles, ArrayList<TransitStopFacility> stopsToBeServedForwardDirection, ArrayList<TransitStopFacility> stopsToBeServedReturnDirection, Id<TransitRoute> routeId){
+		if (stopsToBeServedForwardDirection.size() != 1 || stopsToBeServedReturnDirection.size() != 1) {
+			log.warn("This route provider can only handle as much as two stops (one per direction). Please use a different route provider.");
 			return null;
 		}
 		
-		TransitStopFacility startStop = stopsToBeServed.get(0);
-		TransitStopFacility endStop = stopsToBeServed.get(1);
+		TransitStopFacility startStop = stopsToBeServedForwardDirection.get(0);
+		TransitStopFacility endStop = stopsToBeServedReturnDirection.get(1);
 		
 		// initialize
 		TransitLine line = this.scheduleWithStopsOnly.getFactory().createTransitLine(pLineId);			

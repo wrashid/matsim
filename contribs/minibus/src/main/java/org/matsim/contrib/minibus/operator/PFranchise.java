@@ -99,7 +99,7 @@ public final class PFranchise {
 	private String generateRouteHash(PPlan plan) {
 	//	return generateRouteHash(plan.getStopsToBeServed());
 	//	return generateRouteHash(plan.getStartTime(), plan.getEndTime(), plan.getStopsToBeServed());
-		return generateRouteHashWithGridNodes(plan.getStartTime(), plan.getEndTime(), plan.getStopsToBeServed());
+		return generateRouteHashWithGridNodes(plan.getStartTime(), plan.getEndTime(), plan.getStopsToBeServedForwardDirection(), plan.getStopsToBeServedReturnDirection());
 	}
 
 	/**
@@ -135,10 +135,15 @@ public final class PFranchise {
 		return sB.toString();
 	}
 	
-	private String generateRouteHashWithGridNodes(double startTime, double endTime, ArrayList<TransitStopFacility> stopsToBeServed) {
+	private String generateRouteHashWithGridNodes(double startTime, double endTime, ArrayList<TransitStopFacility> stopsToBeServedForwardDirection, 
+			ArrayList<TransitStopFacility> stopsToBeServedReturnDirection) {
 		StringBuffer sB = new StringBuffer();
 		sB.append(startTime);
 		sB.append("-" + endTime);
+		
+		ArrayList<TransitStopFacility> stopsToBeServed = new ArrayList<>();
+		stopsToBeServed.addAll(stopsToBeServedForwardDirection);
+		stopsToBeServed.addAll(stopsToBeServedReturnDirection);
 		
 		String lastGridNodeId = null;
 		for (TransitStopFacility transitStopFacility : stopsToBeServed) {

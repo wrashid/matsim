@@ -91,7 +91,8 @@ public final class BasicOperator extends AbstractOperator{
 		// vehicles were bought - create plan
 		PPlan oldPlan = this.getBestPlan();
 		PPlan plan = new PPlan(this.getNewPlanId(), "Copied code from AggressiveIncreaseNumberOfVehicles", oldPlan.getId());
-		plan.setStopsToBeServed(oldPlan.getStopsToBeServed());
+		plan.setStopsToBeServedForwardDirection(oldPlan.getStopsToBeServedForwardDirection());
+		plan.setStopsToBeServedReturnDirection(oldPlan.getStopsToBeServedReturnDirection());
 		plan.setStartTime(oldPlan.getStartTime());
 		plan.setEndTime(oldPlan.getEndTime());
 		plan.setScore(this.getBestPlan().getScore());

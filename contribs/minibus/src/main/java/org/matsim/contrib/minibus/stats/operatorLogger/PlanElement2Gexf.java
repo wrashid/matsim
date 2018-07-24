@@ -254,7 +254,10 @@ final class PlanElement2Gexf extends MatsimJaxbXmlWriter{
 			attValueContent.getAttvalue().add(attValue);
 			
 			StringBuffer strB = new StringBuffer();
-			for (Id<TransitStopFacility> stop : node.getStopsToBeServed()) {
+			for (Id<TransitStopFacility> stop : node.getStopsToBeServedForwardDirection()) {
+				strB.append(stop.toString() + ", ");
+			}
+			for (Id<TransitStopFacility> stop : node.getStopsToBeServedReturnDirection()) {
 				strB.append(stop.toString() + ", ");
 			}
 			

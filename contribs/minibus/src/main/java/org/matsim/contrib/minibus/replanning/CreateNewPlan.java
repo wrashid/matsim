@@ -97,16 +97,17 @@ public final class CreateNewPlan extends AbstractPStrategyModule {
 				stop2 = operator.getRouteProvider().getRandomTransitStop(operator.getCurrentIteration());
 			}
 			
-			ArrayList<TransitStopFacility> stopsToBeServed = new ArrayList<>();
-			stopsToBeServed.add(stop1);
-			stopsToBeServed.add(stop2);
+			ArrayList<TransitStopFacility> stopsToBeServedForwardDirection = new ArrayList<>();
+			ArrayList<TransitStopFacility> stopsToBeServedReturnDirection = new ArrayList<>();
+			stopsToBeServedForwardDirection.add(stop1);
+			stopsToBeServedReturnDirection.add(stop2);
 			
 			newPlan = new PPlan(operator.getNewPlanId(), this.getStrategyName(), PConstants.founderPlanId);
-			newPlan.setStopsToBeServed(stopsToBeServed);
+			newPlan.setStopsToBeServedForwardDirection(stopsToBeServedForwardDirection);
+			newPlan.setStopsToBeServedReturnDirection(stopsToBeServedReturnDirection);
 			newPlan.setStartTime(startTime);
 			newPlan.setEndTime(endTime);
 			newPlan.setNVehicles(1);
-			newPlan.setStopsToBeServed(stopsToBeServed);
 			
 			newPlan.setLine(operator.getRouteProvider().createTransitLineFromOperatorPlan(operator.getId(), newPlan));
 

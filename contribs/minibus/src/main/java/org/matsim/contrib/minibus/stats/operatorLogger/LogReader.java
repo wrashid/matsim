@@ -111,16 +111,25 @@ public final class LogReader implements TabularFileHandler {
 					logElement.setStartTime(Time.parseTime(row[10]));
 					logElement.setEndTime(Time.parseTime(row[11]));
 					
-					String stops = row[12];
-					stops = stops.substring(1, stops.length() - 1); // remove brackets
-					String[] stopArray = stops.split(","); // split the array
-					ArrayList<Id<TransitStopFacility>> stopIds = new ArrayList<Id<TransitStopFacility>>();
-					for (String stop : stopArray) {
-						stopIds.add(Id.create(stop.trim(), TransitStopFacility.class));
+					String stopsForwardDirection = row[12];
+					stopsForwardDirection = stopsForwardDirection.substring(1, stopsForwardDirection.length() - 1); // remove brackets
+					String[] stopArrayForwardDirection = stopsForwardDirection.split(","); // split the array
+					ArrayList<Id<TransitStopFacility>> stopIdsForwardDirection = new ArrayList<Id<TransitStopFacility>>();
+					for (String stop : stopArrayForwardDirection) {
+						stopIdsForwardDirection.add(Id.create(stop.trim(), TransitStopFacility.class));
 					}
-					logElement.setStopsToBeServed(stopIds);
+					logElement.setStopsToBeServedForwardDirection(stopIdsForwardDirection);
 					
-					String links = row[13];
+					String stopsReturnDirection = row[13];
+					stopsReturnDirection = stopsReturnDirection.substring(1, stopsReturnDirection.length() - 1); // remove brackets
+					String[] stopArrayReturnDirection = stopsReturnDirection.split(","); // split the array
+					ArrayList<Id<TransitStopFacility>> stopIdsReturnDirection = new ArrayList<Id<TransitStopFacility>>();
+					for (String stop : stopArrayReturnDirection) {
+						stopIdsReturnDirection.add(Id.create(stop.trim(), TransitStopFacility.class));
+					}
+					logElement.setStopsToBeServedReturnDirection(stopIdsReturnDirection);
+					
+					String links = row[14];
 					links = links.substring(1, links.length() - 1); // remove brackets
 					String[] linkArray = links.split(","); // split the array
 					ArrayList<Id<Link>> linkIds = new ArrayList<Id<Link>>();

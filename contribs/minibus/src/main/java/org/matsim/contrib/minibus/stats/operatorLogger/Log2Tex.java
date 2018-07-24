@@ -90,13 +90,22 @@ final class Log2Tex {
 
 					strB.append(" & ");
 
-					ArrayList<Id<TransitStopFacility>> stops = logElement.getStopsToBeServed(); //nodes.split(",");
-					boolean firstIsDone = false;
-					for (Id<TransitStopFacility> stop : stops) {
-						if (firstIsDone) {
+					ArrayList<Id<TransitStopFacility>> stopsForwardDirection = logElement.getStopsToBeServedForwardDirection(); //nodes.split(",");
+					boolean firstIsDoneForwardDirection = false;
+					for (Id<TransitStopFacility> stop : stopsForwardDirection) {
+						if (firstIsDoneForwardDirection) {
 							strB.append("--");
 						}
-						firstIsDone = true;
+						firstIsDoneForwardDirection = true;
+						strB.append(stop.toString());
+					}
+					ArrayList<Id<TransitStopFacility>> stopsReturnDirection = logElement.getStopsToBeServedReturnDirection(); //nodes.split(",");
+					boolean firstIsDoneReturnDirection = false;
+					for (Id<TransitStopFacility> stop : stopsReturnDirection) {
+						if (firstIsDoneReturnDirection) {
+							strB.append("--");
+						}
+						firstIsDoneReturnDirection = true;
 						strB.append(stop.toString());
 					}
 

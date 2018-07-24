@@ -92,7 +92,10 @@ final class SimpleCircleScheduleProvider implements PRouteProvider {
 
 	@Override
 	public TransitLine createTransitLineFromOperatorPlan(Id<Operator> operatorId, PPlan plan){
-		return this.createTransitLine(Id.create(operatorId, TransitLine.class), plan.getStartTime(), plan.getEndTime(), plan.getNVehicles(), plan.getStopsToBeServed(), Id.create(plan.getId(), TransitRoute.class));
+		ArrayList<TransitStopFacility> stopsToBeServed = new ArrayList<>();
+		for (TransitStopFacility stop: plan.getStopsToBeServedForwardDirection()) { stopsToBeServed.add(stop); }
+		for (TransitStopFacility stop: plan.getStopsToBeServedReturnDirection()) { stopsToBeServed.add(stop); }
+		return this.createTransitLine(Id.create(operatorId, TransitLine.class), plan.getStartTime(), plan.getEndTime(), plan.getNVehicles(), stopsToBeServed, Id.create(plan.getId(), TransitRoute.class));
 	}
 	
 	private TransitLine createTransitLine(Id<TransitLine> pLineId, double startTime, double endTime, int numberOfVehicles, ArrayList<TransitStopFacility> stopsToBeServed, Id<TransitRoute> routeId){

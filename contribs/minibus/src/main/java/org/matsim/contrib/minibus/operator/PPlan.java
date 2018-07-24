@@ -55,7 +55,8 @@ public final class PPlan implements Comparable<PPlan>{
 	private double endTime;
 	private int nVehicles;
 	
-	private ArrayList<TransitStopFacility> stopsToBeServed;
+	private ArrayList<TransitStopFacility> stopsToBeServedForwardDirection;
+	private ArrayList<TransitStopFacility> stopsToBeServedReturnDirection;
 
 	private Set<Id<Vehicle>> vehicleIds;
 
@@ -72,9 +73,15 @@ public final class PPlan implements Comparable<PPlan>{
 		sB.append("Plan " + this.planId + ", score: " + this.score + ", score/veh: " + this.getScorePerVehicle()
 				+ ", trips: " + this.tripsServed + ", vehicles: " + this.vehicleIds.size()
 				+ ", Operation time: " + Time.writeTime(this.startTime) + "-" + Time.writeTime(this.endTime)
-				+ ", Stops: ");
+				+ ", Stops forward direction: ");
 		
-		for (TransitStopFacility stop : this.stopsToBeServed) {
+		for (TransitStopFacility stop : this.stopsToBeServedForwardDirection) {
+			sB.append(stop.getId()); sB.append(", ");
+		}
+		
+		sB.append("Stops return direction: ");
+		
+		for (TransitStopFacility stop : this.stopsToBeServedReturnDirection) {
 			sB.append(stop.getId()); sB.append(", ");
 		}
 		
@@ -86,13 +93,19 @@ public final class PPlan implements Comparable<PPlan>{
 		sB.append("Plan " + this.planId + ", score: " + this.score + ", score/veh: " + this.getScorePerVehicle()
 				+ ", trips: " + this.tripsServed + ", vehicles: " + this.vehicleIds.size()
 				+ ", Operation time: " + Time.writeTime(this.startTime) + "-" + Time.writeTime(this.endTime)
-				+ ", Stops: ");
+				+ ", Stops forward direction: ");
 		
-		for (TransitStopFacility stop : this.stopsToBeServed) {
+		for (TransitStopFacility stop : this.stopsToBeServedForwardDirection) {
 			sB.append(stop.getId()); sB.append(", ");
 		}
 		
-		sB.append("line budget " + budget);
+		sB.append("Stops return direction: ");
+		
+		for (TransitStopFacility stop : this.stopsToBeServedReturnDirection) {
+			sB.append(stop.getId()); sB.append(", ");
+		}
+		
+		sB.append(", line budget " + budget);
 		
 		return  sB.toString();
 	}
@@ -148,12 +161,20 @@ public final class PPlan implements Comparable<PPlan>{
 		this.nVehicles = nVehicles;
 	}
 
-	public ArrayList<TransitStopFacility> getStopsToBeServed() {
-		return stopsToBeServed;
+	public ArrayList<TransitStopFacility> getStopsToBeServedForwardDirection() {
+		return stopsToBeServedForwardDirection;
 	}
 	
-	public void setStopsToBeServed(ArrayList<TransitStopFacility> stopsToBeServed) {
-		this.stopsToBeServed = stopsToBeServed;
+	public void setStopsToBeServedForwardDirection(ArrayList<TransitStopFacility> stopsToBeServedForwardDirection) {
+		this.stopsToBeServedForwardDirection = stopsToBeServedForwardDirection;
+	}
+	
+	public ArrayList<TransitStopFacility> getStopsToBeServedReturnDirection() {
+		return stopsToBeServedReturnDirection;
+	}
+	
+	public void setStopsToBeServedReturnDirection(ArrayList<TransitStopFacility> stopsToBeServedReturnDirection) {
+		this.stopsToBeServedReturnDirection = stopsToBeServedReturnDirection;
 	}
 
 	public double getScore() {
@@ -198,12 +219,20 @@ public final class PPlan implements Comparable<PPlan>{
 			return false;
 		}
 
-		if (testPlan.getStopsToBeServed().size() != this.getStopsToBeServed().size()) {
+		ArrayList<TransitStopFacility> thisStopsToBeServed = new ArrayList<>();
+		thisStopsToBeServed.addAll(stopsToBeServedForwardDirection);
+		thisStopsToBeServed.addAll(stopsToBeServedReturnDirection);
+		
+		ArrayList<TransitStopFacility> testPlanStopsToBeServed = new ArrayList<>();
+		testPlanStopsToBeServed.addAll(testPlan.getStopsToBeServedForwardDirection());
+		testPlanStopsToBeServed.addAll(testPlan.getStopsToBeServedReturnDirection());
+
+		if (testPlanStopsToBeServed.size() != thisStopsToBeServed.size()) {
 			return false;
 		}
 		
-		for (int i = 0; i < this.stopsToBeServed.size(); i++) {
-			if(!this.stopsToBeServed.get(i).getId().toString().equalsIgnoreCase(testPlan.getStopsToBeServed().get(i).getId().toString())){
+		for (int i = 0; i < thisStopsToBeServed.size(); i++) {
+			if(!thisStopsToBeServed.get(i).getId().toString().equalsIgnoreCase(testPlanStopsToBeServed.get(i).getId().toString())){
 				return false;
 			}			
 		}
@@ -212,10 +241,22 @@ public final class PPlan implements Comparable<PPlan>{
 	}
 	
 	public boolean isSameButOperationTime(PPlan testPlan) {
-		for (int i = 0; i < this.stopsToBeServed.size(); i++) {
-			if(!this.stopsToBeServed.get(i).getId().toString().equalsIgnoreCase(testPlan.getStopsToBeServed().get(i).getId().toString())){
+		ArrayList<TransitStopFacility> thisStopsToBeServed = new ArrayList<>();
+		thisStopsToBeServed.addAll(stopsToBeServedForwardDirection);
+		thisStopsToBeServed.addAll(stopsToBeServedReturnDirection);
+		
+		ArrayList<TransitStopFacility> testPlanStopsToBeServed = new ArrayList<>();
+		testPlanStopsToBeServed.addAll(testPlan.getStopsToBeServedForwardDirection());
+		testPlanStopsToBeServed.addAll(testPlan.getStopsToBeServedReturnDirection());
+
+		if (testPlanStopsToBeServed.size() != thisStopsToBeServed.size()) {
+			return false;
+		}
+		
+		for (int i = 0; i < thisStopsToBeServed.size(); i++) {
+			if(!thisStopsToBeServed.get(i).getId().toString().equalsIgnoreCase(testPlanStopsToBeServed.get(i).getId().toString())){
 				return false;
-			}
+			}			
 		}
 		
 		if(this.nVehicles != testPlan.getNVehicles()){

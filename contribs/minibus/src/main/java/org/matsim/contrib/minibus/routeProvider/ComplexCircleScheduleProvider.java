@@ -103,14 +103,17 @@ final class ComplexCircleScheduleProvider implements PRouteProvider {
 
 	@Override
 	public TransitLine createTransitLineFromOperatorPlan(Id<Operator> operatorId, PPlan plan){
-		return this.createTransitLine(Id.create(operatorId, TransitLine.class), plan.getStartTime(), plan.getEndTime(), plan.getNVehicles(), plan.getStopsToBeServed(), Id.create(plan.getId(), TransitRoute.class));
+		return this.createTransitLine(Id.create(operatorId, TransitLine.class), plan.getStartTime(), plan.getEndTime(), plan.getNVehicles(), plan.getStopsToBeServedForwardDirection(), plan.getStopsToBeServedReturnDirection(), Id.create(plan.getId(), TransitRoute.class));
 	}
 	
-	private TransitLine createTransitLine(Id<TransitLine> lineId, double startTime, double endTime, int numberOfVehicles, ArrayList<TransitStopFacility> stopsToBeServed, Id<TransitRoute> routeId){
+	private TransitLine createTransitLine(Id<TransitLine> lineId, double startTime, double endTime, int numberOfVehicles, ArrayList<TransitStopFacility> stopsToBeServedForwardDirection, ArrayList<TransitStopFacility> stopsToBeServedReturnDirection, Id<TransitRoute> routeId){
 		
 		// initialize
 		TransitLine line = this.scheduleWithStopsOnly.getFactory().createTransitLine(lineId);			
 		routeId = Id.create(lineId + "-" + routeId, TransitRoute.class);
+		ArrayList<TransitStopFacility> stopsToBeServed = new ArrayList<>();
+		for (TransitStopFacility stop: stopsToBeServedForwardDirection) { stopsToBeServed.add(stop); }
+		for (TransitStopFacility stop: stopsToBeServedReturnDirection) { stopsToBeServed.add(stop); }
 		TransitRoute transitRoute = createRoute(routeId, stopsToBeServed);
 		
 		// register route

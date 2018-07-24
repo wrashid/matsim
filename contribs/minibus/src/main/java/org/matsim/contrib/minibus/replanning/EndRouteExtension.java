@@ -26,7 +26,6 @@ import com.vividsolutions.jts.operation.buffer.BufferOp;
 import com.vividsolutions.jts.operation.buffer.BufferParameters;
 
 import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.contrib.minibus.operator.Operator;
 import org.matsim.contrib.minibus.operator.PPlan;
@@ -53,50 +52,45 @@ public final class EndRouteExtension extends AbstractPStrategyModule {
 	public static final String STRATEGY_NAME = "EndRouteExtension";
 	private final double bufferSize;
 	private final double ratio;
+	private final boolean backwardCompatibleAddNewBeforeBaseOrAfterRemoteStop;
+	private final boolean addFormerTerminusOnWayBack;
+	private enum Direction {FORWARD, RETURN};
 	
 	public EndRouteExtension(ArrayList<String> parameter) {
 		super();
-		if(parameter.size() != 2){
+		if(parameter.size() < 2 && parameter.size() > 4){
 			log.error("Parameter 1: Buffer size in meter");
-			log.error("Parameter 2: Ratio bufferSize to route's beeline length. If set to something very small, e.g. 0.01, the calculated buffer size may be smaller than the one specified in parameter 1. Parameter 1 will then be taken as minimal buffer size.");
+			log.error("Parameter 2: Ratio bufferSize to route's beeline length (between termini ignoring detours to serve other stops to be served in between). If set to something very small, e.g. 0.01, the calculated buffer size may be smaller than the one specified in parameter 1. Parameter 1 will then be taken as minimal buffer size.");
+			log.warn("Parameter 3: Optional: Backwards Compatibility: add new stop either before base stop or after remote stop. Else the new stop is added either before base stop or before remote stop. Default is true.");
+			log.warn("Parameter 4: Optional: Create forth and back extension by adding the former terminus (A) after the new terminus B, creating a back and forth extension |C-...-A-|B|-A-...-C| . Default is false (only add the new stop B).");
 		}
 		this.bufferSize = Double.parseDouble(parameter.get(0));
 		this.ratio = Double.parseDouble(parameter.get(1));
+		if (parameter.size() > 2) {
+			this.backwardCompatibleAddNewBeforeBaseOrAfterRemoteStop = Boolean.parseBoolean(parameter.get(2));
+		} else {
+			this.backwardCompatibleAddNewBeforeBaseOrAfterRemoteStop = false;
+		}
+		if (parameter.size() > 3) {
+			this.addFormerTerminusOnWayBack = Boolean.parseBoolean(parameter.get(3));
+		} else {
+			this.addFormerTerminusOnWayBack = false;
+		}
 	}
 
 	@Override
 	public PPlan run(Operator operator) {
 
 		PPlan oldPlan = operator.getBestPlan();
-		ArrayList<TransitStopFacility> currentStopsToBeServed = oldPlan.getStopsToBeServed();
+		ArrayList<TransitStopFacility> currentStopsToBeServedForwardDirection = oldPlan.getStopsToBeServedForwardDirection();
+		ArrayList<TransitStopFacility> currentStopsToBeServedReturnDirection = oldPlan.getStopsToBeServedReturnDirection();
 		
-		TransitStopFacility baseStop = currentStopsToBeServed.get(0);
-		/* 
-		 * Paratransit TransitRoutes are always circular instead of having one TransitRoute each for each direction between two 
-		 * terminus stops. So we only know one terminus stop, the base stop, and try to find the other terminus, the other end 
-		 * of the route, by scanning the stops on the TransitRoute for the stop which has the largest distance from the base stop.
-		 */
-		TransitStopFacility remoteStop = this.findStopWithLargestDistance(currentStopsToBeServed);
-		
-		if (baseStop.equals(remoteStop)) {
-			/*
-			 * TODO:
-			 * findStopWithLargestDistance() should never return a remote stop which equals the base stop unless the input 
-			 * stop sequence of the oldPlan has only stops at exactly the same coordinate (which should be prohibited somewhere
-			 * else). If baseStop and remoteStop are equal createGeometryFromStops() fails because it asks for a LineString of 
-			 * just one point (the base stop = remote stop).
-			 */
-			log.debug(
-					"EndRouteExtension replanning is skipped for TransitLine "
-							+ operator.getCurrentTransitLine().getId()
-							+ ", because base stop and remote stop returned by findStopWithLargestDistance() are equal. This"
-							+ " should not happen. Base stop: " + baseStop.getId() + ". Remote stop: " + remoteStop.getId());
-			return null;
-		}
+		TransitStopFacility baseStop = currentStopsToBeServedForwardDirection.get(0);
+		TransitStopFacility remoteStop = currentStopsToBeServedReturnDirection.get(0);
 
 		double bufferSizeBasedOnRatio = CoordUtils.calcEuclideanDistance(baseStop.getCoord(), remoteStop.getCoord()) * this.ratio;
 		
-		List<Geometry> lineStrings = this.createGeometryFromStops(currentStopsToBeServed, remoteStop);
+		List<Geometry> lineStrings = this.createGeometryFromStops(currentStopsToBeServedForwardDirection, currentStopsToBeServedReturnDirection);
 		Geometry bufferWithoutEndCaps = this.createBuffer(lineStrings, Math.max(this.bufferSize, bufferSizeBasedOnRatio), true);
 		Geometry bufferWithEndCaps = this.createBuffer(lineStrings, Math.max(this.bufferSize, bufferSizeBasedOnRatio), false);
 		Geometry buffer = bufferWithEndCaps.difference(bufferWithoutEndCaps);
@@ -108,48 +102,97 @@ public final class EndRouteExtension extends AbstractPStrategyModule {
 			return null;
 		}
 		
-		ArrayList<TransitStopFacility> newStopsToBeServed = this.addStopToExistingStops(baseStop, remoteStop, currentStopsToBeServed, newStop);
+		// BEGIN Test
+		
+		System.out.println(newStop.getId().toString());
+		
+		// END Test
+		
+		Map<Direction, ArrayList<TransitStopFacility>> newStopsToBeServed = this.addStopToExistingStops(baseStop, remoteStop, 
+				currentStopsToBeServedForwardDirection, currentStopsToBeServedReturnDirection, newStop);
+		
+		// BEGIN TEST
+		
+		for(TransitStopFacility stop: newStopsToBeServed.get(Direction.FORWARD)) {
+			System.err.print(stop.getId().toString() + " ");
+		}
+		System.err.println();
+		System.err.print("return: ");
+		for(TransitStopFacility stop: newStopsToBeServed.get(Direction.RETURN)) {
+			System.err.print(stop.getId().toString() + " ");
+		}
+		System.err.println();
+		
+		// END TEST
 		
 		// create new plan
 		PPlan newPlan = new PPlan(operator.getNewPlanId(), this.getStrategyName(), oldPlan.getId());
 		newPlan.setNVehicles(1);
 		newPlan.setStartTime(oldPlan.getStartTime());
 		newPlan.setEndTime(oldPlan.getEndTime());
-		newPlan.setStopsToBeServed(newStopsToBeServed);
-		
+		newPlan.setStopsToBeServedForwardDirection(newStopsToBeServed.get(Direction.FORWARD));
+		newPlan.setStopsToBeServedReturnDirection(newStopsToBeServed.get(Direction.RETURN));
 		newPlan.setLine(operator.getRouteProvider().createTransitLineFromOperatorPlan(operator.getId(), newPlan));
 		
 		return newPlan;
 	}
 
 
-	private ArrayList<TransitStopFacility> addStopToExistingStops(TransitStopFacility baseStop, TransitStopFacility remoteStop, ArrayList<TransitStopFacility> currentStopsToBeServed, TransitStopFacility newStop) {
-		ArrayList<TransitStopFacility> newStopsToBeServed = new ArrayList<>(currentStopsToBeServed);
+	private Map<Direction, ArrayList<TransitStopFacility>> addStopToExistingStops(TransitStopFacility baseStop, TransitStopFacility remoteStop, 
+			ArrayList<TransitStopFacility> currentStopsToBeServedForwardDirection, ArrayList<TransitStopFacility> currentStopsToBeServedReturnDirection, 
+			TransitStopFacility newStop) {
+		ArrayList<TransitStopFacility> newStopsToBeServedForwardDirection = new ArrayList<>(currentStopsToBeServedForwardDirection);
+		ArrayList<TransitStopFacility> newStopsToBeServedReturnDirection = new ArrayList<>(currentStopsToBeServedReturnDirection);
 		
 		// decide which stop is closer
 		if (CoordUtils.calcEuclideanDistance(baseStop.getCoord(), newStop.getCoord()) < CoordUtils.calcEuclideanDistance(remoteStop.getCoord(), newStop.getCoord())) {
 			// baseStop is closer - insert before baseStop
-			newStopsToBeServed.add(0, newStop);
+			newStopsToBeServedForwardDirection.add(0, newStop);
+			if (addFormerTerminusOnWayBack) {
+				newStopsToBeServedReturnDirection.add(newStopsToBeServedReturnDirection.size(), baseStop);
+			}
 		} else {
 			// remote stop is closer or both have the same distance - add after remote stop
-			newStopsToBeServed.add(newStopsToBeServed.indexOf(remoteStop) + 1, newStop);
-		}
-		
-		return newStopsToBeServed;
-	}
-
-	private TransitStopFacility findStopWithLargestDistance(ArrayList<TransitStopFacility> stops) {
-		Coord startCoord = stops.get(0).getCoord();
-		double largestDistance = 0;
-		TransitStopFacility stopWithLargestDistance = stops.get(0);
-		for (TransitStopFacility transitStopFacility : stops) {
-			double currentDistance = CoordUtils.calcEuclideanDistance(startCoord, transitStopFacility.getCoord());
-			if (currentDistance > largestDistance) {
-				largestDistance = currentDistance;
-				stopWithLargestDistance = transitStopFacility;
+			if (backwardCompatibleAddNewBeforeBaseOrAfterRemoteStop) {
+				newStopsToBeServedForwardDirection.add(newStopsToBeServedForwardDirection.size(), remoteStop);
+				newStopsToBeServedReturnDirection.set(0, newStop);
+				if (addFormerTerminusOnWayBack) {
+					newStopsToBeServedReturnDirection.add(1, remoteStop);
+				}
+			} else {
+				newStopsToBeServedReturnDirection.add(0, newStop);
+				if (addFormerTerminusOnWayBack) {
+					newStopsToBeServedForwardDirection.add(newStopsToBeServedForwardDirection.size(), remoteStop);
+				}
 			}
 		}
-		return stopWithLargestDistance;
+		
+		// BEGIN TEST
+		
+		for(TransitStopFacility stop: currentStopsToBeServedForwardDirection) {
+			System.err.print(stop.getId().toString() + " ");
+		}
+		System.err.print(" new: ");
+		for(TransitStopFacility stop: newStopsToBeServedForwardDirection) {
+			System.err.print(stop.getId().toString() + " ");
+		}
+		System.err.println();
+		System.err.print("return: ");
+		for(TransitStopFacility stop: currentStopsToBeServedReturnDirection) {
+			System.err.print(stop.getId().toString() + " ");
+		}
+		System.err.print(" new: ");
+		for(TransitStopFacility stop: newStopsToBeServedReturnDirection) {
+			System.err.print(stop.getId().toString() + " ");
+		}
+		System.err.println();
+		
+		// END TEST
+		
+		Map<Direction, ArrayList<TransitStopFacility>> result = new HashMap<>();
+		result.put(Direction.FORWARD, newStopsToBeServedForwardDirection);
+		result.put(Direction.RETURN, newStopsToBeServedReturnDirection);
+		return result;
 	}
 
 	private Set<Id<TransitStopFacility>> getStopsUsed(Collection<TransitRoute> routes) {
@@ -201,30 +244,30 @@ public final class EndRouteExtension extends AbstractPStrategyModule {
 		return union;
 	}
 
-	private List<Geometry> createGeometryFromStops(ArrayList<TransitStopFacility> stops, TransitStopFacility remoteStop) {
+	private List<Geometry> createGeometryFromStops(ArrayList<TransitStopFacility> stopsForwardDirection, ArrayList<TransitStopFacility> stopsReturnDirection) {
 		List<Geometry> geometries = new LinkedList<>();
 		
-		ArrayList<Coordinate> coords = new ArrayList<>();
-		for (TransitStopFacility stop : stops) {
-			if (stop.equals(remoteStop)) {
-				// terminate current line string
-				coords.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
-				Coordinate[] coordinates = coords.toArray(new Coordinate[coords.size()]);
-				Geometry lineString = new GeometryFactory().createLineString(coordinates);
-				geometries.add(lineString);
-				// create new line string
-				coords = new ArrayList<>();
-				coords.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
-			} else {
-				coords.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
-			}
+		// Forward direction
+		ArrayList<Coordinate> coordsForward = new ArrayList<>();
+		for (TransitStopFacility stop : stopsForwardDirection) {
+			coordsForward.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
 		}
-		// add first stop to close the circle
-		coords.add(new Coordinate(stops.get(0).getCoord().getX(), stops.get(0).getCoord().getY(), 0.0));
+		// add first stop of return direction to close the circle
+		coordsForward.add(new Coordinate(stopsReturnDirection.get(0).getCoord().getX(), stopsReturnDirection.get(0).getCoord().getY(), 0.0));
+		Coordinate[] coordinatesForward = coordsForward.toArray(new Coordinate[coordsForward.size()]);
+		Geometry lineStringForward = new GeometryFactory().createLineString(coordinatesForward);
+		geometries.add(lineStringForward);
 		
-		Coordinate[] coordinates = coords.toArray(new Coordinate[coords.size()]);
-		Geometry lineString = new GeometryFactory().createLineString(coordinates);
-		geometries.add(lineString);
+		// Return direction
+		ArrayList<Coordinate> coordsReturn = new ArrayList<>();
+		for (TransitStopFacility stop : stopsReturnDirection) {
+			coordsReturn.add(new Coordinate(stop.getCoord().getX(), stop.getCoord().getY(), 0.0));
+		}
+		// add first stop of forward direction to close the circle
+		coordsReturn.add(new Coordinate(stopsForwardDirection.get(0).getCoord().getX(), stopsForwardDirection.get(0).getCoord().getY(), 0.0));
+		Coordinate[] coordinatesReturn = coordsReturn.toArray(new Coordinate[coordsReturn.size()]);
+		Geometry lineStringReturn = new GeometryFactory().createLineString(coordinatesReturn);
+		geometries.add(lineStringReturn);
 		return geometries;
 	}
 

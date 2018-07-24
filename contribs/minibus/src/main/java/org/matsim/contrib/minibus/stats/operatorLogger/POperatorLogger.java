@@ -130,11 +130,16 @@ public final class POperatorLogger implements StartupListener, IterationEndsList
 					local.setStartTime(plan.getStartTime());
 					local.setEndTime(plan.getEndTime());
 					
-					ArrayList<Id<TransitStopFacility>> stopsServed = new ArrayList<>();
-					for (TransitStopFacility stop : plan.getStopsToBeServed()) {
-						stopsServed.add(stop.getId());
+					ArrayList<Id<TransitStopFacility>> stopsServedForwardDirection = new ArrayList<>();
+					for (TransitStopFacility stop : plan.getStopsToBeServedForwardDirection()) {
+						stopsServedForwardDirection.add(stop.getId());
 					}
-					local.setStopsToBeServed(stopsServed);
+					local.setStopsToBeServedForwardDirection(stopsServedForwardDirection);
+					ArrayList<Id<TransitStopFacility>> stopsServedReturnDirection = new ArrayList<>();
+					for (TransitStopFacility stop : plan.getStopsToBeServedReturnDirection()) {
+						stopsServedReturnDirection.add(stop.getId());
+					}
+					local.setStopsToBeServedForwardDirection(stopsServedReturnDirection);
 					
 					ArrayList<Id<Link>> linksServed = new ArrayList<>();
 					for (TransitRoute route : plan.getLine().getRoutes().values()) {

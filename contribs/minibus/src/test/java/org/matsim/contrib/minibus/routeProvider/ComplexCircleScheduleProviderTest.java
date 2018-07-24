@@ -67,10 +67,12 @@ public class ComplexCircleScheduleProviderTest {
 		plan.setNVehicles(2);
 		TransitStopFacility startStop = tS.getFacilities().get(Id.create(pC.getPIdentifier() + "1424", TransitStopFacility.class));
 		TransitStopFacility endStop = tS.getFacilities().get(Id.create(pC.getPIdentifier() + "4434", TransitStopFacility.class));
-		ArrayList<TransitStopFacility> stopsToBeServed = new ArrayList<>();
-		stopsToBeServed.add(startStop);
-		stopsToBeServed.add(endStop);
-		plan.setStopsToBeServed(stopsToBeServed);
+		ArrayList<TransitStopFacility> stopsToBeServedForwardDirection = new ArrayList<>();
+		ArrayList<TransitStopFacility> stopsToBeServedReturnDirection = new ArrayList<>();
+		stopsToBeServedForwardDirection.add(startStop);
+		stopsToBeServedReturnDirection.add(endStop);
+		plan.setStopsToBeServedForwardDirection(stopsToBeServedForwardDirection);
+		plan.setStopsToBeServedReturnDirection(stopsToBeServedReturnDirection);
 		
 		ArrayList<Id<Link>> refIds = new ArrayList<>();
 		refIds.add(Id.create("1424", Link.class)); refIds.add(Id.create("2434", Link.class));
@@ -129,14 +131,16 @@ public class ComplexCircleScheduleProviderTest {
 		TransitStopFacility stop3 = tS.getFacilities().get(Id.create(pC.getPIdentifier() + "2333", TransitStopFacility.class));
 		TransitStopFacility stop4 = tS.getFacilities().get(Id.create(pC.getPIdentifier() + "3433", TransitStopFacility.class));
 		TransitStopFacility stop5 = tS.getFacilities().get(Id.create(pC.getPIdentifier() + "3334", TransitStopFacility.class));
-		ArrayList<TransitStopFacility> stopsToBeServed = new ArrayList<>();
-		stopsToBeServed.add(stop1);
-		stopsToBeServed.add(stop2);
-		stopsToBeServed.add(stop3);
-		stopsToBeServed.add(stop4);
-		stopsToBeServed.add(stop5);
+		ArrayList<TransitStopFacility> stopsToBeServedForwardDirection = new ArrayList<>();
+		ArrayList<TransitStopFacility> stopsToBeServedReturnDirection = new ArrayList<>();
+		stopsToBeServedForwardDirection.add(stop1);
+		stopsToBeServedForwardDirection.add(stop2);
+		stopsToBeServedForwardDirection.add(stop3);
+		stopsToBeServedReturnDirection.add(stop4);
+		stopsToBeServedReturnDirection.add(stop5);
 		
-		plan.setStopsToBeServed(stopsToBeServed);
+		plan.setStopsToBeServedForwardDirection(stopsToBeServedForwardDirection);
+		plan.setStopsToBeServedReturnDirection(stopsToBeServedReturnDirection);
 		
 		ArrayList<Id<Link>> refIds = new ArrayList<>();
 		refIds.add(Id.create("1424", Link.class)); refIds.add(Id.create("2423", Link.class));

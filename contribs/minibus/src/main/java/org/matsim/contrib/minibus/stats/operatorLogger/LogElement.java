@@ -57,7 +57,8 @@ public final class LogElement {
 	private double budget;
 	private double startTime;
 	private double endTime;
-	private ArrayList<Id<TransitStopFacility>> stopsToBeServed;
+	private ArrayList<Id<TransitStopFacility>> stopsToBeServedForwardDirection;
+	private ArrayList<Id<TransitStopFacility>> stopsToBeServedReturnDirection;
 	private ArrayList<Id<Link>> linksServed;
 
 	
@@ -137,11 +138,17 @@ public final class LogElement {
 	public void setEndTime(double endTime) {
 		this.endTime = endTime;
 	}
-	public ArrayList<Id<TransitStopFacility>> getStopsToBeServed() {
-		return stopsToBeServed;
+	public ArrayList<Id<TransitStopFacility>> getStopsToBeServedForwardDirection() {
+		return stopsToBeServedForwardDirection;
 	}
-	public void setStopsToBeServed(ArrayList<Id<TransitStopFacility>> stopsServed) {
-		this.stopsToBeServed = stopsServed;
+	public void setStopsToBeServedForwardDirection(ArrayList<Id<TransitStopFacility>> stopsServedForwardDirection) {
+		this.stopsToBeServedForwardDirection = stopsServedForwardDirection;
+	}
+	public ArrayList<Id<TransitStopFacility>> getStopsToBeServedReturnDirection() {
+		return stopsToBeServedReturnDirection;
+	}
+	public void setStopsToBeServedReturnDirection(ArrayList<Id<TransitStopFacility>> stopsServedReturnDirection) {
+		this.stopsToBeServedReturnDirection = stopsServedReturnDirection;
 	}
 	public ArrayList<Id<Link>> getLinksServed() {
 		return linksServed;
@@ -165,7 +172,8 @@ public final class LogElement {
 		strB.append(DELIMITER).append("budget");
 		strB.append(DELIMITER).append("start time");
 		strB.append(DELIMITER).append("end time");
-		strB.append(DELIMITER).append("important stops");
+		strB.append(DELIMITER).append("important stops forward direction");
+		strB.append(DELIMITER).append("important stops return direction");
 		strB.append(DELIMITER).append("links");
 		return strB.toString();
 	}
@@ -184,7 +192,8 @@ public final class LogElement {
 		strB.append(DELIMITER).append(this.budget);
 		strB.append(DELIMITER).append(Time.writeTime(this.startTime));
 		strB.append(DELIMITER).append(Time.writeTime(this.endTime));
-		strB.append(DELIMITER).append(this.stopsToBeServed);
+		strB.append(DELIMITER).append(this.stopsToBeServedForwardDirection);
+		strB.append(DELIMITER).append(this.stopsToBeServedReturnDirection);
 		strB.append(DELIMITER).append(this.linksServed);
 		return strB.toString();
 	}
