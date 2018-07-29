@@ -1,6 +1,11 @@
 package org.matsim.contrib.dvrp.passenger;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.dvrp.optimizer.VrpOptimizer;
@@ -8,12 +13,16 @@ import org.matsim.contrib.dvrp.router.DvrpRoutingNetworkProvider;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.mobsim.qsim.AbstractQSimPlugin;
-import org.matsim.core.mobsim.qsim.interfaces.*;
+import org.matsim.core.mobsim.qsim.interfaces.DepartureHandler;
+import org.matsim.core.mobsim.qsim.interfaces.MobsimEngine;
 
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 import com.google.inject.name.Named;
 
 public class PassengerEnginePlugin extends AbstractQSimPlugin {
+	public final static String PASSENGER_ENGINE_NAME = "PassengerEngine";
+	
 	private final String mode;
 
 	public PassengerEnginePlugin(Config config, String mode) {
@@ -32,13 +41,13 @@ public class PassengerEnginePlugin extends AbstractQSimPlugin {
 	}
 
 	@Override
-	public Collection<Class<? extends DepartureHandler>> departureHandlers() {
-		return Collections.singletonList(PassengerEngine.class);
+	public Map<String, Class<? extends DepartureHandler>> departureHandlers() {
+		return Collections.singletonMap(PASSENGER_ENGINE_NAME, PassengerEngine.class);
 	}
 
 	@Override
-	public Collection<Class<? extends MobsimEngine>> engines() {
-		return Collections.singletonList(PassengerEngine.class);
+	public Map<String, Class<? extends MobsimEngine>> engines() {
+		return Collections.singletonMap(PASSENGER_ENGINE_NAME, PassengerEngine.class);
 	}
 
 	public static class PassengerEngineProvider implements Provider<PassengerEngine> {

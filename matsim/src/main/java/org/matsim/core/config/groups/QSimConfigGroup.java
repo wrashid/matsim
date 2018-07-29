@@ -23,7 +23,11 @@ package org.matsim.core.config.groups;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.core.config.ReflectiveConfigGroup;
@@ -135,8 +139,8 @@ public final class QSimConfigGroup extends ReflectiveConfigGroup {
 	private VehiclesSource vehiclesSource = VehiclesSource.defaultVehicle ;
 	// ---
 
-	private static final String CREATING_VEHICLES_FOR_ALL_NETWORK_MODES = "creatingVehiclesForAllNetworkModes";
-	private boolean creatingVehiclesForAllNetworkModes = true;
+//	private static final String CREATING_VEHICLES_FOR_ALL_NETWORK_MODES = "creatingVehiclesForAllNetworkModes";
+//	private boolean creatingVehiclesForAllNetworkModes = true;
 	// ---
 	private static final String IS_SEEP_MODE_STORAGE_FREE = "isSeepModeStorageFree";
 	
@@ -278,8 +282,9 @@ public final class QSimConfigGroup extends ReflectiveConfigGroup {
 		map.put(SEEP_MODE, "If link dynamics is set as "+ LinkDynamics.SeepageQ+", set a seep mode. Default is bike.");
 		map.put(IS_SEEP_MODE_STORAGE_FREE, "If link dynamics is set as "+ LinkDynamics.SeepageQ+", set to true if seep mode do not consumes any space on the link. Default is false.");
 		map.put(IS_RESTRICTING_SEEPAGE, "If link dynamics is set as "+ LinkDynamics.SeepageQ+", set to false if all seep modes should perform seepage. Default is true (better option).");
-		map.put(CREATING_VEHICLES_FOR_ALL_NETWORK_MODES, "If set to true, creates a vehicle for each person corresponding to every network mode. However, " +
-				"this will be overridden if vehicle source is "+ VehiclesSource.fromVehiclesData+".");
+//		map.put(CREATING_VEHICLES_FOR_ALL_NETWORK_MODES, "If set to true, creates a vehicle for each person corresponding to every network mode. However, " +
+//				"this will be overridden if vehicle source is "+ VehiclesSource.fromVehiclesData+".");
+		
 		return map;
 	}
 
@@ -589,13 +594,16 @@ public final class QSimConfigGroup extends ReflectiveConfigGroup {
 		this.pcuThresholdForFlowCapacityEasing = pcuThresholdForFlowCapacityEasing;
 	}
 
-	@StringGetter(CREATING_VEHICLES_FOR_ALL_NETWORK_MODES)
-	public boolean isCreatingVehiclesForAllNetworkModes() {
-		return creatingVehiclesForAllNetworkModes;
-	}
+////	@StringGetter(CREATING_VEHICLES_FOR_ALL_NETWORK_MODES)
+//	public boolean isCreatingVehiclesForAllNetworkModes() {
+//		// yyyy do we really need this switch?  Quite in general, please try to avoid boolean switches.  kai, may'18
+//		return creatingVehiclesForAllNetworkModes;
+//	}
 
-	@StringSetter(CREATING_VEHICLES_FOR_ALL_NETWORK_MODES)
-	public void setCreatingVehiclesForAllNetworkModes(boolean creatingVehiclesForAllNetworkModes) {
-		this.creatingVehiclesForAllNetworkModes = creatingVehiclesForAllNetworkModes;
-	}
+////	@StringSetter(CREATING_VEHICLES_FOR_ALL_NETWORK_MODES)
+//	public void setCreatingVehiclesForAllNetworkModes(boolean creatingVehiclesForAllNetworkModes) {
+//		// yyyy do we really need this switch?  Quite in general, please try to avoid boolean switches.  kai, may'18
+//		this.creatingVehiclesForAllNetworkModes = creatingVehiclesForAllNetworkModes;
+//	}
+	
 }

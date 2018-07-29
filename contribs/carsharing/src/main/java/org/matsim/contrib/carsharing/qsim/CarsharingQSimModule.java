@@ -28,7 +28,7 @@ public class CarsharingQSimModule extends AbstractModule {
 		}
 		plugins.add(new ActivityEnginePlugin(config));
 		plugins.add(new TeleportationPlugin(config));
-		plugins.add(new CarsharingQSimPlugin(config));
+		plugins.add(new CarSharingQSimPlugin(config));
 
 		return plugins;
 	}
