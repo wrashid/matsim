@@ -39,6 +39,7 @@ import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.io.PopulationReader;
@@ -57,10 +58,11 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 
 /**
- * Simple class to convert MATSim plans to ESRI shape files. Activities will be converted into points and
- * legs will be converted into line strings. Parameters as defined in the population xml file will be added
- * as attributes to the shape files. There are also some parameters to configure this converter, please
- * consider the corresponding setters in this class.
+ * Simple class to convert MATSim plans to ESRI shape files. Activities will be
+ * converted into points and legs will be converted into line strings.
+ * Parameters as defined in the population xml file will be added as attributes
+ * to the shape files. There are also some parameters to configure this
+ * converter, please consider the corresponding setters in this class.
  *
  * @author laemmel
  */
@@ -79,7 +81,8 @@ public class SelectedPlans2ESRIShape {
 	private final GeometryFactory geofac;
 	private final Network network;
 
-	public SelectedPlans2ESRIShape(final Population population, final Network network, final CoordinateReferenceSystem crs, final String outputDir) {
+	public SelectedPlans2ESRIShape(final Population population, final Network network,
+			final CoordinateReferenceSystem crs, final String outputDir) {
 		this.population = population;
 		this.network = network;
 		this.crs = crs;
@@ -105,7 +108,7 @@ public class SelectedPlans2ESRIShape {
 	}
 
 	public void setLegBlurFactor(final double legBlurFactor) {
-		this.legBlurFactor  = legBlurFactor;
+		this.legBlurFactor = legBlurFactor;
 	}
 
 	public void write() {
@@ -113,7 +116,7 @@ public class SelectedPlans2ESRIShape {
 			drawOutputSample();
 			if (this.writeActs) {
 				writeActs();
-			} 
+			}
 			if (this.writeLegs) {
 				writeLegs();
 			}
@@ -156,7 +159,8 @@ public class SelectedPlans2ESRIShape {
 				if (pe instanceof Leg) {
 					Leg leg = (Leg) pe;
 					if (leg.getRoute() instanceof NetworkRoute) {
-						if (RouteUtils.calcDistanceExcludingStartEndLink((NetworkRoute) leg.getRoute(), this.network) > 0) {
+						if (RouteUtils.calcDistanceExcludingStartEndLink((NetworkRoute) leg.getRoute(),
+								this.network) > 0) {
 							fts.add(getLegFeature(leg, id));
 						}
 					} else if (leg.getRoute().getDistance() > 0) {
@@ -177,9 +181,10 @@ public class SelectedPlans2ESRIShape {
 		double ry = MatsimRandom.getRandom().nextDouble() * this.actBlurFactor;
 		Coord cc = this.network.getLinks().get(act.getLinkId()).getCoord();
 		Coord c = new Coord(cc.getX() + rx, cc.getY() + ry);
-		
+
 		try {
-			return this.actBuilder.buildFeature(null, new Object [] {MGC.coord2Point(c), id, type, linkId, startTime, endTime});
+			return this.actBuilder.buildFeature(null,
+					new Object[] { MGC.coord2Point(c), id, type, linkId, startTime, endTime });
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		}
@@ -188,43 +193,70 @@ public class SelectedPlans2ESRIShape {
 	}
 
 	private SimpleFeature getLegFeature(final Leg leg, final String id) {
-		if (!(leg.getRoute() instanceof NetworkRoute)) {
-			return null;
-		}
-		String mode = leg.getMode();
-		Double depTime = leg.getDepartureTime();
-		Double travTime = leg.getTravelTime();
-		Double dist = RouteUtils.calcDistanceExcludingStartEndLink((NetworkRoute) leg.getRoute(), this.network);
+		// if (!(leg.getRoute() instanceof NetworkRoute)) {
+		// return null;
+		// }
+		final String mode = leg.getMode();
+		final Double depTime = leg.getDepartureTime();
+		final Double travTime = leg.getTravelTime();
+		final Double dist;
 
-		List<Id<Link>> linkIds = ((NetworkRoute) leg.getRoute()).getLinkIds();
-		Coordinate [] coords = new Coordinate[linkIds.size() + 1];
-		for (int i = 0; i < linkIds.size(); i++) {
-			Link link = this.network.getLinks().get(linkIds.get(i));
-			Coord c = link.getFromNode().getCoord();
+		final Coordinate[] coords;
+
+		if (leg.getRoute() instanceof NetworkRoute) {
+
+			dist = RouteUtils.calcDistanceExcludingStartEndLink((NetworkRoute) leg.getRoute(), this.network);
+			
+			List<Id<Link>> linkIds = ((NetworkRoute) leg.getRoute()).getLinkIds();
+			coords = new Coordinate[linkIds.size() + 1];
+
+			for (int i = 0; i < linkIds.size(); i++) {
+				Link link = this.network.getLinks().get(linkIds.get(i));
+				Coord c = link.getFromNode().getCoord();
+				double rx = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
+				double ry = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
+				Coordinate cc = new Coordinate(c.getX() + rx, c.getY() + ry);
+				coords[i] = cc;
+			}
+
+			Link link = this.network.getLinks().get(linkIds.get(linkIds.size() - 1));
+			Coord c = link.getToNode().getCoord();
 			double rx = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
 			double ry = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
-			Coordinate cc = new Coordinate(c.getX()+rx,c.getY()+ry);
-			coords[i] = cc;
-		}
+			Coordinate cc = new Coordinate(c.getX() + rx, c.getY() + ry);
+			coords[linkIds.size()] = cc;
 
-		Link link = this.network.getLinks().get(linkIds.get(linkIds.size() - 1));
-		Coord c = link.getToNode().getCoord();
-		double rx = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
-		double ry = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
-		Coordinate cc = new Coordinate(c.getX()+rx,c.getY()+ry);
-		coords[linkIds.size()] = cc;
+		} else {
+
+			final Coord from = this.network.getLinks().get(leg.getRoute().getStartLinkId()).getFromNode()
+					.getCoord();
+			final Coord to = this.network.getLinks().get(leg.getRoute().getEndLinkId()).getToNode().getCoord();
+			
+			dist = NetworkUtils.getEuclideanDistance(from, to);
+			
+			coords = new Coordinate[2];
+			{
+				double rx = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
+				double ry = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
+				coords[0] = new Coordinate(from.getX() + rx, from.getY() + ry);
+			}
+			{
+				double rx = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
+				double ry = MatsimRandom.getRandom().nextDouble() * this.legBlurFactor;
+				coords[1] = new Coordinate(to.getX() + rx, to.getY() + ry);
+			}
+		}
 
 		LineString ls = this.geofac.createLineString(coords);
 
 		try {
-			return this.legBuilder.buildFeature(null, new Object [] {ls,id,mode,depTime,travTime,dist});
+			return this.legBuilder.buildFeature(null, new Object[] { ls, id, mode, depTime, travTime, dist });
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		}
 
 		return null;
 	}
-
 
 	private void initFeatureType() {
 		SimpleFeatureTypeBuilder actBuilder = new SimpleFeatureTypeBuilder();
@@ -236,7 +268,7 @@ public class SelectedPlans2ESRIShape {
 		actBuilder.add("LINK_ID", String.class);
 		actBuilder.add("START_TIME", Double.class);
 		actBuilder.add("END_TIME", Double.class);
-		
+
 		SimpleFeatureTypeBuilder legBuilder = new SimpleFeatureTypeBuilder();
 		legBuilder.setName("leg");
 		legBuilder.setCRS(this.crs);
@@ -251,12 +283,13 @@ public class SelectedPlans2ESRIShape {
 		this.legBuilder = new SimpleFeatureBuilder(legBuilder.buildFeatureType());
 	}
 
-	public static void main(final String [] args) {
+	public static void main(final String[] args) {
 		// FIXME hard-coded file names; does this class really need a main-method?
 		final String populationFilename = "./examples/equil/plans100.xml";
 		final String networkFilename = "./examples/equil/network.xml";
-		//		final String populationFilename = "./test/scenarios/berlin/plans_hwh_1pct.xml.gz";
-		//		final String networkFilename = "./test/scenarios/berlin/network.xml.gz";
+		// final String populationFilename =
+		// "./test/scenarios/berlin/plans_hwh_1pct.xml.gz";
+		// final String networkFilename = "./test/scenarios/berlin/network.xml.gz";
 
 		final String outputDir = "./plans/";
 		new File(outputDir).mkdir();
@@ -266,7 +299,8 @@ public class SelectedPlans2ESRIShape {
 		new PopulationReader(scenario).readFile(populationFilename);
 
 		CoordinateReferenceSystem crs = MGC.getCRS("DHDN_GK4");
-		SelectedPlans2ESRIShape sp = new SelectedPlans2ESRIShape(scenario.getPopulation(), scenario.getNetwork(), crs, outputDir);
+		SelectedPlans2ESRIShape sp = new SelectedPlans2ESRIShape(scenario.getPopulation(), scenario.getNetwork(), crs,
+				outputDir);
 		sp.setOutputSample(0.05);
 		sp.setActBlurFactor(100);
 		sp.setLegBlurFactor(100);
@@ -277,4 +311,3 @@ public class SelectedPlans2ESRIShape {
 	}
 
 }
-

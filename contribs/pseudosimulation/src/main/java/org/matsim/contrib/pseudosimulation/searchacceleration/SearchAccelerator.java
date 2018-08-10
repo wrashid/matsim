@@ -43,6 +43,7 @@ import org.matsim.contrib.pseudosimulation.MobSimSwitcher;
 import org.matsim.contrib.pseudosimulation.PSimConfigGroup;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DeltaForUniformReplanning;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPhysicalSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPseudoSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.EffectiveReplanningRate;
@@ -50,6 +51,7 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.logging.FinalObjec
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.MeanReplanningRate;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RegularizationWeight;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RepeatedReplanningProba;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ReplanningEfficiency;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareNeverReplanned;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareScoreImprovingReplanners;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.TTSum;
@@ -71,6 +73,7 @@ import org.matsim.core.router.util.TravelTime;
 
 import com.google.inject.Inject;
 
+import floetteroed.utilities.Tuple;
 import floetteroed.utilities.statisticslogging.StatisticsWriter;
 import floetteroed.utilities.statisticslogging.TimeStampStatistic;
 
@@ -111,7 +114,8 @@ public class SearchAccelerator
 
 	// the following only for bookkeeping
 	private final Set<Id<Person>> everReplanners = new LinkedHashSet<>();
-	private final Set<Id<Person>> lastReplanners = new LinkedHashSet<>();
+	// private final Set<Id<Person>> lastReplanners = new LinkedHashSet<>();
+	private final Map<Id<Person>, Tuple<Double, Double>> lastReplannerIds2lastAndExpectedScore = new LinkedHashMap<>();
 
 	// Delegate for mobsim listening. Created upon startup.
 	private LinkUsageListener matsimMobsimUsageListener = null;
@@ -167,8 +171,16 @@ public class SearchAccelerator
 		this.statsWriter.addSearchStatistic(new ShareScoreImprovingReplanners());
 		this.statsWriter.addSearchStatistic(new UniformityExcess());
 		this.statsWriter.addSearchStatistic(new WeightedCountDifferences2());
-		
+
 		this.statsWriter.addSearchStatistic(new TTSum());
+
+		this.statsWriter.addSearchStatistic(new ReplanningEfficiency());
+		
+		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(50));
+		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(90));
+		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(95));
+		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(99));
+		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(100));
 	}
 
 	// -------------------- IMPLEMENTATION OF EventHandlers --------------------
@@ -336,7 +348,8 @@ public class SearchAccelerator
 
 			replannerIdentifier.analyze(this.services.getScenario().getPopulation().getPersons().keySet(),
 					this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages, this.replanners, this.everReplanners,
-					this.lastReplanners);
+					// this.lastReplanners, 
+					this.lastReplannerIds2lastAndExpectedScore);
 
 			this.statsWriter.writeToFile(replannerIdentifier);
 

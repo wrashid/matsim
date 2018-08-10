@@ -41,6 +41,7 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.recipes.UniformRep
 import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.DynamicData;
+import floetteroed.utilities.Tuple;
 
 /**
  * 
@@ -71,6 +72,10 @@ public class ReplannerIdentifier {
 	private final Map<Id<Person>, Double> personId2oldUtility;
 	private final double totalUtilityChange;
 
+	// TODO NEW
+	private Map<Id<Person>, Double> replannerId2expectedUtilityChange = null;
+	private Double replanningEfficiency = null;
+
 	private Double shareOfScoreImprovingReplanners = null;
 	private Double score = null;
 
@@ -83,8 +88,10 @@ public class ReplannerIdentifier {
 	private Double repeatedReplanningProba = null;
 
 	private Double shareNeverReplanned = null;
-	
+
 	private final double ttSum_h;
+
+	private List<Double> allDeltaForUniformReplanning = new ArrayList<>();
 
 	// -------------------- GETTERS (FOR LOGGING) --------------------
 
@@ -146,7 +153,16 @@ public class ReplannerIdentifier {
 	public double getTTSum_h() {
 		return this.ttSum_h;
 	}
+
+	public double getDeltaForUniformReplanningPercentile(final int percentile) {
+		Collections.sort(this.allDeltaForUniformReplanning);
+		return this.allDeltaForUniformReplanning.get((percentile * this.allDeltaForUniformReplanning.size()) / 100);
+	}
 	
+	public double getReplanningEfficiency() {
+		return this.replanningEfficiency;
+	}
+
 	// -------------------- CONSTRUCTION --------------------
 
 	ReplannerIdentifier(final AccelerationConfigGroup replanningParameters, final int iteration,
@@ -159,7 +175,7 @@ public class ReplannerIdentifier {
 			final double ttSum_h) {
 
 		this.ttSum_h = ttSum_h;
-		
+
 		this.replanningParameters = replanningParameters;
 		this.driverId2physicalLinkUsage = driverId2physicalLinkUsage;
 		this.driverId2pseudoSimLinkUsage = driverId2pseudoSimLinkUsage;
@@ -244,6 +260,8 @@ public class ReplannerIdentifier {
 			scoreUpdater.updateResiduals(replanner ? 1.0 : 0.0); // interaction residual by reference
 			inertiaResidual = scoreUpdater.getUpdatedInertiaResidual();
 			regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();
+
+			this.allDeltaForUniformReplanning.add(scoreUpdater.getDeltaForUniformReplanning());
 		}
 
 		this.shareOfScoreImprovingReplanners = ((double) scoreImprovingReplanners) / allPersonIdsShuffled.size();
@@ -255,7 +273,25 @@ public class ReplannerIdentifier {
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalSimUsage,
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pseudoSimUsage,
 			final Set<Id<Person>> replannerIds, final Set<Id<Person>> everReplanners,
-			final Set<Id<Person>> lastReplanners) {
+			// final Set<Id<Person>> lastReplanners,
+			final Map<Id<Person>, Tuple<Double, Double>> lastReplannerIds2lastAndExpectedScore) {
+
+		// >>>>> TODO NEW >>>>>
+
+		double expectedUtilityChangeFromReplanning = 0.0;
+		double realizedUtilityChangeFromReplanning = 0.0;
+		for (Map.Entry<Id<Person>, Tuple<Double, Double>> entry : lastReplannerIds2lastAndExpectedScore.entrySet()) {
+			Id<Person> replannerId = entry.getKey();
+			final double lastUtility = entry.getValue().getA();
+			final double expectedUtility = entry.getValue().getB();
+			final double realizedUtility = this.personId2newUtility.get(replannerId);
+			expectedUtilityChangeFromReplanning += (expectedUtility - lastUtility);
+			realizedUtilityChangeFromReplanning += (realizedUtility - lastUtility);
+		}
+		this.replanningEfficiency = Math.max(realizedUtilityChangeFromReplanning, 0)
+				/ Math.max(expectedUtilityChangeFromReplanning, 1e-8);
+
+		// <<<<< TODO NEW <<<<<
 
 		this.driversInPhysicalSim = driverId2physicalSimUsage.size();
 		this.driversInPseudoSim = driverId2pseudoSimUsage.size();
@@ -265,12 +301,22 @@ public class ReplannerIdentifier {
 		everReplanners.addAll(replannerIds);
 		this.shareNeverReplanned = 1.0 - ((double) everReplanners.size()) / allPersonIds.size();
 
+		// >>>>> TODO NEW >>>>>
+
+		final Set<Id<Person>> lastReplanners = new LinkedHashSet<>(lastReplannerIds2lastAndExpectedScore.keySet());
 		final int lastReplannerCnt = lastReplanners.size();
 		lastReplanners.retainAll(replannerIds);
 		this.repeatedReplanningProba = ((double) lastReplanners.size()) / lastReplannerCnt;
 
-		lastReplanners.clear();
-		lastReplanners.addAll(replannerIds);
-	}
+		lastReplannerIds2lastAndExpectedScore.clear();
+		for (Id<Person> replannerId : replannerIds) {
+			lastReplannerIds2lastAndExpectedScore.put(replannerId,
+					new Tuple<>(this.personId2oldUtility.get(replannerId), this.personId2newUtility.get(replannerId)));
+		}
 
+		// lastReplanners.clear();
+		// lastReplanners.addAll(replannerIds);
+
+		// <<<<< TODO NEW <<<<<
+	}
 }

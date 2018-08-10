@@ -62,6 +62,8 @@ public class ScoreUpdater<L> {
 
 	private boolean residualsUpdated = false;
 
+	private final double deltaForUniformReplanning;
+
 	// -------------------- CONSTRUCTION --------------------
 
 	public ScoreUpdater(final SpaceTimeIndicators<L> currentIndicators, final SpaceTimeIndicators<L> upcomingIndicators,
@@ -126,6 +128,18 @@ public class ScoreUpdater<L> {
 
 		this.scoreChangeIfOne = expectedScoreIfOne - expectedScoreIfMean;
 		this.scoreChangeIfZero = expectedScoreIfZero - expectedScoreIfMean;
+
+		// >>> TODO NEW >>>
+
+		final double deltaInteraction = this.expectedInteraction(1.0, sumOfWeightedIndividualChanges2,
+				sumOfWeightedIndividualChangesTimesInteractionResiduals, sumOfInteractionResiduals2)
+				- this.expectedInteraction(0.0, sumOfWeightedIndividualChanges2,
+						sumOfWeightedIndividualChangesTimesInteractionResiduals, sumOfInteractionResiduals2);
+		final double deltaInertia = this.expectedInertia(1.0, individualUtilityChange, inertiaResidual)
+				- this.expectedInertia(0.0, individualUtilityChange, inertiaResidual);
+		this.deltaForUniformReplanning = -(deltaInteraction + beta * deltaInertia);
+
+		// <<< TODO NEW <<<
 	}
 
 	private double expectedScore(final double lambda, final double sumOfWeightedIndividualChanges2,
@@ -194,5 +208,9 @@ public class ScoreUpdater<L> {
 
 	public double getScoreChangeIfZero() {
 		return this.scoreChangeIfZero;
+	}
+
+	public Double getDeltaForUniformReplanning() {
+		return this.deltaForUniformReplanning;
 	}
 }
