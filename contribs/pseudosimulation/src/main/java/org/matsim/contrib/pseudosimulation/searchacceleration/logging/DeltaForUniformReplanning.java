@@ -19,8 +19,6 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
-
 import floetteroed.utilities.statisticslogging.Statistic;
 
 /**
@@ -28,22 +26,19 @@ import floetteroed.utilities.statisticslogging.Statistic;
  * @author Gunnar Flötteröd
  *
  */
-public class DeltaForUniformReplanning implements Statistic<ReplannerIdentifier> {
+public class DeltaForUniformReplanning implements Statistic<LogDataWrapper> {
 
-	private final int percentile;
-	
-	public DeltaForUniformReplanning(final int percentile) {
-		this.percentile = percentile;
+	public DeltaForUniformReplanning() {
 	}
 	
 	@Override
 	public String label() {
-		return "CritDelta(" + this.percentile + "%)";
+		return "CritDelta";
 	}
 
 	@Override
-	public String value(ReplannerIdentifier arg0) {
-		return Statistic.toString(arg0.getDeltaForUniformReplanningPercentile(this.percentile));
+	public String value(LogDataWrapper arg0) {
+		return Statistic.toString(arg0.getDeltaForUniformReplanning());
 	}
 }
 

@@ -23,7 +23,6 @@ import java.util.Collection;
 
 import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
 import org.matsim.contrib.pseudosimulation.searchacceleration.utils.SetUtils;
-import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.DynamicData;
 
@@ -52,28 +51,28 @@ public class CountIndicatorUtils {
 	// }
 
 	public static <L> DynamicData<L> newWeightedCounts(final Collection<SpaceTimeIndicators<L>> allIndicators,
-			final AccelerationConfigGroup replParams, final TravelTime travelTimes) {
+			final AccelerationConfigGroup replParams) {
 		final DynamicData<L> result = new DynamicData<L>(replParams.getTimeDiscretization());
 		for (SpaceTimeIndicators<L> indicators : allIndicators) {
 			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
 				for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
-					result.add(locObj, bin, replParams.getWeight(locObj, bin, travelTimes));
+					result.add(locObj, bin, replParams.getWeight(locObj, bin));
 				}
 			}
 		}
 		return result;
 	}
 
-	public static <L> double sumOfEntries2(final DynamicData<L> data) {
-		double result = 0.0;
-		for (L locObj : data.keySet()) {
-			for (int bin = 0; bin < data.getBinCnt(); bin++) {
-				final double val = data.getBinValue(locObj, bin);
-				result += val * val;
-			}
-		}
-		return result;
-	}
+	// public static <L> double sumOfEntries2(final DynamicData<L> data) {
+	// double result = 0.0;
+	// for (L locObj : data.keySet()) {
+	// for (int bin = 0; bin < data.getBinCnt(); bin++) {
+	// final double val = data.getBinValue(locObj, bin);
+	// result += val * val;
+	// }
+	// }
+	// return result;
+	// }
 
 	// public static <L> int count(final DynamicData<L> data, final double minVal) {
 	// int result = 0;

@@ -32,18 +32,20 @@ public class AccelerationRecipe implements ReplannerIdentifierRecipe {
 
 	// -------------------- MEMBERS --------------------
 
-	private final boolean randomizeIfNotScoreImprover;
+	// private final boolean randomizeIfNotScoreImprover;
 
-	private final double baselineLambda;
+	// private final double baselineLambda;
 
 	private final double meanLambda;
 
 	// -------------------- CONSTRUCTION --------------------
 
-	public AccelerationRecipe(final boolean randomizeIfNotScoreImprover, final double baselineLambda,
+	public AccelerationRecipe(
+			// final boolean randomizeIfNotScoreImprover,
+			// final double baselineLambda,
 			final double meanLambda) {
-		this.randomizeIfNotScoreImprover = randomizeIfNotScoreImprover;
-		this.baselineLambda = baselineLambda;
+		// this.randomizeIfNotScoreImprover = randomizeIfNotScoreImprover;
+		// this.baselineLambda = baselineLambda;
 		this.meanLambda = meanLambda;
 	}
 
@@ -51,15 +53,16 @@ public class AccelerationRecipe implements ReplannerIdentifierRecipe {
 
 	@Override
 	public boolean isReplanner(final Id<Person> personId, final double deltaScoreIfYes, final double deltaScoreIfNo) {
-		if (MatsimRandom.getRandom().nextDouble() < this.baselineLambda) {
-			return true;
-		} else {
-			final boolean isScoreReducer = (Math.min(deltaScoreIfYes, deltaScoreIfNo) < 0);
-			if (isScoreReducer || !this.randomizeIfNotScoreImprover) {
-				return (deltaScoreIfYes < deltaScoreIfNo);
-			} else { // !scoreImprover && randomizeIfNotScoreImprover
-				return (MatsimRandom.getRandom().nextDouble() < this.meanLambda);
-			}
+		// if (MatsimRandom.getRandom().nextDouble() < this.baselineLambda) {
+		// return true;
+		// } else {
+		final boolean isScoreReducer = (Math.min(deltaScoreIfYes, deltaScoreIfNo) < 0);
+		// if (isScoreReducer || !this.randomizeIfNotScoreImprover) {
+		if (isScoreReducer) {
+			return (deltaScoreIfYes < deltaScoreIfNo);
+		} else { // !scoreImprover && randomizeIfNotScoreImprover
+			return (MatsimRandom.getRandom().nextDouble() < this.meanLambda);
 		}
 	}
+	// }
 }

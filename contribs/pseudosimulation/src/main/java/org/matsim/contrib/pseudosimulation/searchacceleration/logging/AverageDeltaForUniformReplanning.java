@@ -26,18 +26,18 @@ import floetteroed.utilities.statisticslogging.Statistic;
  * @author Gunnar Flötteröd
  *
  */
-public class FinalObjectiveFunctionValue implements Statistic<LogDataWrapper> {
+public class AverageDeltaForUniformReplanning implements Statistic<LogDataWrapper> {
 
-	public static final String LABEL = "FinalObjectiveFunctionValue";
+	public AverageDeltaForUniformReplanning() {
+	}
 
 	@Override
 	public String label() {
-		return LABEL;
+		return "AvgCritDelta";
 	}
 
 	@Override
 	public String value(LogDataWrapper arg0) {
-		return Statistic.toString(arg0.getFinalObjectiveFunctionValue());
+		return Statistic.toString(arg0.getAverageDeltaForUniformReplanning());
 	}
-
 }

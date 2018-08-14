@@ -19,19 +19,16 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
-
 import floetteroed.utilities.statisticslogging.Statistic;
 
 /**
  *
  * @author Gunnar Flötteröd
  *
- * @deprecated No implementation available.
  */
-public class ExpectedUniformSamplingObjectiveFunctionValue implements Statistic<ReplannerIdentifier> {
+public class AverageReplanningEfficiency implements Statistic<LogDataWrapper> {
 
-	public static final String LABEL = "ExpectedUniformSamplingObjectiveFunctionValue";
+	public static final String LABEL = AverageReplanningEfficiency.class.getSimpleName();
 
 	@Override
 	public String label() {
@@ -39,8 +36,8 @@ public class ExpectedUniformSamplingObjectiveFunctionValue implements Statistic<
 	}
 
 	@Override
-	public String value(ReplannerIdentifier arg0) {
-		return Statistic.toString(arg0.getExpectedUniformSamplingObjectiveFunctionValue());
+	public String value(LogDataWrapper arg0) {
+		return Statistic.toString(arg0.getAverageReplanningEfficiency());
 	}
 
 }

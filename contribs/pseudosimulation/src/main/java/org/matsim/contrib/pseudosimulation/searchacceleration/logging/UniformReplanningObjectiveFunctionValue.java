@@ -19,8 +19,6 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
-
 import floetteroed.utilities.statisticslogging.Statistic;
 
 /**
@@ -28,7 +26,7 @@ import floetteroed.utilities.statisticslogging.Statistic;
  * @author Gunnar Flötteröd
  *
  */
-public class UniformReplanningObjectiveFunctionValue implements Statistic<ReplannerIdentifier>{
+public class UniformReplanningObjectiveFunctionValue implements Statistic<LogDataWrapper>{
 
 	public static final String LABEL = "UniformReplanningObjectiveFunctionValue";
 	
@@ -38,7 +36,7 @@ public class UniformReplanningObjectiveFunctionValue implements Statistic<Replan
 	}
 
 	@Override
-	public String value(ReplannerIdentifier arg0) {
+	public String value(LogDataWrapper arg0) {
 		return Statistic.toString(arg0.getUniformReplanningObjectiveFunctionValue());
 	}
 

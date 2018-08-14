@@ -19,8 +19,6 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
-
 import floetteroed.utilities.statisticslogging.Statistic;
 
 /**
@@ -28,18 +26,19 @@ import floetteroed.utilities.statisticslogging.Statistic;
  * @author Gunnar Flötteröd
  *
  */
-public class UniformityExcess implements Statistic<ReplannerIdentifier> {
+public class UniformGreedyScoreChange implements Statistic<LogDataWrapper> {
 
-	public static final String LABEL = "UniformityExcess";
-
+	public static final String LABEL = "UniformGreedyScoreChange";
+	
 	@Override
 	public String label() {
 		return LABEL;
 	}
 
 	@Override
-	public String value(final ReplannerIdentifier arg0) {
-		return Statistic.toString(arg0.getUniformityExcess());
+	public String value(LogDataWrapper arg0) {
+		return Statistic.toString(arg0.getUniformGreedyScoreChange());
 	}
 
 }
+

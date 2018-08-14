@@ -22,7 +22,6 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -43,21 +42,26 @@ import org.matsim.contrib.pseudosimulation.MobSimSwitcher;
 import org.matsim.contrib.pseudosimulation.PSimConfigGroup;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
+import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.Utilities;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AverageDeltaForUniformReplanning;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AverageReplanningEfficiency;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DeltaForUniformReplanning;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPhysicalSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPseudoSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.EffectiveReplanningRate;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.FinalObjectiveFunctionValue;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.LogDataWrapper;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.MeanReplanningRate;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RealizedGreedyScoreChange;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RegularizationWeight;
-import org.matsim.contrib.pseudosimulation.searchacceleration.logging.RepeatedReplanningProba;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ReplanningEfficiency;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareNeverReplanned;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.ShareScoreImprovingReplanners;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.TTSum;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformGreedyScoreChange;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformReplanningObjectiveFunctionValue;
-import org.matsim.contrib.pseudosimulation.searchacceleration.logging.UniformityExcess;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.WeightedCountDifferences2;
+import org.matsim.contrib.pseudosimulation.searchacceleration.utils.RecursiveMovingAverage;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
@@ -73,7 +77,6 @@ import org.matsim.core.router.util.TravelTime;
 
 import com.google.inject.Inject;
 
-import floetteroed.utilities.Tuple;
 import floetteroed.utilities.statisticslogging.StatisticsWriter;
 import floetteroed.utilities.statisticslogging.TimeStampStatistic;
 
@@ -112,18 +115,23 @@ public class SearchAccelerator
 
 	private Set<Id<Person>> replanners = null;
 
-	// the following only for bookkeeping
 	private final Set<Id<Person>> everReplanners = new LinkedHashSet<>();
-	// private final Set<Id<Person>> lastReplanners = new LinkedHashSet<>();
-	private final Map<Id<Person>, Tuple<Double, Double>> lastReplannerIds2lastAndExpectedScore = new LinkedHashMap<>();
 
 	// Delegate for mobsim listening. Created upon startup.
 	private LinkUsageListener matsimMobsimUsageListener = null;
 
-	// Created upon startup
-	private StatisticsWriter<ReplannerIdentifier> statsWriter = null;
+	// >>> created upon startup >>>
+	private StatisticsWriter<LogDataWrapper> statsWriter = null;
+	private RecursiveMovingAverage averageExpectedUtilityImprovement;
+	private RecursiveMovingAverage averageRealizedUtilityImprovement;
+	private RecursiveMovingAverage averageDeltaForUniformReplanning;
+	// <<< created upon startup <<<
 
 	private PopulationState hypotheticalPopulationState = null;
+
+	private double currentDelta = 0.0;
+
+	private final Utilities utilities = new Utilities();
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -146,12 +154,88 @@ public class SearchAccelerator
 		}
 	}
 
+	public Integer getDriversInPhysicalSim() {
+		if (this.lastPhysicalLinkUsages != null) {
+			return this.lastPhysicalLinkUsages.size();
+		} else {
+			return null;
+		}
+	}
+
+	public Double getReplanningEfficiency() {
+		if ((this.averageExpectedUtilityImprovement.size() == 0)
+				|| (this.averageRealizedUtilityImprovement.size() == 0)) {
+			return null;
+		} else {
+			final double expected = Math.max(1e-8, this.averageExpectedUtilityImprovement.mostRecentValue());
+			final double realized = Math.max(1e-8, this.averageRealizedUtilityImprovement.mostRecentValue());
+			return realized / expected;
+		}
+	}
+
+	public Double getAverageReplanningEfficiency() {
+		if ((this.averageExpectedUtilityImprovement.size() == 0)
+				|| (this.averageRealizedUtilityImprovement.size() == 0)) {
+			return null;
+		} else {
+			final double expected = Math.max(1e-8, this.averageExpectedUtilityImprovement.sum());
+			final double realized = Math.max(1e-8, this.averageRealizedUtilityImprovement.sum());
+			return realized / expected;
+		}
+	}
+
+	public Double getPhysicalTravelTimeSum_h() {
+		double ttSum_s = 0;
+		for (Link link : this.services.getScenario().getNetwork().getLinks().values()) {
+			for (int time_s = 0; time_s < 24 * 3600; time_s += 15 * 60) {
+				ttSum_s += this.linkTravelTimes.getLinkTravelTime(link, time_s, null, null);
+			}
+		}
+		return (ttSum_s / 3600.0);
+	}
+
+	public Double getEffectiveReplanningRate() {
+		if (this.replanners == null) {
+			return null;
+		} else {
+			return ((double) this.replanners.size()) / this.services.getScenario().getPopulation().getPersons().size();
+		}
+	}
+
+	public Double getShareNeverReplanned() {
+		return 1.0 - ((double) this.everReplanners.size())
+				/ this.services.getScenario().getPopulation().getPersons().size();
+	}
+
+	public Double getDeltaForUniformReplanning() {
+		if (this.averageDeltaForUniformReplanning == null || this.averageDeltaForUniformReplanning.size() == 0) {
+			return null;
+		} else {
+			return this.averageDeltaForUniformReplanning.mostRecentValue();
+		}
+	}
+
+	public Double getAverageDeltaForUniformReplanning() {
+		if (this.averageDeltaForUniformReplanning == null) {
+			return null;
+		} else {
+			return this.averageDeltaForUniformReplanning.average();
+		}
+	}
+
 	// --------------- IMPLEMENTATION OF StartupListener ---------------
 
 	@Override
 	public void notifyStartup(final StartupEvent event) {
 
 		this.matsimMobsimUsageListener = new LinkUsageListener(this.replanningParameters().getTimeDiscretization());
+
+		this.averageExpectedUtilityImprovement = new RecursiveMovingAverage(
+				this.replanningParameters().getAverageIterations());
+		this.averageRealizedUtilityImprovement = new RecursiveMovingAverage(
+				this.replanningParameters().getAverageIterations());
+		this.averageDeltaForUniformReplanning = new RecursiveMovingAverage(
+				this.replanningParameters().getAverageIterations());
 
 		this.statsWriter = new StatisticsWriter<>(
 				new File(this.services.getConfig().controler().getOutputDirectory(), "acceleration.log").toString(),
@@ -162,25 +246,18 @@ public class SearchAccelerator
 		this.statsWriter.addSearchStatistic(new RegularizationWeight());
 		this.statsWriter.addSearchStatistic(new MeanReplanningRate());
 		this.statsWriter.addSearchStatistic(new EffectiveReplanningRate());
-		this.statsWriter.addSearchStatistic(new RepeatedReplanningProba());
+		this.statsWriter.addSearchStatistic(new RealizedGreedyScoreChange());
+		this.statsWriter.addSearchStatistic(new UniformGreedyScoreChange());
 		this.statsWriter.addSearchStatistic(new ShareNeverReplanned());
-		// this.statsWriter.addSearchStatistic(new
-		// ExpectedUniformSamplingObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new UniformReplanningObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new FinalObjectiveFunctionValue());
 		this.statsWriter.addSearchStatistic(new ShareScoreImprovingReplanners());
-		this.statsWriter.addSearchStatistic(new UniformityExcess());
 		this.statsWriter.addSearchStatistic(new WeightedCountDifferences2());
-
 		this.statsWriter.addSearchStatistic(new TTSum());
-
 		this.statsWriter.addSearchStatistic(new ReplanningEfficiency());
-		
-		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(50));
-		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(90));
-		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(95));
-		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(99));
-		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning(100));
+		this.statsWriter.addSearchStatistic(new AverageReplanningEfficiency());
+		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning());
+		this.statsWriter.addSearchStatistic(new AverageDeltaForUniformReplanning());
 	}
 
 	// -------------------- IMPLEMENTATION OF EventHandlers --------------------
@@ -237,20 +314,22 @@ public class SearchAccelerator
 				.getIterationsPerCycle() - 1)) {
 
 			/*
-			 * Extract, for each agent, the expected (hypothetical) score change.
+			 * Extract, for each agent, the expected (hypothetical) score change and do some
+			 * book-keeping.
 			 */
-			double deltaScoreTotal = 0.0;
-			final Map<Id<Person>, Double> personId2deltaScore = new LinkedHashMap<>();
-			final Map<Id<Person>, Double> personId2oldScore = new LinkedHashMap<>();
-			final Map<Id<Person>, Double> personId2newScore = new LinkedHashMap<>();
+
 			for (Person person : this.services.getScenario().getPopulation().getPersons().values()) {
-				final double oldScore = this.lastPhysicalPopulationState.getSelectedPlan(person.getId()).getScore();
-				personId2oldScore.put(person.getId(), oldScore);
-				final double newScore = person.getSelectedPlan().getScore();
-				personId2newScore.put(person.getId(), newScore);
-				final double deltaScore = newScore - oldScore;
-				personId2deltaScore.put(person.getId(), deltaScore);
-				deltaScoreTotal += deltaScore;
+				final double realizedUtility = this.lastPhysicalPopulationState.getSelectedPlan(person.getId())
+						.getScore();
+				final double expectedUtility = person.getSelectedPlan().getScore();
+				this.utilities.update(person.getId(), realizedUtility, expectedUtility);
+			}
+
+			final Utilities.SummaryStatistics utilityStats = this.utilities.newSummaryStatistics();
+
+			if (utilityStats.previousDataValid) {
+				this.averageExpectedUtilityImprovement.add(utilityStats.previousAverageExpectedUtilityImprovement);
+				this.averageRealizedUtilityImprovement.add(utilityStats.averageRealizedUtilityImprovement);
 			}
 
 			/*
@@ -267,31 +346,6 @@ public class SearchAccelerator
 			 * Execute one pSim with the full population.
 			 */
 
-			// this.services.getLinkTravelTimes(); // Just to check if this has side
-			// effects.
-
-			// TESTING
-
-			// for (int i = 1; i <= 1000000; i++) {
-			// this.services.getLinkTravelTimes();
-			// System.out.println("instance " + i + ", remaining memory = " +
-			// Runtime.getRuntime().freeMemory());
-			// }
-
-			// TESTING
-
-			// if (this.linkTravelTimes == null) {
-			// this.linkTravelTimes = this.services.getLinkTravelTimes();
-			// }
-
-			double ttSum_h = 0;
-			for (Link link : this.services.getScenario().getNetwork().getLinks().values()) {
-				for (int time_s = 0; time_s < 24 * 3600; time_s += 15 * 60) {
-					ttSum_h += this.linkTravelTimes.getLinkTravelTime(link, time_s, null, null);
-				}
-			}
-			ttSum_h /= 3600;
-
 			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> lastPseudoSimLinkUsages;
 			{
 				final LinkUsageListener pSimLinkUsageListener = new LinkUsageListener(
@@ -299,22 +353,14 @@ public class SearchAccelerator
 				final EventsManager eventsManager = EventsUtils.createEventsManager();
 				eventsManager.addHandler(pSimLinkUsageListener);
 				final PSim pSim = new PSim(this.services.getScenario(), eventsManager, selectedHypotheticalPlans,
-						// this.services.getLinkTravelTimes()
-						// new TravelTime() {
-						// @Override
-						// public double getLinkTravelTime(Link link, double time, Person person,
-						// Vehicle vehicle) {
-						// return link.getLength() / link.getFreespeed();
-						// }
-						// }
 						this.linkTravelTimes);
 				pSim.run();
 				lastPseudoSimLinkUsages = pSimLinkUsageListener.getAndClearIndicators();
 			}
 
 			/*
-			 * Memorize the most recent hypothetical population state re-set the population
-			 * to its most recent physical state.
+			 * Memorize the most recent hypothetical population state and re-set the
+			 * population to its most recent physical state.
 			 */
 
 			this.hypotheticalPopulationState = new PopulationState(this.services.getScenario().getPopulation());
@@ -335,28 +381,29 @@ public class SearchAccelerator
 			 * 
 			 */
 
-			final AccelerationConfigGroup accConf = ConfigUtils.addOrGetModule(this.services.getConfig(),
-					AccelerationConfigGroup.class);
-
 			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters(),
 					event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
-					this.services.getScenario().getPopulation(), null, // this.services.getLinkTravelTimes(),
-					accConf.getModeTypeField(), personId2deltaScore, personId2oldScore, personId2newScore,
-					deltaScoreTotal, accConf.getRandomizeIfNoImprovement(), accConf.getBaselineReplanningRate(),
-					ttSum_h);
+					this.services.getScenario().getPopulation(), utilityStats.personId2currentDeltaUtility,
+					utilityStats.currentDeltaUtilitySum, this.currentDelta);
 			this.replanners = replannerIdentifier.drawReplanners();
+			this.everReplanners.addAll(this.replanners);
 
-			replannerIdentifier.analyze(this.services.getScenario().getPopulation().getPersons().keySet(),
-					this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages, this.replanners, this.everReplanners,
-					// this.lastReplanners, 
-					this.lastReplannerIds2lastAndExpectedScore);
+			this.averageDeltaForUniformReplanning.add(replannerIdentifier.getDeltaForUniformReplanning(95));
 
-			this.statsWriter.writeToFile(replannerIdentifier);
+			final LogDataWrapper data = new LogDataWrapper(this, replannerIdentifier, lastPseudoSimLinkUsages.size());
+			this.statsWriter.writeToFile(data);
+
+			if (this.getAverageReplanningEfficiency() != null) {
+				this.currentDelta = this.replanningParameters().getAdaptiveRegularizationWeight(
+						this.getAverageReplanningEfficiency(), this.averageDeltaForUniformReplanning.average());
+			}
 
 			this.nextMobsimIsExpectedToBePhysical = true;
 			this.setWeightOfHypotheticalReplanning(1e9);
 
-		} else {
+		} else
+
+		{
 
 			this.nextMobsimIsExpectedToBePhysical = false;
 			this.setWeightOfHypotheticalReplanning(0);

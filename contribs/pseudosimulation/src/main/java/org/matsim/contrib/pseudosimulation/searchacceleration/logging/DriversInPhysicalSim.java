@@ -1,10 +1,8 @@
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
-
 import floetteroed.utilities.statisticslogging.Statistic;
 
-public class DriversInPhysicalSim implements Statistic<ReplannerIdentifier> {
+public class DriversInPhysicalSim implements Statistic<LogDataWrapper> {
 
 	public static final String PHYSICAL_DRIVERS = "PhysicalDrivers";
 
@@ -14,7 +12,7 @@ public class DriversInPhysicalSim implements Statistic<ReplannerIdentifier> {
 	}
 
 	@Override
-	public String value(ReplannerIdentifier arg0) {
+	public String value(LogDataWrapper arg0) {
 		return Statistic.toString(arg0.getDriversInPhysicalSim());
 	}
 

@@ -26,7 +26,6 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.config.ReflectiveConfigGroup;
-import org.matsim.core.router.util.TravelTime;
 
 import floetteroed.utilities.TimeDiscretization;
 import floetteroed.utilities.Units;
@@ -130,19 +129,20 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		this.initialMeanReplanningRate = initialMeanReplanningRate;
 	}
 
-	// -------------------- regularizationWeight --------------------
-
-	private double initialRegularizationWeight = Double.NaN;
-
-	@StringGetter("initialRegularizationWeight")
-	public double getInitialRegularizationWeight() {
-		return this.initialRegularizationWeight;
-	}
-
-	@StringSetter("initialRegularizationWeight")
-	public void setInitialRegularizationWeight(double initialRegularizationWeight) {
-		this.initialRegularizationWeight = initialRegularizationWeight;
-	}
+	// // -------------------- regularizationWeight --------------------
+	//
+	// private double initialRegularizationWeight = Double.NaN;
+	//
+	// @StringGetter("initialRegularizationWeight")
+	// public double getInitialRegularizationWeight() {
+	// return this.initialRegularizationWeight;
+	// }
+	//
+	// @StringSetter("initialRegularizationWeight")
+	// public void setInitialRegularizationWeight(double
+	// initialRegularizationWeight) {
+	// this.initialRegularizationWeight = initialRegularizationWeight;
+	// }
 
 	// -------------------- replanningRateIterationExponent --------------------
 
@@ -158,37 +158,39 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		this.replanningRateIterationExponent = replanningRateIterationExponent;
 	}
 
-	// -------------------- replanningRateIterationExponent --------------------
+	// // -------------------- replanningRateIterationExponent --------------------
+	//
+	// private double regularizationIterationExponent = Double.NaN;
+	//
+	// @StringGetter("regularizationIterationExponent")
+	// public double getRegularizationIterationExponent() {
+	// return this.regularizationIterationExponent;
+	// }
+	//
+	// @StringSetter("regularizationIterationExponent")
+	// public void setRegularizationIterationExponent(double
+	// regularizationIterationExponent) {
+	// this.regularizationIterationExponent = regularizationIterationExponent;
+	// }
 
-	private double regularizationIterationExponent = Double.NaN;
-
-	@StringGetter("regularizationIterationExponent")
-	public double getRegularizationIterationExponent() {
-		return this.regularizationIterationExponent;
-	}
-
-	@StringSetter("regularizationIterationExponent")
-	public void setRegularizationIterationExponent(double regularizationIterationExponent) {
-		this.regularizationIterationExponent = regularizationIterationExponent;
-	}
-
-	// -------------------- weighting --------------------
-
-	public static enum RegularizationType {
-		absolute, relative
-	};
-
-	private RegularizationType regularizationTypeField = null;
-
-	@StringGetter("regularizationType")
-	public RegularizationType getRegularizationType() {
-		return this.regularizationTypeField;
-	}
-
-	@StringSetter("regularizationType")
-	public void setRegularizationType(final RegularizationType regularizationTypeField) {
-		this.regularizationTypeField = regularizationTypeField;
-	}
+	// // -------------------- weighting --------------------
+	//
+	// public static enum RegularizationType {
+	// absolute, relative
+	// };
+	//
+	// private RegularizationType regularizationTypeField = null;
+	//
+	// @StringGetter("regularizationType")
+	// public RegularizationType getRegularizationType() {
+	// return this.regularizationTypeField;
+	// }
+	//
+	// @StringSetter("regularizationType")
+	// public void setRegularizationType(final RegularizationType
+	// regularizationTypeField) {
+	// this.regularizationTypeField = regularizationTypeField;
+	// }
 
 	// -------------------- weighting --------------------
 
@@ -208,32 +210,61 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		this.weightingField = weightingField;
 	}
 
-	// -------------------- baselineReplanningRate --------------------
+	// // -------------------- baselineReplanningRate --------------------
+	//
+	// private double baselineReplanningRate = Double.NaN;
+	//
+	// @StringGetter("baselineReplanningRate")
+	// public double getBaselineReplanningRate() {
+	// return this.baselineReplanningRate;
+	// }
+	//
+	// @StringSetter("baselineReplanningRate")
+	// public void setBaselineReplanningRate(final double baselineReplanningRate) {
+	// this.baselineReplanningRate = baselineReplanningRate;
+	// }
 
-	private double baselineReplanningRate = Double.NaN;
+	// // -------------------- randomizeIfNoImprovement --------------------
+	//
+	// private boolean randomizeIfNoImprovement = false;
+	//
+	// @StringGetter("randomizeIfNoImprovement")
+	// public boolean getRandomizeIfNoImprovement() {
+	// return this.randomizeIfNoImprovement;
+	// }
+	//
+	// @StringSetter("randomizeIfNoImprovement")
+	// public void setRandomizeIfNoImprovement(final boolean
+	// randomizeIfNoImprovement) {
+	// this.randomizeIfNoImprovement = randomizeIfNoImprovement;
+	// }
 
-	@StringGetter("baselineReplanningRate")
-	public double getBaselineReplanningRate() {
-		return this.baselineReplanningRate;
+	// -------------------- replanningEfficiencyThreshold --------------------
+
+	private double replanningEfficiencyThreshold;
+
+	@StringGetter("replanningEfficiencyThreshold")
+	public double getReplanningEfficiencyThreshold() {
+		return this.replanningEfficiencyThreshold;
 	}
 
-	@StringSetter("baselineReplanningRate")
-	public void setBaselineReplanningRate(final double baselineReplanningRate) {
-		this.baselineReplanningRate = baselineReplanningRate;
+	@StringSetter("replanningEfficiencyThreshold")
+	public void setReplanningEfficiencyThreshold(final double replanningEfficiencyThreshold) {
+		this.replanningEfficiencyThreshold = replanningEfficiencyThreshold;
 	}
 
-	// -------------------- randomizeIfNoImprovement --------------------
+	// -------------------- replanningEfficiencyThreshold --------------------
 
-	private boolean randomizeIfNoImprovement = false;
+	private int averageIterations;
 
-	@StringGetter("randomizeIfNoImprovement")
-	public boolean getRandomizeIfNoImprovement() {
-		return this.randomizeIfNoImprovement;
+	@StringGetter("averageIterations")
+	public int getAverageIterations() {
+		return this.averageIterations;
 	}
 
-	@StringSetter("randomizeIfNoImprovement")
-	public void setRandomizeIfNoImprovement(final boolean randomizeIfNoImprovement) {
-		this.randomizeIfNoImprovement = randomizeIfNoImprovement;
+	@StringSetter("averageIterations")
+	public void setAverageIterations(final int averageIterations) {
+		this.averageIterations = averageIterations;
 	}
 
 	// ==================== SUPPLEMENTARY FUNCTIONALITY ====================
@@ -285,20 +316,29 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 				* Math.pow(1.0 + iteration / this.pSimIterations, this.getReplanningRateIterationExponent());
 	}
 
-	public double getRegularizationWeight(int iteration, Double deltaN2) {
-		double result = Math.pow(1.0 + iteration / this.pSimIterations, this.getRegularizationIterationExponent())
-				* this.getInitialRegularizationWeight();
-		if (this.getRegularizationType() == RegularizationType.absolute) {
-			// Nothing to do, only here to check for unknown regularization types.
-		} else if (this.getRegularizationType() == RegularizationType.relative) {
-			result *= deltaN2;
-		} else {
-			throw new RuntimeException("Unknown regularizationType: " + this.getRegularizationType());
-		}
-		return result;
+	public double getAdaptiveRegularizationWeight(final double currentReplanningEfficiency,
+			final double criticalDelta) {
+		final double boundedFactor = Math.max(0,
+				Math.min(10.0, this.getReplanningEfficiencyThreshold() / currentReplanningEfficiency));
+		return boundedFactor * criticalDelta;
 	}
 
-	public double getWeight(Object linkId, int bin, TravelTime travelTimes) {
+	// public double getRegularizationWeight(int iteration, Double deltaN2) {
+	// double result = Math.pow(1.0 + iteration / this.pSimIterations,
+	// this.getRegularizationIterationExponent())
+	// * this.getInitialRegularizationWeight();
+	// if (this.getRegularizationType() == RegularizationType.absolute) {
+	// // Nothing to do, only here to check for unknown regularization types.
+	// } else if (this.getRegularizationType() == RegularizationType.relative) {
+	// result *= deltaN2;
+	// } else {
+	// throw new RuntimeException("Unknown regularizationType: " +
+	// this.getRegularizationType());
+	// }
+	// return result;
+	// }
+
+	public double getWeight(Object linkId, int bin) {
 		if (this.linkWeights == null) {
 			if (this.weightingField == LinkWeighting.uniform) {
 				this.linkWeights = newUniformLinkWeights(network);
