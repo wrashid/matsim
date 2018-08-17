@@ -21,7 +21,6 @@ package org.matsim.contrib.pseudosimulation.searchacceleration.recipes;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.core.gbl.MatsimRandom;
 
 /**
  *
@@ -53,16 +52,19 @@ public class AccelerationRecipe implements ReplannerIdentifierRecipe {
 
 	@Override
 	public boolean isReplanner(final Id<Person> personId, final double deltaScoreIfYes, final double deltaScoreIfNo) {
-		// if (MatsimRandom.getRandom().nextDouble() < this.baselineLambda) {
-		// return true;
-		// } else {
-		final boolean isScoreReducer = (Math.min(deltaScoreIfYes, deltaScoreIfNo) < 0);
-		// if (isScoreReducer || !this.randomizeIfNotScoreImprover) {
-		if (isScoreReducer) {
-			return (deltaScoreIfYes < deltaScoreIfNo);
-		} else { // !scoreImprover && randomizeIfNotScoreImprover
-			return (MatsimRandom.getRandom().nextDouble() < this.meanLambda);
-		}
+		return (deltaScoreIfYes < deltaScoreIfNo);
+		//
+		// // if (MatsimRandom.getRandom().nextDouble() < this.baselineLambda) {
+		// // return true;
+		// // } else {
+		// final boolean isScoreReducer = (Math.min(deltaScoreIfYes, deltaScoreIfNo) <
+		// 0);
+		// // if (isScoreReducer || !this.randomizeIfNotScoreImprover) {
+		// if (isScoreReducer) {
+		// return (deltaScoreIfYes < deltaScoreIfNo);
+		// } else { // !scoreImprover && randomizeIfNotScoreImprover
+		// return (MatsimRandom.getRandom().nextDouble() < this.meanLambda);
+		// }
+		// }
 	}
-	// }
 }

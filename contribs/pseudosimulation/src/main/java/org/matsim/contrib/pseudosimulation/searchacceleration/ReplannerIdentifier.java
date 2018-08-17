@@ -73,6 +73,7 @@ public class ReplannerIdentifier {
 	private Double score = null;
 
 	private List<Double> allDeltaForUniformReplanning = new ArrayList<>();
+	private List<Double> allDeltaForUniformReplanningExact = new ArrayList<>();
 
 	private Double uniformGreedyScoreChange = null;
 	private Double realizedGreedyScoreChange = null;
@@ -104,10 +105,25 @@ public class ReplannerIdentifier {
 	}
 
 	public double getDeltaForUniformReplanning(final int percentile) {
-		Collections.sort(this.allDeltaForUniformReplanning);
-		final int index = Math.min(this.allDeltaForUniformReplanning.size() - 1,
-				(percentile * this.allDeltaForUniformReplanning.size()) / 100);
-		return this.allDeltaForUniformReplanning.get(index);
+		// Collections.sort(this.allDeltaForUniformReplanning);
+		// final int index = Math.min(this.allDeltaForUniformReplanning.size() - 1,
+		// (percentile * this.allDeltaForUniformReplanning.size()) / 100);
+		// return this.allDeltaForUniformReplanning.get(index);
+		return this.getDeltaForUniformReplanning(this.allDeltaForUniformReplanning, percentile);
+	}
+
+	public double getDeltaForUniformReplanningExact(final int percentile) {
+		// Collections.sort(this.allDeltaForUniformReplanning);
+		// final int index = Math.min(this.allDeltaForUniformReplanning.size() - 1,
+		// (percentile * this.allDeltaForUniformReplanning.size()) / 100);
+		// return this.allDeltaForUniformReplanning.get(index);
+		return this.getDeltaForUniformReplanning(this.allDeltaForUniformReplanningExact, percentile);
+	}
+
+	private double getDeltaForUniformReplanning(final List<Double> allDelta, final int percentile) {
+		Collections.sort(allDelta);
+		final int index = Math.min(allDelta.size() - 1, (percentile * allDelta.size()) / 100);
+		return allDelta.get(index);
 	}
 
 	public Double getUniformGreedyScoreChange() {
@@ -156,8 +172,13 @@ public class ReplannerIdentifier {
 				.newWeightedDifference(this.upcomingWeightedCounts, this.currentWeightedCounts, this.lambda);
 		double inertiaResidual = (1.0 - this.lambda) * this.totalUtilityChange;
 		double regularizationResidual = 0;
-
 		double sumOfInteractionResiduals2 = interactionResiduals.sumOfEntries2();
+
+		final DynamicData<Id<Link>> uniformInteractionResiduals = CountIndicatorUtils
+				.newWeightedDifference(this.upcomingWeightedCounts, this.currentWeightedCounts, this.lambda);
+		double uniformInertiaResidual = inertiaResidual;
+		double uniformRegularizationResidual = regularizationResidual;
+		double sumOfUniformInteractionResiduals2 = sumOfInteractionResiduals2;
 
 		// Select the replanning recipe.
 
@@ -195,6 +216,12 @@ public class ReplannerIdentifier {
 					this.replanningParameters, this.personId2utilityChange.get(driverId), this.totalUtilityChange,
 					sumOfInteractionResiduals2);
 
+			final ScoreUpdater<Id<Link>> uniformScoreUpdater = new ScoreUpdater<>(
+					this.driverId2physicalLinkUsage.get(driverId), this.driverId2pseudoSimLinkUsage.get(driverId),
+					this.lambda, this.beta, this.delta, uniformInteractionResiduals, uniformInertiaResidual,
+					uniformRegularizationResidual, this.replanningParameters, this.personId2utilityChange.get(driverId),
+					this.totalUtilityChange, sumOfUniformInteractionResiduals2);
+
 			final boolean replanner = recipe.isReplanner(driverId, scoreUpdater.getScoreChangeIfOne(),
 					scoreUpdater.getScoreChangeIfZero());
 			if (replanner) {
@@ -216,8 +243,12 @@ public class ReplannerIdentifier {
 			scoreUpdater.updateResiduals(replanner ? 1.0 : 0.0); // interaction residual by reference
 			inertiaResidual = scoreUpdater.getUpdatedInertiaResidual();
 			regularizationResidual = scoreUpdater.getUpdatedRegularizationResidual();
-
 			sumOfInteractionResiduals2 = scoreUpdater.getUpdatedSumOfInteractionResiduals2();
+
+			uniformScoreUpdater.updateResiduals(uniformScoreUpdater.wouldBeUniformReplanner ? 1.0 : 0.0);
+			uniformInertiaResidual = uniformScoreUpdater.getUpdatedInertiaResidual();
+			uniformRegularizationResidual = uniformScoreUpdater.getUpdatedRegularizationResidual();
+			sumOfUniformInteractionResiduals2 = uniformScoreUpdater.getUpdatedSumOfInteractionResiduals2();
 
 			// {
 			// final double exactSum2 = interactionResiduals.sumOfEntries2();
@@ -226,6 +257,8 @@ public class ReplannerIdentifier {
 			// }
 
 			this.allDeltaForUniformReplanning.add(scoreUpdater.getDeltaForUniformReplanning());
+			
+			this.allDeltaForUniformReplanningExact.add(uniformScoreUpdater.getDeltaForUniformReplanning());
 		}
 
 		this.shareOfScoreImprovingReplanners = ((double) scoreImprovingReplanners) / allPersonIdsShuffled.size();

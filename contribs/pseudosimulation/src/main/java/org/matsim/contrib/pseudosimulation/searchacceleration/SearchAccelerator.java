@@ -46,6 +46,7 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.Uti
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AverageDeltaForUniformReplanning;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AverageReplanningEfficiency;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DeltaForUniformReplanning;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DeltaForUniformReplanningExact;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPhysicalSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DriversInPseudoSim;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.EffectiveReplanningRate;
@@ -125,6 +126,7 @@ public class SearchAccelerator
 	private RecursiveMovingAverage averageExpectedUtilityImprovement;
 	private RecursiveMovingAverage averageRealizedUtilityImprovement;
 	private RecursiveMovingAverage averageDeltaForUniformReplanning;
+	private RecursiveMovingAverage averageDeltaForUniformReplanningExact;
 	// <<< created upon startup <<<
 
 	private PopulationState hypotheticalPopulationState = null;
@@ -215,6 +217,15 @@ public class SearchAccelerator
 		}
 	}
 
+	public Double getDeltaForUniformReplanningExact() {
+		if (this.averageDeltaForUniformReplanningExact == null
+				|| this.averageDeltaForUniformReplanningExact.size() == 0) {
+			return null;
+		} else {
+			return this.averageDeltaForUniformReplanningExact.mostRecentValue();
+		}
+	}
+
 	public Double getAverageDeltaForUniformReplanning() {
 		if (this.averageDeltaForUniformReplanning == null) {
 			return null;
@@ -235,6 +246,8 @@ public class SearchAccelerator
 		this.averageRealizedUtilityImprovement = new RecursiveMovingAverage(
 				this.replanningParameters().getAverageIterations());
 		this.averageDeltaForUniformReplanning = new RecursiveMovingAverage(
+				this.replanningParameters().getAverageIterations());
+		this.averageDeltaForUniformReplanningExact = new RecursiveMovingAverage(
 				this.replanningParameters().getAverageIterations());
 
 		this.statsWriter = new StatisticsWriter<>(
@@ -257,6 +270,7 @@ public class SearchAccelerator
 		this.statsWriter.addSearchStatistic(new ReplanningEfficiency());
 		this.statsWriter.addSearchStatistic(new AverageReplanningEfficiency());
 		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanning());
+		this.statsWriter.addSearchStatistic(new DeltaForUniformReplanningExact());
 		this.statsWriter.addSearchStatistic(new AverageDeltaForUniformReplanning());
 	}
 
@@ -389,6 +403,7 @@ public class SearchAccelerator
 			this.everReplanners.addAll(this.replanners);
 
 			this.averageDeltaForUniformReplanning.add(replannerIdentifier.getDeltaForUniformReplanning(95));
+			this.averageDeltaForUniformReplanningExact.add(replannerIdentifier.getDeltaForUniformReplanningExact(95));
 
 			final LogDataWrapper data = new LogDataWrapper(this, replannerIdentifier, lastPseudoSimLinkUsages.size());
 			this.statsWriter.writeToFile(data);

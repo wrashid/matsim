@@ -46,6 +46,10 @@ public class LogDataWrapper {
 		return accelerator.getDeltaForUniformReplanning();
 	}
 
+	public double getDeltaForUniformReplanningExact() {
+		return accelerator.getDeltaForUniformReplanningExact();
+	}
+
 	public double getAverageDeltaForUniformReplanning() {
 		return accelerator.getAverageDeltaForUniformReplanning();
 	}
