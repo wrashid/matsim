@@ -31,6 +31,8 @@ public class BikeshareDepartureHandler implements DepartureHandler {
 			if (agent.getMode().startsWith("access_walk_bike")) {
 				// Plan plan = WithinDayAgentUtils.getModifiablePlan( agent ) ;
 				Link link = network.getLinks().get(linkId);
+				bikeFleet.addRental(link.getCoord(), now);
+
 				Plan plan = WithinDayAgentUtils.getModifiablePlan(agent);
 				final Integer planElementsIndex = WithinDayAgentUtils.getCurrentPlanElementIndex(agent);
 				final Leg accessLeg = (Leg) plan.getPlanElements().get(planElementsIndex);

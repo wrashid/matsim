@@ -1,5 +1,6 @@
 package org.matsim.contrib.carsharing.bikeshare;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,10 +15,15 @@ public class BikeshareFleet {
 	private Map<Id<Vehicle>, Coord> bikeCoordMap = new ConcurrentHashMap<>();
 	private Map<Id<Vehicle>, Coord> initialBikeCoordMap;
 	private Map<Id<Person>, Id<Vehicle>> rentedBikes = new ConcurrentHashMap<>();
+	private ArrayList<QuadTree<Double>> rentals;
 
 	public BikeshareFleet(QuadTree<Id<Vehicle>> availableBikesLocationQuadTree,
 			Map<Id<Vehicle>, Coord> vehicleCoordMap) {
 		this.availableBikesLocationQuadTree = availableBikesLocationQuadTree;
+		rentals = new ArrayList<>();
+				//QuadTree<Double>(availableBikesLocationQuadTree.getMinEasting(),
+				//availableBikesLocationQuadTree.getMinNorthing(), availableBikesLocationQuadTree.getMaxEasting(),
+				//a/vailableBikesLocationQuadTree.getMaxNorthing());
 		this.initialBikeCoordMap = vehicleCoordMap;
 		for (Id<Vehicle> vehicleId : vehicleCoordMap.keySet()) {
 			this.bikeCoordMap.put(vehicleId, vehicleCoordMap.get(vehicleId));
@@ -66,6 +72,21 @@ public class BikeshareFleet {
 			this.bikeCoordMap.put(vehicleId, coord);
 			this.availableBikesLocationQuadTree.put(coord.getX(), coord.getY(), vehicleId);
 		}
+		this.rentals.clear();
+	}
+
+	public void addRental(Coord coord, double now) {
+		this.rentals.get(this.rentals.size() - 1).put(coord.getX(), coord.getY(), now);
+	}
+
+	public ArrayList<QuadTree<Double>> getRentals() {
+		return rentals;
+	}
+	
+	public void addRentalQuadTree() {
+		this.rentals.add(new QuadTree<Double> (availableBikesLocationQuadTree.getMinEasting(),
+				availableBikesLocationQuadTree.getMinNorthing(), availableBikesLocationQuadTree.getMaxEasting(),
+				availableBikesLocationQuadTree.getMaxNorthing()));
 	}
 
 }
