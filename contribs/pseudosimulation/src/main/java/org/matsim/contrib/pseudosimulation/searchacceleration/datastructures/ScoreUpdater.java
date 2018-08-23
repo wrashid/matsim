@@ -68,8 +68,10 @@ public class ScoreUpdater<L> {
 	private final double deltaForUniformReplanning;
 
 	private double sumOfInteractionResiduals2;
-	
+
 	public final boolean wouldBeUniformReplanner;
+
+	public final boolean wouldBeGreedyReplanner;
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -153,10 +155,11 @@ public class ScoreUpdater<L> {
 		final double deltaRegularization = regularizationIfOne - regularizationIfZero;
 
 		final double deltaRegularizationWellBehaved = Math.signum(deltaRegularization)
-				* Math.max(1.0, Math.abs(deltaRegularization));
+				* Math.max(1e-8, Math.abs(deltaRegularization));
 		this.deltaForUniformReplanning = -(deltaInteraction + beta * deltaInertia) / deltaRegularizationWellBehaved;
 
 		this.wouldBeUniformReplanner = (this.regularizationResidual <= -0.5);
+		this.wouldBeGreedyReplanner = (this.greedyScoreChangeIfOne <= this.greedyScoreChangeIfZero);
 	}
 
 	private double expectedInteraction(final double lambda, final double sumOfWeightedIndividualChanges2,

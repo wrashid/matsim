@@ -49,6 +49,10 @@ public class RecursiveMovingAverage {
 		}
 	}
 
+	public int memoryLength() {
+		return this.memoryLength;
+	}
+
 	public int size() {
 		return this.data.size();
 	}

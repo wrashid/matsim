@@ -40,6 +40,7 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.recipes.ReplannerI
 import org.matsim.contrib.pseudosimulation.searchacceleration.recipes.UniformReplanningRecipe;
 
 import floetteroed.utilities.DynamicData;
+import floetteroed.utilities.math.Vector;
 
 /**
  * 
@@ -73,10 +74,18 @@ public class ReplannerIdentifier {
 	private Double score = null;
 
 	private List<Double> allDeltaForUniformReplanning = new ArrayList<>();
-	private List<Double> allDeltaForUniformReplanningExact = new ArrayList<>();
+	public List<Double> allDeltaForUniformReplanningExact = new ArrayList<>();
+
+	public List<Double> actualReplanIndicator = new ArrayList<>();
+	public List<Double> uniformReplanIndicator = new ArrayList<>();
+	public List<Double> deltaScore = new ArrayList<>();
 
 	private Double uniformGreedyScoreChange = null;
 	private Double realizedGreedyScoreChange = null;
+
+	private Double uniformReplannerShare = null;
+
+	private List<Double> replanningSignalAKF = null;
 
 	// -------------------- GETTERS (FOR LOGGING) --------------------
 
@@ -98,10 +107,6 @@ public class ReplannerIdentifier {
 
 	public Double getMeanReplanningRate() {
 		return this.lambda;
-	}
-
-	public Double getRegularizationWeight() {
-		return this.delta;
 	}
 
 	public double getDeltaForUniformReplanning(final int percentile) {
@@ -132,6 +137,14 @@ public class ReplannerIdentifier {
 
 	public Double getRealizedGreedyScoreChange() {
 		return this.realizedGreedyScoreChange;
+	}
+
+	public Double getUniformReplannerShare() {
+		return this.uniformReplannerShare;
+	}
+
+	public List<Double> getReplanningSignalAKF() {
+		return this.replanningSignalAKF;
 	}
 
 	// -------------------- CONSTRUCTION --------------------
@@ -208,6 +221,8 @@ public class ReplannerIdentifier {
 		this.realizedGreedyScoreChange = 0.0;
 		this.uniformGreedyScoreChange = 0.0;
 
+		int uniformReplanners = 0;
+
 		for (Id<Person> driverId : allPersonIdsShuffled) {
 
 			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(
@@ -233,11 +248,19 @@ public class ReplannerIdentifier {
 				realizedGreedyScoreChange += scoreUpdater.getGreedyScoreChangeIfZero();
 			}
 
-			uniformGreedyScoreChange += this.lambda * scoreUpdater.getGreedyScoreChangeIfOne()
+			this.actualReplanIndicator.add(replanner ? 1.0 : 0.0);
+			this.uniformReplanIndicator.add(scoreUpdater.wouldBeUniformReplanner ? 1.0 : 0.0);
+			this.deltaScore.add(this.personId2utilityChange.get(driverId));
+
+			this.uniformGreedyScoreChange += this.lambda * scoreUpdater.getGreedyScoreChangeIfOne()
 					+ (1.0 - this.lambda) * scoreUpdater.getGreedyScoreChangeIfZero();
 
 			if (Math.min(scoreUpdater.getScoreChangeIfOne(), scoreUpdater.getScoreChangeIfZero()) < 0) {
 				scoreImprovingReplanners++;
+			}
+
+			if (replanner == uniformScoreUpdater.wouldBeUniformReplanner) {
+				uniformReplanners++;
 			}
 
 			scoreUpdater.updateResiduals(replanner ? 1.0 : 0.0); // interaction residual by reference
@@ -257,11 +280,15 @@ public class ReplannerIdentifier {
 			// }
 
 			this.allDeltaForUniformReplanning.add(scoreUpdater.getDeltaForUniformReplanning());
-			
+
 			this.allDeltaForUniformReplanningExact.add(uniformScoreUpdater.getDeltaForUniformReplanning());
 		}
 
 		this.shareOfScoreImprovingReplanners = ((double) scoreImprovingReplanners) / allPersonIdsShuffled.size();
+
+		this.uniformReplannerShare = ((double) uniformReplanners) / allPersonIdsShuffled.size();
+
+		this.replanningSignalAKF = new Vector(this.actualReplanIndicator).akf((int) (2.0 / this.lambda)).asList();
 
 		return replanners;
 	}

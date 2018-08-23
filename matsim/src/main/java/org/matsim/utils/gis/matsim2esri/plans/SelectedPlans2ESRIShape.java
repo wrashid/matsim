@@ -68,11 +68,12 @@ import com.vividsolutions.jts.geom.Point;
  */
 public class SelectedPlans2ESRIShape {
 	private final CoordinateReferenceSystem crs;
-	private final Population population;
+	// private final Population population;
+	private final List<Person> persons;
 	private double outputSample = 1;
 	private double actBlurFactor = 0;
 	private double legBlurFactor = 0;
-	private final String outputDir;
+	private final String outputPrefix;
 	private boolean writeActs = true;
 	private boolean writeLegs = true;
 	private ArrayList<Plan> outputSamplePlans;
@@ -81,14 +82,19 @@ public class SelectedPlans2ESRIShape {
 	private final GeometryFactory geofac;
 	private final Network network;
 
-	public SelectedPlans2ESRIShape(final Population population, final Network network,
-			final CoordinateReferenceSystem crs, final String outputDir) {
-		this.population = population;
+	public SelectedPlans2ESRIShape(final List<Person> persons, final Network network,
+			final CoordinateReferenceSystem crs, final String outputPrefix) {
+		this.persons = persons;
 		this.network = network;
 		this.crs = crs;
-		this.outputDir = outputDir;
+		this.outputPrefix = outputPrefix;
 		this.geofac = new GeometryFactory();
 		initFeatureType();
+	}
+
+	public SelectedPlans2ESRIShape(final Population population, final Network network,
+			final CoordinateReferenceSystem crs, final String outputPrefix) {
+		this(new ArrayList<>(population.getPersons().values()), network, crs, outputPrefix);
 	}
 
 	public void setOutputSample(final double sample) {
@@ -127,7 +133,8 @@ public class SelectedPlans2ESRIShape {
 
 	private void drawOutputSample() {
 		this.outputSamplePlans = new ArrayList<Plan>();
-		for (Person pers : PopulationUtils.getSortedPersons(this.population).values()) {
+//		for (Person pers : PopulationUtils.getSortedPersons(this.population).values()) {
+		for (Person pers : this.persons) {
 			if (MatsimRandom.getRandom().nextDouble() <= this.outputSample) {
 				this.outputSamplePlans.add(pers.getSelectedPlan());
 			}
@@ -135,7 +142,8 @@ public class SelectedPlans2ESRIShape {
 	}
 
 	private void writeActs() throws IOException {
-		String outputFile = this.outputDir + "/acts.shp";
+//		String outputFile = this.outputPrefix + "/acts.shp";
+		String outputFile = this.outputPrefix + "-acts.shp";
 		ArrayList<SimpleFeature> fts = new ArrayList<SimpleFeature>();
 		for (Plan plan : this.outputSamplePlans) {
 			String id = plan.getPerson().getId().toString();
@@ -151,7 +159,8 @@ public class SelectedPlans2ESRIShape {
 	}
 
 	private void writeLegs() throws IOException {
-		String outputFile = this.outputDir + "/legs.shp";
+//		String outputFile = this.outputPrefix + "/legs.shp";
+		String outputFile = this.outputPrefix + "-legs.shp";
 		ArrayList<SimpleFeature> fts = new ArrayList<SimpleFeature>();
 		for (Plan plan : this.outputSamplePlans) {
 			String id = plan.getPerson().getId().toString();

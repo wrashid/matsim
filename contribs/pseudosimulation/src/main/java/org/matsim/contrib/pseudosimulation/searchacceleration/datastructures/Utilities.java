@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.contrib.pseudosimulation.searchacceleration.utils.RecursiveMovingAverage;
 
 /**
  *
@@ -37,6 +38,9 @@ public class Utilities {
 
 	public static class Entry {
 
+		public final RecursiveMovingAverage averageRealizedImprovement;
+		public final RecursiveMovingAverage averageExpectedImprovement;
+
 		// objects to allow for initial null-value
 		private Double previousRealizedUtility = null;
 		private Double previousExpectedUtility = null;
@@ -45,16 +49,21 @@ public class Utilities {
 		private double currentRealizedUtility;
 		private double currentExpectedUtility;
 
-		public Entry(final double newRealizedUtility, final double newExpectedUtility) {
+		private Entry(final double newRealizedUtility, final double newExpectedUtility, final int memoryLength) {
 			this.currentRealizedUtility = newRealizedUtility;
 			this.currentExpectedUtility = newExpectedUtility;
+			this.averageExpectedImprovement = new RecursiveMovingAverage(memoryLength);
+			this.averageRealizedImprovement = new RecursiveMovingAverage(memoryLength);
 		}
 
-		public void update(final double newRealizedUtility, final double newExpectedUtility) {
+		public void updateBeforeReplanning(final double newRealizedUtility, final double newExpectedUtility) {
 			this.previousRealizedUtility = this.currentRealizedUtility;
 			this.previousExpectedUtility = this.currentExpectedUtility;
 			this.currentRealizedUtility = newRealizedUtility;
 			this.currentExpectedUtility = newExpectedUtility;
+
+			this.averageExpectedImprovement.add(this.previousExpectedUtility - this.previousRealizedUtility);
+			this.averageRealizedImprovement.add(this.currentRealizedUtility - this.previousRealizedUtility);
 		}
 
 		public boolean previousDataValid() {
@@ -76,16 +85,29 @@ public class Utilities {
 		public double getCurrentExpectedUtility() {
 			return currentExpectedUtility;
 		}
+		
+		public Double getPreviousExpectedUtilityChange() {
+			return this.previousExpectedUtility - this.previousRealizedUtility;
+		}
 
+		public boolean isImprover(final double relativeThreshold) {
+			if (this.averageExpectedImprovement.size() < this.averageExpectedImprovement.memoryLength()) {
+				return true;
+			} else {
+				// TODO may need refinement
+				return (this.averageRealizedImprovement.average() >= relativeThreshold
+						* this.averageExpectedImprovement.average());
+			}
+		}
 	}
 
 	// -------------------- INNER SummaryStatistics CLASS --------------------
 
 	public static class SummaryStatistics {
 
-		public final Double currentAverageRealizedUtility;
+		public final Double currentRealizedUtilitySum;
 
-		public final Double currentAverageExpectedUtility;
+		public final Double currentExpectedUtilitySum;
 
 		// set to an unmodifiable instance
 		public final Map<Id<Person>, Double> personId2currentDeltaUtility;
@@ -94,37 +116,40 @@ public class Utilities {
 
 		public final boolean previousDataValid;
 
-		public final Double previousAverageRealizedUtility;
+		public final Double previousRealizedUtilitySum;
 
-		public final Double previousAverageExpectedUtility;
+		public final Double previousExpectedUtilitySum;
 
-		public final Double averageRealizedUtilityImprovement;
+		public final Double realizedUtilityImprovementSum;
 
-		public final Double previousAverageExpectedUtilityImprovement;
+		public final Double previousExpectedUtilityImprovementSum;
 
-		private SummaryStatistics(final double currentAverageRealizedUtility,
-				final double currentAverageExpectedUtility, final Map<Id<Person>, Double> personId2currentDeltaUtility,
-				final double currentDeltaUtilitySum, final boolean previousDataValid,
-				final Double previousAverageRealizedUtility, final Double previousAverageExpectedUtility) {
+		public final Double shareOfImprovers;
 
-			this.currentAverageRealizedUtility = currentAverageRealizedUtility;
-			this.currentAverageExpectedUtility = currentAverageExpectedUtility;
+		private SummaryStatistics(final double currentRealizedUtilitySum, final double currentExpectedUtilitySum,
+				final Map<Id<Person>, Double> personId2currentDeltaUtility, final double currentDeltaUtilitySum,
+				final boolean previousDataValid, final Double previousRealizedUtilitySum,
+				final Double previousExpectedUtilitySum, final Double shareOfImprovers) {
+
+			this.currentRealizedUtilitySum = currentRealizedUtilitySum;
+			this.currentExpectedUtilitySum = currentExpectedUtilitySum;
 			this.personId2currentDeltaUtility = Collections.unmodifiableMap(personId2currentDeltaUtility);
 			this.currentDeltaUtilitySum = currentDeltaUtilitySum;
 
 			this.previousDataValid = previousDataValid;
 			if (this.previousDataValid) {
-				this.previousAverageRealizedUtility = previousAverageRealizedUtility;
-				this.previousAverageExpectedUtility = previousAverageExpectedUtility;
-				this.averageRealizedUtilityImprovement = this.currentAverageRealizedUtility
-						- this.previousAverageRealizedUtility;
-				this.previousAverageExpectedUtilityImprovement = this.previousAverageExpectedUtility
-						- this.previousAverageRealizedUtility;
+				this.previousRealizedUtilitySum = previousRealizedUtilitySum;
+				this.previousExpectedUtilitySum = previousExpectedUtilitySum;
+				this.realizedUtilityImprovementSum = this.currentRealizedUtilitySum - this.previousRealizedUtilitySum;
+				this.previousExpectedUtilityImprovementSum = this.previousExpectedUtilitySum
+						- this.previousRealizedUtilitySum;
+				this.shareOfImprovers = shareOfImprovers;
 			} else {
-				this.previousAverageRealizedUtility = null;
-				this.previousAverageExpectedUtility = null;
-				this.averageRealizedUtilityImprovement = null;
-				this.previousAverageExpectedUtilityImprovement = null;
+				this.previousRealizedUtilitySum = null;
+				this.previousExpectedUtilitySum = null;
+				this.realizedUtilityImprovementSum = null;
+				this.previousExpectedUtilityImprovementSum = null;
+				this.shareOfImprovers = null;
 			}
 		}
 	}
@@ -133,19 +158,23 @@ public class Utilities {
 
 	private final Map<Id<Person>, Entry> personId2entry = new LinkedHashMap<>();
 
+	private final int memoryLength;
+
 	// -------------------- CONSTRUCTION --------------------
 
-	public Utilities() {
+	public Utilities(final int memoryLength) {
+		this.memoryLength = memoryLength;
 	}
 
 	// -------------------- CONTENT ACCESS --------------------
 
-	public void update(final Id<Person> personId, final Double newRealizedUtility, final double newExpectedUtility) {
+	public void updateBeforeReplanning(final Id<Person> personId, final Double newRealizedUtility,
+			final double newExpectedUtility) {
 		Entry entry = this.personId2entry.get(personId);
 		if (entry == null) {
-			this.personId2entry.put(personId, new Entry(newRealizedUtility, newExpectedUtility));
+			this.personId2entry.put(personId, new Entry(newRealizedUtility, newExpectedUtility, this.memoryLength));
 		} else {
-			entry.update(newRealizedUtility, newExpectedUtility);
+			entry.updateBeforeReplanning(newRealizedUtility, newExpectedUtility);
 		}
 	}
 
@@ -153,7 +182,7 @@ public class Utilities {
 		return this.personId2entry.get(personId);
 	}
 
-	public SummaryStatistics newSummaryStatistics() {
+	public SummaryStatistics newSummaryStatistics(final double relativeImprovementThreshold) {
 
 		if (this.personId2entry.size() == 0) {
 
@@ -169,6 +198,7 @@ public class Utilities {
 			boolean previousDataValid = true;
 			double previousRealizedUtilitySum = 0.0;
 			double previousExpectedUtilitySum = 0.0;
+			double improverCnt = 0.0;
 
 			for (Map.Entry<Id<Person>, Entry> mapEntry : this.personId2entry.entrySet()) {
 				final Id<Person> personId = mapEntry.getKey();
@@ -185,6 +215,9 @@ public class Utilities {
 				if (previousDataValid) {
 					previousRealizedUtilitySum += entry.getPreviousRealizedUtility();
 					previousExpectedUtilitySum += entry.getPreviousExpectedUtility();
+					if (entry.isImprover(relativeImprovementThreshold)) {
+						improverCnt++;
+					}
 				}
 			}
 
@@ -195,10 +228,10 @@ public class Utilities {
 			System.out.println(currentExpectedUtilitySum);
 			System.out.println(previousRealizedUtilitySum);
 			System.out.println(previousExpectedUtilitySum);
-			return new SummaryStatistics(currentRealizedUtilitySum / cnt, currentExpectedUtilitySum / cnt,
+			return new SummaryStatistics(currentRealizedUtilitySum, currentExpectedUtilitySum,
 					personId2currentDeltaUtility, currentDeltaUtilitySum, previousDataValid,
-					previousDataValid ? previousRealizedUtilitySum / cnt : null,
-					previousDataValid ? previousExpectedUtilitySum / cnt : null);
+					previousDataValid ? previousRealizedUtilitySum : null,
+					previousDataValid ? previousExpectedUtilitySum : null, previousDataValid ? improverCnt : null);
 		}
 	}
 }

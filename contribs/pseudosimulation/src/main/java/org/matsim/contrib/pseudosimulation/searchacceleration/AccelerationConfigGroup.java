@@ -267,6 +267,24 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		this.averageIterations = averageIterations;
 	}
 
+	// -------------------- deltaRecipe --------------------
+
+	public static enum DeltaRecipeType {
+		linearInPercentile, linearInDelta
+	};
+
+	private DeltaRecipeType deltaRecipeField = null;
+
+	@StringGetter("deltaRecipe")
+	public DeltaRecipeType getDeltaRecipeField() {
+		return this.deltaRecipeField;
+	}
+
+	@StringSetter("deltaRecipe")
+	public void setDeltaRecipeFiled(final DeltaRecipeType deltaRecipeField) {
+		this.deltaRecipeField = deltaRecipeField;
+	}
+
 	// ==================== SUPPLEMENTARY FUNCTIONALITY ====================
 
 	// -------------------- STATIC UTILITIES --------------------

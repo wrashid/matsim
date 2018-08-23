@@ -21,7 +21,9 @@
 package org.matsim.utils.gis.matsim2esri.network;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
@@ -37,12 +39,16 @@ import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
- * Simple class to convert the links of MATSim network files to ESRI shape files. The network can be written either
- * as line strings or as polygons. Furthermore the width of the links could be calculated according to
- * freespeed, lanes or capacity. For some basic examples please have a look at the <code>main</code> method.
- * Can also be called as Links2ESRIShape inputNetwork.xml outputAsLines.shp outputAsPolygons.shp .
+ * Simple class to convert the links of MATSim network files to ESRI shape
+ * files. The network can be written either as line strings or as polygons.
+ * Furthermore the width of the links could be calculated according to
+ * freespeed, lanes or capacity. For some basic examples please have a look at
+ * the <code>main</code> method. Can also be called as Links2ESRIShape
+ * inputNetwork.xml outputAsLines.shp outputAsPolygons.shp .
  *
- * <p> <strong>Keywords:</strong> converter, network, links, esri, shp, matsim </p>
+ * <p>
+ * <strong>Keywords:</strong> converter, network, links, esri, shp, matsim
+ * </p>
  *
  * @author laemmel
  */
@@ -51,25 +57,30 @@ public class Links2ESRIShape {
 	private static Logger log = Logger.getLogger(Links2ESRIShape.class);
 
 	private final FeatureGenerator featureGenerator;
-	private final Network network;
+	// private final Network network;
+	private final List<Link> links;
 	private final String filename;
-
 
 	public Links2ESRIShape(final Network network, final String filename, final String coordinateSystem) {
 		this(network, filename, new FeatureGeneratorBuilderImpl(network, coordinateSystem));
 	}
 
-	public Links2ESRIShape(final Network network, final String filename, final FeatureGeneratorBuilder builder) {
-		this.network = network;
+	public Links2ESRIShape(final List<Link> links, final String filename, final FeatureGeneratorBuilder builder) {
+		this.links = links;
 		this.filename = filename;
 		this.featureGenerator = builder.createFeatureGenerator();
 
 	}
 
+	public Links2ESRIShape(final Network network, final String filename, final FeatureGeneratorBuilder builder) {
+		this(Arrays.asList(NetworkUtils.getSortedLinks(network)), filename, builder);
+	}
+
 	public void write() {
 		log.info("creating features...");
 		Collection<SimpleFeature> features = new ArrayList<SimpleFeature>();
-		for (Link link : NetworkUtils.getSortedLinks(this.network)) {
+		// for (Link link : NetworkUtils.getSortedLinks(this.network)) {
+		for (Link link : this.links) {
 			features.add(this.featureGenerator.getFeature(link));
 		}
 		log.info("writing features to shape file... " + this.filename);
@@ -77,36 +88,37 @@ public class Links2ESRIShape {
 		log.info("done writing shape file.");
 	}
 
-	public static void main(final String [] args) {
-		String netfile = null ;
-		String outputFileLs = null ;
-		String outputFileP = null ;
+	public static void main(final String[] args) {
+		String netfile = null;
+		String outputFileLs = null;
+		String outputFileP = null;
 		String defaultCRS = "DHDN_GK4";
-		boolean commonWealth = false; //to render Commonwealth networks correctly (e.g. drive on left-hand side of the road)
-		if ( args.length == 0 ) {
+		boolean commonWealth = false; // to render Commonwealth networks correctly (e.g. drive on left-hand side of
+										// the road)
+		if (args.length == 0) {
 			netfile = "./examples/equil/network.xml";
-//		String netfile = "./test/scenarios/berlin/network.xml.gz";
+			// String netfile = "./test/scenarios/berlin/network.xml.gz";
 
 			outputFileLs = "./plans/networkLs.shp";
 			outputFileP = "./plans/networkP.shp";
-		} else if ( args.length == 3 ) {
-			netfile = args[0] ;
-			outputFileLs = args[1] ;
-			outputFileP  = args[2] ;
-		} else if ( args.length == 4 ) {
-			netfile = args[0] ;
-			outputFileLs = args[1] ;
-			outputFileP  = args[2] ;
-			defaultCRS   = args[3] ;
-		} else if ( args.length == 5 ) {
-			netfile = args[0] ;
-			outputFileLs = args[1] ;
-			outputFileP  = args[2] ;
-			defaultCRS   = args[3] ;
-			commonWealth = Boolean.parseBoolean(args[4]) ;
+		} else if (args.length == 3) {
+			netfile = args[0];
+			outputFileLs = args[1];
+			outputFileP = args[2];
+		} else if (args.length == 4) {
+			netfile = args[0];
+			outputFileLs = args[1];
+			outputFileP = args[2];
+			defaultCRS = args[3];
+		} else if (args.length == 5) {
+			netfile = args[0];
+			outputFileLs = args[1];
+			outputFileP = args[2];
+			defaultCRS = args[3];
+			commonWealth = Boolean.parseBoolean(args[4]);
 		} else {
-			log.error("Arguments cannot be interpreted.  Aborting ...") ;
-			System.exit(-1) ;
+			log.error("Arguments cannot be interpreted.  Aborting ...");
+			System.exit(-1);
 		}
 
 		Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
@@ -121,14 +133,14 @@ public class Links2ESRIShape {
 		builder.setFeatureGeneratorPrototype(LineStringBasedFeatureGenerator.class);
 		builder.setWidthCoefficient(0.5);
 		builder.setWidthCalculatorPrototype(LanesBasedWidthCalculator.class);
-		new Links2ESRIShape(network,outputFileLs, builder).write();
+		new Links2ESRIShape(network, outputFileLs, builder).write();
 
 		CoordinateReferenceSystem crs = MGC.getCRS(defaultCRS);
 		builder.setWidthCoefficient((commonWealth ? -1 : 1) * 0.003);
 		builder.setFeatureGeneratorPrototype(PolygonFeatureGenerator.class);
 		builder.setWidthCalculatorPrototype(CapacityBasedWidthCalculator.class);
 		builder.setCoordinateReferenceSystem(crs);
-		new Links2ESRIShape(network,outputFileP, builder).write();
+		new Links2ESRIShape(network, outputFileP, builder).write();
 
 	}
 

@@ -19,6 +19,8 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration.logging;
 
+import java.util.List;
+
 import org.matsim.contrib.pseudosimulation.searchacceleration.ReplannerIdentifier;
 import org.matsim.contrib.pseudosimulation.searchacceleration.SearchAccelerator;
 
@@ -75,7 +77,7 @@ public class LogDataWrapper {
 	}
 
 	public Double getRegularizationWeight() {
-		return this.identifier.getRegularizationWeight();
+		return this.accelerator.getRegularizationWeight();
 	}
 
 	public Double getReplanningEfficiency() {
@@ -113,4 +115,33 @@ public class LogDataWrapper {
 	public Double getRealizedGreedyScoreChange() {
 		return this.identifier.getRealizedGreedyScoreChange();
 	}
+
+	public Double getUniformReplannerShare() {
+		return this.identifier.getUniformReplannerShare();
+	}
+
+	public List<Double> getReplaningSignalAKF() {
+		return this.identifier.getReplanningSignalAKF();
+	}
+
+	public Double getPercentile() {
+		return this.accelerator.getPercentile();
+	}
+
+	public Double getLastExpectedUtilityChangeSumAccelerated() {
+		return this.accelerator.getLastExpectedUtilityChangeSumAccelerated();
+	}
+
+	public Double getLastExpectedUtilityChangeSumUniform() {
+		return this.accelerator.getLastExpectedUtilityChangeSumUniform();
+	}
+
+	public Double getLastRealizedUtilityChangeSum() {
+		return this.accelerator.getLastRealizedUtilityChangeSum();
+	}
+
+	public Double getTargetPercentile() {
+		return this.accelerator.getTargetPercentile();
+	}
+
 }
