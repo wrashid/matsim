@@ -25,6 +25,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
@@ -40,7 +42,6 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.recipes.ReplannerI
 import org.matsim.contrib.pseudosimulation.searchacceleration.recipes.UniformReplanningRecipe;
 
 import floetteroed.utilities.DynamicData;
-import floetteroed.utilities.math.Vector;
 
 /**
  * 
@@ -73,12 +74,11 @@ public class ReplannerIdentifier {
 	private Double shareOfScoreImprovingReplanners = null;
 	private Double score = null;
 
-	private List<Double> allDeltaForUniformReplanning = new ArrayList<>();
-	public List<Double> allDeltaForUniformReplanningExact = new ArrayList<>();
-
-	public List<Byte> actualReplanIndicator = new ArrayList<>();
-	public List<Byte> uniformReplanIndicator = new ArrayList<>();
-	public List<Double> deltaScore = new ArrayList<>();
+	private SortedSet<IndividualReplanningResult> individualReplanningResults = new TreeSet<>();
+	// private List<Double> deltaForUniformReplanningList = new ArrayList<>();
+	// private List<Double> expectedScoreChangeList = new ArrayList<>();
+	// private List<Byte> actualReplanIndicatorList = new ArrayList<>();
+	// private List<Byte> uniformReplanIndicatorList = new ArrayList<>();
 
 	private Double uniformGreedyScoreChange = null;
 	private Double realizedGreedyScoreChange = null;
@@ -109,27 +109,22 @@ public class ReplannerIdentifier {
 		return this.lambda;
 	}
 
-	public double getDeltaForUniformReplanning(final int percentile) {
-		// Collections.sort(this.allDeltaForUniformReplanning);
-		// final int index = Math.min(this.allDeltaForUniformReplanning.size() - 1,
-		// (percentile * this.allDeltaForUniformReplanning.size()) / 100);
-		// return this.allDeltaForUniformReplanning.get(index);
-		return this.getDeltaForUniformReplanning(this.allDeltaForUniformReplanning, percentile);
-	}
+	// public double getDeltaForUniformReplanningExact(final int percentile) {
+	// Collections.sort(this.allDeltaForUniformReplanning);
+	// final int index = Math.min(this.allDeltaForUniformReplanning.size() - 1,
+	// (percentile * this.allDeltaForUniformReplanning.size()) / 100);
+	// return this.allDeltaForUniformReplanning.get(index);
+	// return
+	// this.getDeltaForUniformReplanning(this.getDeltaForUniformReplanningListView(),
+	// percentile);
+	// }
 
-	public double getDeltaForUniformReplanningExact(final int percentile) {
-		// Collections.sort(this.allDeltaForUniformReplanning);
-		// final int index = Math.min(this.allDeltaForUniformReplanning.size() - 1,
-		// (percentile * this.allDeltaForUniformReplanning.size()) / 100);
-		// return this.allDeltaForUniformReplanning.get(index);
-		return this.getDeltaForUniformReplanning(this.allDeltaForUniformReplanningExact, percentile);
-	}
-
-	private double getDeltaForUniformReplanning(final List<Double> allDelta, final int percentile) {
-		Collections.sort(allDelta);
-		final int index = Math.min(allDelta.size() - 1, (percentile * allDelta.size()) / 100);
-		return allDelta.get(index);
-	}
+	// private double getDeltaForUniformReplanning(final List<Double> allDelta,
+	// final int percentile) {
+	// final int index = Math.min(allDelta.size() - 1, (percentile *
+	// allDelta.size()) / 100);
+	// return allDelta.get(index);
+	// }
 
 	public Double getUniformGreedyScoreChange() {
 		return this.uniformGreedyScoreChange;
@@ -146,6 +141,26 @@ public class ReplannerIdentifier {
 	public List<Double> getReplanningSignalAKF() {
 		return this.replanningSignalAKF;
 	}
+
+	public List<IndividualReplanningResult> getIndividualReplanningResultListView() {
+		return Collections.unmodifiableList(new ArrayList<>(this.individualReplanningResults));
+	}
+
+	// public List<Double> getDeltaForUniformReplanningListView() {
+	// return Collections.unmodifiableList(this.deltaForUniformReplanningList);
+	// }
+	//
+	// public List<Byte> getActualReplanIndicatorListView() {
+	// return Collections.unmodifiableList(this.actualReplanIndicatorList);
+	// }
+	//
+	// public List<Byte> getUniformReplanIndicatorListView() {
+	// return Collections.unmodifiableList(this.uniformReplanIndicatorList);
+	// }
+	//
+	// public List<Double> getExpectedScoreChangeListView() {
+	// return Collections.unmodifiableList(this.expectedScoreChangeList);
+	// }
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -248,10 +263,6 @@ public class ReplannerIdentifier {
 				realizedGreedyScoreChange += scoreUpdater.getGreedyScoreChangeIfZero();
 			}
 
-			this.actualReplanIndicator.add(replanner ? (byte) 1 : 0);
-			this.uniformReplanIndicator.add(scoreUpdater.wouldBeUniformReplanner ? (byte) 1 : 0);
-			this.deltaScore.add(this.personId2utilityChange.get(driverId));
-
 			this.uniformGreedyScoreChange += this.lambda * scoreUpdater.getGreedyScoreChangeIfOne()
 					+ (1.0 - this.lambda) * scoreUpdater.getGreedyScoreChangeIfZero();
 
@@ -273,22 +284,31 @@ public class ReplannerIdentifier {
 			uniformRegularizationResidual = uniformScoreUpdater.getUpdatedRegularizationResidual();
 			sumOfUniformInteractionResiduals2 = uniformScoreUpdater.getUpdatedSumOfInteractionResiduals2();
 
+			// for debugging
 			// {
 			// final double exactSum2 = interactionResiduals.sumOfEntries2();
 			// log.info("Relative interaction residual error = "
 			// + (sumOfInteractionResiduals2 - exactSum2) / exactSum2);
 			// }
 
-			this.allDeltaForUniformReplanning.add(scoreUpdater.getDeltaForUniformReplanning());
+			// this.allDeltaForUniformReplanning.add(scoreUpdater.getDeltaForUniformReplanning());
+			// this.actualReplanIndicatorList.add(replanner ? (byte) 1 : 0);
+			// this.uniformReplanIndicatorList.add(scoreUpdater.wouldBeUniformReplanner ?
+			// (byte) 1 : 0);
+			// this.expectedScoreChangeList.add(this.personId2utilityChange.get(driverId));
+			// this.deltaForUniformReplanningList.add(uniformScoreUpdater.getDeltaForUniformReplanning());
 
-			this.allDeltaForUniformReplanningExact.add(uniformScoreUpdater.getDeltaForUniformReplanning());
+			this.individualReplanningResults.add(new IndividualReplanningResult(
+					uniformScoreUpdater.getDeltaForUniformReplanning(), this.personId2utilityChange.get(driverId),
+					replanner, scoreUpdater.wouldBeUniformReplanner));
 		}
 
 		this.shareOfScoreImprovingReplanners = ((double) scoreImprovingReplanners) / allPersonIdsShuffled.size();
 
 		this.uniformReplannerShare = ((double) uniformReplanners) / allPersonIdsShuffled.size();
 
-		// this.replanningSignalAKF = new Vector(this.actualReplanIndicator).akf((int) (2.0 / this.lambda)).asList();
+		// this.replanningSignalAKF = new Vector(this.actualReplanIndicator).akf((int)
+		// (2.0 / this.lambda)).asList();
 
 		return replanners;
 	}

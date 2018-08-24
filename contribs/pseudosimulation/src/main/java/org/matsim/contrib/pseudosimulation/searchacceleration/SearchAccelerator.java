@@ -130,28 +130,22 @@ public class SearchAccelerator
 	private double currentDelta = 0.0;
 
 	// >>> created upon startup >>>
-	// private RecursiveMovingAverage expectedUtilityImprovementSum;
-	// private RecursiveMovingAverage realizedUtilityImprovementSum;
-	// private RecursiveMovingAverage averageDeltaForUniformReplanning;
-	// private RecursiveMovingAverage averageDeltaForUniformReplanningExact;
-	// <<< created upon startup <<<
-
-	// >>> created upon startup >>>
 	private LinkUsageListener matsimMobsimUsageListener;
 	private StatisticsWriter<LogDataWrapper> statsWriter;
 	private Utilities utilities;
-	private RecursiveMovingAverage lastExpectedUtilityChangeSumAccelerated;
-	private RecursiveMovingAverage lastExpectedUtilityChangeSumUniform;
-	private RecursiveMovingAverage lastRealizedUtilityChangeSum;
+	private RecursiveMovingAverage expectedUtilityChangeSumAccelerated;
+	private RecursiveMovingAverage expectedUtilityChangeSumUniform;
+	private RecursiveMovingAverage realizedUtilityChangeSum;
 	// <<< created upon startup <<<
 
-	private List<Byte> lastActualReplanIndicatorList = null;
-	private List<Byte> lastUniformReplanIndicatorList = null;
-	private List<Double> lastCriticalDeltaList = null;
-	private List<Double> lastExpectedScoreChangeList = null;
+	private List<IndividualReplanningResult> individualReplanningResultsList = null;
+	// private List<Byte> lastActualReplanIndicatorList = null;
+	// private List<Byte> lastUniformReplanIndicatorList = null;
+	// private List<Double> lastCriticalDeltaList = null;
+	// private List<Double> lastExpectedScoreChangeList = null;
 
-	private Double lastRealizedDeltaPercentile = null;
-	private Double nextTargetDeltaPercentile = null;
+	private Double previouslyRealizedDeltaPercentile = null;
+	private Double targetDeltaPercentile = null;
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -262,23 +256,23 @@ public class SearchAccelerator
 	}
 
 	public Double getPercentile() {
-		return this.lastRealizedDeltaPercentile;
+		return this.previouslyRealizedDeltaPercentile;
 	}
 
 	public Double getLastExpectedUtilityChangeSumAccelerated() {
-		return this.lastExpectedUtilityChangeSumAccelerated.average();
+		return this.expectedUtilityChangeSumAccelerated.average();
 	}
 
 	public Double getLastExpectedUtilityChangeSumUniform() {
-		return this.lastExpectedUtilityChangeSumUniform.average();
+		return this.expectedUtilityChangeSumUniform.average();
 	}
 
 	public Double getLastRealizedUtilityChangeSum() {
-		return this.lastRealizedUtilityChangeSum.average();
+		return this.realizedUtilityChangeSum.average();
 	}
 
 	public Double getTargetPercentile() {
-		return this.nextTargetDeltaPercentile;
+		return this.targetDeltaPercentile;
 	}
 
 	// --------------- IMPLEMENTATION OF StartupListener ---------------
@@ -288,21 +282,11 @@ public class SearchAccelerator
 
 		this.matsimMobsimUsageListener = new LinkUsageListener(this.replanningParameters().getTimeDiscretization());
 
-		// this.expectedUtilityImprovementSum = new RecursiveMovingAverage(
-		// this.replanningParameters().getAverageIterations());
-		// this.realizedUtilityImprovementSum = new RecursiveMovingAverage(
-		// this.replanningParameters().getAverageIterations());
-		// this.averageDeltaForUniformReplanning = new RecursiveMovingAverage(
-		// this.replanningParameters().getAverageIterations());
-		// this.averageDeltaForUniformReplanningExact = new RecursiveMovingAverage(
-		// this.replanningParameters().getAverageIterations());
-
-		this.lastExpectedUtilityChangeSumAccelerated = new RecursiveMovingAverage(
+		this.expectedUtilityChangeSumAccelerated = new RecursiveMovingAverage(
 				this.replanningParameters().getAverageIterations());
-		this.lastExpectedUtilityChangeSumUniform = new RecursiveMovingAverage(
+		this.expectedUtilityChangeSumUniform = new RecursiveMovingAverage(
 				this.replanningParameters().getAverageIterations());
-		this.lastRealizedUtilityChangeSum = new RecursiveMovingAverage(
-				this.replanningParameters().getAverageIterations());
+		this.realizedUtilityChangeSum = new RecursiveMovingAverage(this.replanningParameters().getAverageIterations());
 
 		this.utilities = new Utilities(this.replanningParameters().getAverageIterations());
 
@@ -399,16 +383,89 @@ public class SearchAccelerator
 				final double realizedUtility = this.lastPhysicalPopulationState.getSelectedPlan(person.getId())
 						.getScore();
 				final double expectedUtility = person.getSelectedPlan().getScore();
-				this.utilities.updateBeforeReplanning(person.getId(), realizedUtility, expectedUtility);
+				this.utilities.update(person.getId(), realizedUtility, expectedUtility);
 			}
 
-			final Utilities.SummaryStatistics utilityStats = this.utilities
+			final Utilities.SummaryStatistics utilityStatsBeforeReplanning = this.utilities
 					.newSummaryStatistics(this.replanningParameters().getReplanningEfficiencyThreshold());
 
-			// if (utilityStats.previousDataValid) {
-			// this.expectedUtilityImprovementSum.add(utilityStats.previousExpectedUtilityImprovementSum);
-			// this.realizedUtilityImprovementSum.add(utilityStats.realizedUtilityImprovementSum);
-			// }
+			if (utilityStatsBeforeReplanning.previousDataValid) {
+
+				// Merely a safeguard.
+
+				if ((this.replanners == null) || (this.individualReplanningResultsList == null)) {
+					throw new RuntimeException(
+							"Previous data is valid but previous replanners have not been registered.");
+				}
+
+				// Update aggregate utility statistics.
+
+				this.realizedUtilityChangeSum.add(utilityStatsBeforeReplanning.currentRealizedUtilitySum
+						- utilityStatsBeforeReplanning.previousRealizedUtilitySum);
+				this.expectedUtilityChangeSumUniform
+						.add(this.replanningParameters().getMeanReplanningRate(event.getIteration())
+								* (utilityStatsBeforeReplanning.previousExpectedUtilitySum
+										- utilityStatsBeforeReplanning.previousRealizedUtilitySum));
+				double previousExpectedUtilityChangeSumAcceleratedTmp = 0.0;
+				for (Id<Person> replannerId : this.replanners) {
+					previousExpectedUtilityChangeSumAcceleratedTmp += this.utilities.getUtilities(replannerId)
+							.getPreviousExpectedUtilityChange();
+				}
+				this.expectedUtilityChangeSumAccelerated.add(previousExpectedUtilityChangeSumAcceleratedTmp);
+
+				// Identify to what delta percentile the current re-planning corresponds.
+
+				int percentileIndex = 0;
+				while ((this.individualReplanningResultsList.get(percentileIndex).deltaForUniformReplanning < 0.0)
+						&& (percentileIndex + 1 < this.individualReplanningResultsList.size())) {
+					percentileIndex++;
+				}
+				this.previouslyRealizedDeltaPercentile = Math.max(0, Math.min(100,
+						(percentileIndex * 100.0) / this.services.getScenario().getPopulation().getPersons().size()));
+
+				// Compute target percentile and corresponding delta for the next iteration.
+
+				final double upperBound = this.getLastExpectedUtilityChangeSumUniform()
+						+ Math.max(0, this.getLastRealizedUtilityChangeSum());
+				double currentVal = this.getLastExpectedUtilityChangeSumAccelerated();
+
+				if (currentVal > upperBound) { // TODO Use relative threshold?
+
+					while ((currentVal > upperBound)
+							&& (percentileIndex + 1 < this.individualReplanningResultsList.size())) {
+						percentileIndex++;
+						final IndividualReplanningResult individualResult = this.individualReplanningResultsList
+								.get(percentileIndex);
+						if (individualResult.isActualReplanner && !individualResult.wouldBeUniformReplanner) {
+							currentVal -= individualResult.expectedScoreChange;
+						} else if (!individualResult.isActualReplanner && individualResult.wouldBeUniformReplanner) {
+							currentVal += individualResult.expectedScoreChange;
+						}
+					}
+
+				} else { // TODO Use relative threshold?
+
+					while ((currentVal < upperBound) && (percentileIndex - 1 >= 0)) {
+						percentileIndex--;
+						final IndividualReplanningResult individualResult = this.individualReplanningResultsList
+								.get(percentileIndex);
+						if (individualResult.isActualReplanner && !individualResult.wouldBeUniformReplanner) {
+							currentVal += individualResult.expectedScoreChange;
+						} else if (!individualResult.isActualReplanner && individualResult.wouldBeUniformReplanner) {
+							currentVal -= individualResult.expectedScoreChange;
+						}
+					}
+					if (currentVal > upperBound) {
+						percentileIndex = Math.min(this.individualReplanningResultsList.size() - 1,
+								percentileIndex + 1);
+					}
+				}
+
+				this.targetDeltaPercentile = Math.max(0, Math.min(100,
+						(percentileIndex * 100.0) / this.services.getScenario().getPopulation().getPersons().size()));
+				this.currentDelta = Math.max(0.0,
+						this.individualReplanningResultsList.get(percentileIndex).deltaForUniformReplanning);
+			}
 
 			/*
 			 * Extract hypothetical selected plans.
@@ -461,100 +518,29 @@ public class SearchAccelerator
 
 			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters(),
 					event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
-					this.services.getScenario().getPopulation(), utilityStats.personId2currentDeltaUtility,
-					utilityStats.currentDeltaUtilitySum, this.currentDelta);
+					this.services.getScenario().getPopulation(),
+					utilityStatsBeforeReplanning.personId2currentDeltaUtility,
+					utilityStatsBeforeReplanning.currentDeltaUtilitySum, this.currentDelta);
 			this.replanners = replannerIdentifier.drawReplanners();
 			this.everReplanners.addAll(this.replanners);
-
-			// this.averageDeltaForUniformReplanning.add(replannerIdentifier.getDeltaForUniformReplanning(95));
-			// this.averageDeltaForUniformReplanningExact.add(replannerIdentifier.getDeltaForUniformReplanningExact(95));
-
-			// if (this.getAverageReplanningEfficiency() != null) {
-			// this.currentDelta =
-			// this.replanningParameters().getAdaptiveRegularizationWeight(
-			// this.getAverageReplanningEfficiency(),
-			// this.averageDeltaForUniformReplanning.average());
-			// }
-			// if (utilityStats.previousDataValid) {
-			// final int percentile = max(0, min(100, (int) ((1.0 -
-			// this.getReplanningEfficiency()) * 100)));
-			// this.currentDelta = max(0,
-			// replannerIdentifier.getDeltaForUniformReplanning(percentile));
-			// }
+			this.individualReplanningResultsList = replannerIdentifier.getIndividualReplanningResultListView();
 
 			final LogDataWrapper data = new LogDataWrapper(this, replannerIdentifier, lastPseudoSimLinkUsages.size());
 			this.statsWriter.writeToFile(data);
 
-			if (this.lastRealizedUtilityChangeSum.size() > 0) {
-
-				int percentileIndex = 0;
-				while ((this.lastCriticalDeltaList.get(percentileIndex) < 0.0)
-						&& (percentileIndex + 1 < this.lastCriticalDeltaList.size())) {
-					percentileIndex++;
-				}
-				this.lastRealizedDeltaPercentile = Math.max(0, Math.min(100,
-						(percentileIndex * 100.0) / this.services.getScenario().getPopulation().getPersons().size()));
-
-				final double upperBound = Math.max(0, this.getLastRealizedUtilityChangeSum())
-						+ this.getLastExpectedUtilityChangeSumUniform();
-				double currentVal = this.getLastExpectedUtilityChangeSumAccelerated();
-				final int dir = (currentVal > upperBound ? 1 : -1);
-				while ((currentVal > upperBound) & (percentileIndex + dir >= 0)
-						&& (percentileIndex + dir < this.lastCriticalDeltaList.size())) {
-					percentileIndex += dir;
-					if (this.lastActualReplanIndicatorList.get(percentileIndex) == 1.0
-							&& this.lastUniformReplanIndicatorList.get(percentileIndex) == 0.0) {
-						currentVal -= this.lastExpectedScoreChangeList.get(percentileIndex) * dir;
-					} else if (this.lastActualReplanIndicatorList.get(percentileIndex) == 0.0
-							&& this.lastUniformReplanIndicatorList.get(percentileIndex) == 1.0) {
-						currentVal += this.lastExpectedScoreChangeList.get(percentileIndex) * dir;
-					}
-				}
-				this.nextTargetDeltaPercentile = Math.max(0, Math.min(100,
-						(percentileIndex * 100.0) / this.services.getScenario().getPopulation().getPersons().size()));
-				this.currentDelta = this.lastCriticalDeltaList.get(percentileIndex);
-			}
-			// this.currentDelta = this.deltaRecipe.getDelta();
-			// if (this.getAverageReplanningEfficiency() != null) {
-			// final int percentile = Math.max(0,
-			// Math.min(100, (int) ((1.0 - this.getAverageReplanningEfficiency()) * 100)));
-			// this.currentDelta = Math.max(0,
-			// replannerIdentifier.getDeltaForUniformReplanningExact(percentile));
-			// }
-
-			// this.lastExpectedUtilityChangeSumAccelerated = 0.0;
-			// for (Id<Person> replanner : this.replanners) {
-			// final Utilities.Entry utilityEntry = this.utilities.getUtilities(replanner);
-			// this.lastExpectedUtilityChangeSumAccelerated +=
-			// utilityEntry.getCurrentExpectedUtility()
-			// - utilityEntry.getCurrentRealizedUtility();
-			// }
-
-			if (utilityStats.previousDataValid) {
-				this.lastRealizedUtilityChangeSum
-						.add(utilityStats.currentRealizedUtilitySum - utilityStats.previousRealizedUtilitySum);
-				this.lastExpectedUtilityChangeSumUniform
-						.add(this.replanningParameters().getMeanReplanningRate(event.getIteration())
-								* (utilityStats.previousExpectedUtilitySum - utilityStats.previousRealizedUtilitySum));
-				double lastExpectedUtilityChangeSumAcceleratedValue = 0.0;
-				for (Id<Person> replannerId : this.replanners) {
-					lastExpectedUtilityChangeSumAcceleratedValue += this.utilities.getUtilities(replannerId)
-							.getPreviousExpectedUtilityChange();
-				}
-				this.lastExpectedUtilityChangeSumAccelerated.add(lastExpectedUtilityChangeSumAcceleratedValue);
-			}
-
-			this.lastActualReplanIndicatorList = replannerIdentifier.actualReplanIndicator;
-			this.lastUniformReplanIndicatorList = replannerIdentifier.uniformReplanIndicator;
-			this.lastCriticalDeltaList = replannerIdentifier.allDeltaForUniformReplanningExact;
-			this.lastExpectedScoreChangeList = replannerIdentifier.deltaScore;
+			// this.lastActualReplanIndicatorList =
+			// replannerIdentifier.getActualReplanIndicatorListView();
+			// this.lastUniformReplanIndicatorList =
+			// replannerIdentifier.getUniformReplanIndicatorListView();
+			// this.lastCriticalDeltaList =
+			// replannerIdentifier.getDeltaForUniformReplanningListView();
+			// this.lastExpectedScoreChangeList =
+			// replannerIdentifier.getExpectedScoreChangeListView();
 
 			this.nextMobsimIsExpectedToBePhysical = true;
 			this.setWeightOfHypotheticalReplanning(1e9);
 
-		} else
-
-		{
+		} else {
 
 			this.nextMobsimIsExpectedToBePhysical = false;
 			this.setWeightOfHypotheticalReplanning(0);

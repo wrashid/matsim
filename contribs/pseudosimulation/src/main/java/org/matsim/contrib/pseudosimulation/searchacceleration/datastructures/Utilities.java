@@ -168,7 +168,7 @@ public class Utilities {
 
 	// -------------------- CONTENT ACCESS --------------------
 
-	public void updateBeforeReplanning(final Id<Person> personId, final Double newRealizedUtility,
+	public void update(final Id<Person> personId, final Double newRealizedUtility,
 			final double newExpectedUtility) {
 		Entry entry = this.personId2entry.get(personId);
 		if (entry == null) {
