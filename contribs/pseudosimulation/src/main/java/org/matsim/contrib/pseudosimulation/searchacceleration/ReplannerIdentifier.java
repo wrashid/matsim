@@ -76,8 +76,8 @@ public class ReplannerIdentifier {
 	private List<Double> allDeltaForUniformReplanning = new ArrayList<>();
 	public List<Double> allDeltaForUniformReplanningExact = new ArrayList<>();
 
-	public List<Double> actualReplanIndicator = new ArrayList<>();
-	public List<Double> uniformReplanIndicator = new ArrayList<>();
+	public List<Byte> actualReplanIndicator = new ArrayList<>();
+	public List<Byte> uniformReplanIndicator = new ArrayList<>();
 	public List<Double> deltaScore = new ArrayList<>();
 
 	private Double uniformGreedyScoreChange = null;
@@ -248,8 +248,8 @@ public class ReplannerIdentifier {
 				realizedGreedyScoreChange += scoreUpdater.getGreedyScoreChangeIfZero();
 			}
 
-			this.actualReplanIndicator.add(replanner ? 1.0 : 0.0);
-			this.uniformReplanIndicator.add(scoreUpdater.wouldBeUniformReplanner ? 1.0 : 0.0);
+			this.actualReplanIndicator.add(replanner ? (byte) 1 : 0);
+			this.uniformReplanIndicator.add(scoreUpdater.wouldBeUniformReplanner ? (byte) 1 : 0);
 			this.deltaScore.add(this.personId2utilityChange.get(driverId));
 
 			this.uniformGreedyScoreChange += this.lambda * scoreUpdater.getGreedyScoreChangeIfOne()
@@ -288,7 +288,7 @@ public class ReplannerIdentifier {
 
 		this.uniformReplannerShare = ((double) uniformReplanners) / allPersonIdsShuffled.size();
 
-		this.replanningSignalAKF = new Vector(this.actualReplanIndicator).akf((int) (2.0 / this.lambda)).asList();
+		// this.replanningSignalAKF = new Vector(this.actualReplanIndicator).akf((int) (2.0 / this.lambda)).asList();
 
 		return replanners;
 	}

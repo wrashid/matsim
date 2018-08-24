@@ -38,7 +38,7 @@ public class DeltaForUniformReplanningExact implements Statistic<LogDataWrapper>
 
 	@Override
 	public String value(LogDataWrapper arg0) {
-		return Statistic.toString(arg0.getDeltaForUniformReplanningExact());
+		return "DEPRECATED"; // return Statistic.toString(arg0.getDeltaForUniformReplanningExact());
 	}
 }
 

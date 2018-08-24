@@ -38,6 +38,6 @@ public class AverageDeltaForUniformReplanning implements Statistic<LogDataWrappe
 
 	@Override
 	public String value(LogDataWrapper arg0) {
-		return Statistic.toString(arg0.getAverageDeltaForUniformReplanning());
+		return "DEPRECATED"; // return Statistic.toString(arg0.getAverageDeltaForUniformReplanning());
 	}
 }

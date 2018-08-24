@@ -37,7 +37,7 @@ public class AverageReplanningEfficiency implements Statistic<LogDataWrapper> {
 
 	@Override
 	public String value(LogDataWrapper arg0) {
-		return Statistic.toString(arg0.getAverageReplanningEfficiency());
+		return "DEPRECATED"; // return Statistic.toString(arg0.getAverageReplanningEfficiency());
 	}
 
 }
