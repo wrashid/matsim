@@ -131,7 +131,7 @@ public class RelocationExample {
 		final RouteCarsharingTrip routeCarsharingTrip = new RouteCarsharingTripImpl();
 		final AverageDemandRelocationListener averageDemandRelocationListener = new AverageDemandRelocationListener();
 		final VehicleChoiceAgent vehicleChoiceAgent = new VehicleChoiceAgentImpl();
-		controler.addOverridingModule(new RelocationQSimModule());
+		//controler.addOverridingModule(new RelocationQSimModule());
 		controler.addOverridingModule(new DvrpTravelTimeModule());
 		// ===adding carsharing objects on supply and demand infrastructure ===
 		controler.addOverridingModule(new AbstractModule() {

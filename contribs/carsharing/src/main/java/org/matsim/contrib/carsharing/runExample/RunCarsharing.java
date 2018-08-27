@@ -32,7 +32,7 @@ import org.matsim.contrib.carsharing.models.ChooseVehicleType;
 import org.matsim.contrib.carsharing.models.ChooseVehicleTypeExample;
 import org.matsim.contrib.carsharing.models.KeepingTheCarModel;
 import org.matsim.contrib.carsharing.models.KeepingTheCarModelExample;
-import org.matsim.contrib.carsharing.qsim.CarsharingQSimModule;
+import org.matsim.contrib.carsharing.qsim.CarSharingQSimModule;
 import org.matsim.contrib.carsharing.readers.CarsharingXmlReaderNew;
 import org.matsim.contrib.carsharing.replanning.CarsharingSubtourModeChoiceStrategy;
 import org.matsim.contrib.carsharing.replanning.RandomTripToCarsharingStrategy;
@@ -40,18 +40,20 @@ import org.matsim.contrib.carsharing.router.CarsharingRoute;
 import org.matsim.contrib.carsharing.router.CarsharingRouteFactory;
 import org.matsim.contrib.carsharing.scoring.CarsharingScoringFunctionFactory;
 import org.matsim.contrib.dvrp.router.DvrpRoutingNetworkProvider;
-import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.contrib.dvrp.trafficmonitoring.DvrpTravelTimeModule;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.mobsim.qsim.components.QSimComponents;
+import org.matsim.core.mobsim.qsim.components.StandardQSimComponentsConfigurator;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import com.google.inject.Key;
+import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
 /**
@@ -123,9 +125,8 @@ public class RunCarsharing {
 		final RouteCarsharingTrip routeCarsharingTrip = new RouteCarsharingTripImpl();
 		final VehicleChoiceAgent vehicleChoiceAgent = new VehicleChoiceAgentImpl();
 		// ===adding carsharing objects on supply and demand infrastructure ===
-		controler.addOverridingModule(new CarsharingQSimModule());
 		controler.addOverridingModule(new DvrpTravelTimeModule());
-
+		controler.addOverridingQSimModule(new CarSharingQSimModule());
 		controler.addOverridingModule(new AbstractModule() {
 
 			@Override
@@ -142,13 +143,21 @@ public class RunCarsharing {
 				bind(CarsharingManagerInterface.class).to(CarsharingManagerNew.class);
 				bind(VehicleChoiceAgent.class).toInstance(vehicleChoiceAgent);
 				bind(DemandHandler.class).asEagerSingleton();
-				bind(Network.class).annotatedWith(Names.named(DvrpRoutingNetworkProvider.DVRP_ROUTING)).to(Network.class);
+				bind(Network.class).annotatedWith(Names.named(DvrpRoutingNetworkProvider.DVRP_ROUTING))
+						.to(Network.class);
 
 				bind(Network.class).annotatedWith(Names.named("carnetwork")).toInstance(networkFF);
 				bind(TravelTime.class).annotatedWith(Names.named("ff"))
 						.to(Key.get(TravelTime.class, Names.named(DvrpTravelTimeModule.DVRP_ESTIMATED)));
 			}
 
+			@Provides
+			public QSimComponents provideQSimComponents(Config config) {
+				QSimComponents components = new QSimComponents();
+				new StandardQSimComponentsConfigurator(config).configure(components);
+				CarSharingQSimModule.configureComponents(components);
+				return components;
+			}
 		});
 
 		// === carsharing specific replanning strategies ===
@@ -166,6 +175,7 @@ public class RunCarsharing {
 		controler.addOverridingModule(new AbstractModule() {
 			@Override
 			public void install() {
+				// bindMobsim().toProvider(CarsharingQsimFactoryNew.class);
 				addControlerListenerBinding().toInstance(carsharingListener);
 				addControlerListenerBinding().to(CarsharingManagerNew.class);
 				// bindScoringFunctionFactory().to(CarsharingScoringFunctionFactory.class);

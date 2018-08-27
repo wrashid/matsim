@@ -52,7 +52,7 @@ public class SignalsDataLoader {
 	public SignalsDataLoader(Config config){
 		this.config = config;
 		this.signalConfig = ConfigUtils.addOrGetModule(config,
-				SignalSystemsConfigGroup.GROUPNAME, SignalSystemsConfigGroup.class);
+				SignalSystemsConfigGroup.GROUP_NAME, SignalSystemsConfigGroup.class);
 	}
 
 	public SignalsData loadSignalsData() {
@@ -66,7 +66,7 @@ public class SignalsDataLoader {
 		if (this.signalConfig.isUseIntergreenTimes()){
 			this.loadIntergreenTimes(data);
 		}
-		if (this.signalConfig.isUseConflictingDirections()) {
+		if (this.signalConfig.getIntersectionLogic().toString().startsWith("CONFLICTING_DIRECTIONS")) {
 			this.loadConflicts(data);
 		}
 		return data;
