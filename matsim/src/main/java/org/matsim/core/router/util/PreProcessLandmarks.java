@@ -33,7 +33,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.core.api.internal.MatsimComparator;
-import org.matsim.lanes.data.Lanes;
+import org.matsim.lanes.Lanes;
 
 /**
  * Pre-processes a given network, gathering information which can be used by

@@ -41,7 +41,7 @@ import org.matsim.core.router.util.PreProcessLandmarks;
 import org.matsim.core.router.util.RoutingNetworkLink;
 import org.matsim.core.router.util.RoutingNetworkNode;
 import org.matsim.core.router.util.TravelDisutility;
-import org.matsim.lanes.data.Lanes;
+import org.matsim.lanes.Lanes;
 import org.matsim.vehicles.Vehicle;
 
 @Singleton

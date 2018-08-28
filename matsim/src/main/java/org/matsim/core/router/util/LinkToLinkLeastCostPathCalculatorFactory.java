@@ -23,7 +23,7 @@ package org.matsim.core.router.util;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.api.internal.MatsimExtensionPoint;
 import org.matsim.core.api.internal.MatsimFactory;
-import org.matsim.lanes.data.Lanes;
+import org.matsim.lanes.Lanes;
 
 public interface LinkToLinkLeastCostPathCalculatorFactory extends MatsimFactory, MatsimExtensionPoint {
 	

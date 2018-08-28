@@ -23,6 +23,8 @@ package org.matsim.core.controler;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
+
 import org.apache.log4j.Layout;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -41,6 +43,11 @@ import org.matsim.core.controler.corelisteners.ControlerDefaultCoreListenersModu
 import org.matsim.core.controler.listener.ControlerListener;
 import org.matsim.core.events.handler.EventHandler;
 import org.matsim.core.gbl.Gbl;
+import org.matsim.core.mobsim.qsim.AbstractQSimModule;
+import org.matsim.core.mobsim.qsim.components.QSimComponents;
+import org.matsim.core.mobsim.qsim.components.QSimComponentsConfigurator;
+import org.matsim.core.mobsim.qsim.components.QSimComponentsModule;
+import org.matsim.core.mobsim.qsim.components.StandardQSimComponentsConfigurator;
 import org.matsim.core.replanning.ReplanningContext;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.router.TripRouter;
@@ -54,8 +61,10 @@ import org.matsim.core.scoring.ScoringFunctionFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * The Controler is responsible for complete simulation runs, including the
@@ -70,17 +79,27 @@ public final class Controler implements ControlerI, MatsimServices {
 	// not sufficient, people should use AbstractController.  kai, jan'13
 
 	public static final String DIRECTORY_ITERS = "ITERS";
+	public static final String FILENAME_CONFIG = "config.xml";
+	public static final String FILENAME_CONFIG_REDUCED = "config_reduced.xml";
+	public static final String FILENAME_NETWORK = "network.xml.gz";
+	public static final String FILENAME_LANES = "lanes.xml.gz";
+	public static final String FILENAME_CHANGE_EVENTS_XML = "change_events.xml.gz";
+	public static final String FILENAME_COUNTS = "counts.xml.gz" ;
+	public static final String FILENAME_POPULATION = "plans.xml.gz";
+	public static final String FILENAME_EXPERIENCED_PLANS = "experienced_plans.xml.gz";
+	public static final String FILENAME_PERSON_ATTRIBUTES = "personAttributes.xml.gz" ;
+	public static final String FILENAME_HOUSEHOLDS = "households.xml.gz";
+	public static final String FILENAME_FACILITIES = "facilities.xml.gz";
 	public static final String FILENAME_EVENTS_XML = "events.xml.gz";
+	public static final String FILENAME_TRANSIT_SCHEDULE = "transitSchedule.xml.gz";
+	public static final String FILENAME_TRANSIT_VEHICLES = "transitVehicles.xml.gz";
+	public static final String FILENAME_VEHICLES = "vehicles.xml.gz";
 	public static final String FILENAME_LINKSTATS = "linkstats.txt.gz";
 	public static final String FILENAME_TRAVELDISTANCESTATS = "traveldistancestats";
-	public static final String FILENAME_POPULATION = "output_plans.xml.gz";
-	public static final String FILENAME_NETWORK = "output_network.xml.gz";
-	public static final String FILENAME_HOUSEHOLDS = "output_households.xml.gz";
-	public static final String FILENAME_LANES = "output_lanes.xml.gz";
-	public static final String FILENAME_CONFIG = "output_config.xml";
-	public static final String FILENAME_PERSON_ATTRIBUTES = "output_personAttributes.xml.gz" ; 
-	public static final String FILENAME_COUNTS = "output_counts.xml.gz" ;
+	public static final String OUTPUT_PREFIX = "output_";
 
+	public static final String DIVIDER = "###################################################";
+	
 	private static final Logger log = Logger.getLogger(Controler.class);
 
 	public static final Layout DEFAULTLOG4JLAYOUT = new PatternLayout(
@@ -104,6 +123,8 @@ public final class Controler implements ControlerI, MatsimServices {
 
 	// The module which is currently defined by the sum of the setXX methods called on this Controler.
     private AbstractModule overrides = AbstractModule.emptyModule();
+    
+    private List<AbstractQSimModule> overridingQSimModules = new LinkedList<>();
 
 	public static void main(final String[] args) {
 		if ((args == null) || (args.length == 0)) {
@@ -170,6 +191,10 @@ public final class Controler implements ControlerI, MatsimServices {
 		this.overrides = scenario == null ?
 				new ScenarioByConfigModule() :
 				new ScenarioByInstanceModule(this.scenario);
+		
+		this.config.qsim().setLocked();
+		// yy this is awfully ad-hoc.  kai, jul'18
+		// yy should probably come even earlier, before the scenario is generated. kai, jul'18
 	}
 
 	/**
@@ -186,6 +211,15 @@ public final class Controler implements ControlerI, MatsimServices {
 		// And this happens silently, leading to lots of time and hair lost.
 		// td, nov 16
 		this.injectorCreated = true;
+		
+		this.overrides = AbstractModule.override(Collections.singletonList(this.overrides), new AbstractModule() {
+			@Override
+			public void install() {
+				bind(Key.get(new TypeLiteral<List<AbstractQSimModule>>() {
+				}, Names.named("overrides"))).toInstance(overridingQSimModules);
+			}
+		});
+		
 		this.injector = Injector.createInjector(config, AbstractModule.override(Collections.singleton(new AbstractModule() {
 			@Override
 			public void install() {
@@ -433,4 +467,32 @@ public final class Controler implements ControlerI, MatsimServices {
         this.modules = Arrays.asList(modules);
     }
 
+    public final void addOverridingQSimModule(AbstractQSimModule qsimModule) {
+        if (this.injectorCreated) {
+            throw new RuntimeException("Too late for configuring the Controler. This can only be done before calling run.");
+        }
+        
+    	overridingQSimModules.add(qsimModule);
+    }
+    
+    public final void addQSimModule(AbstractQSimModule qsimModule) {
+    	this.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				installQSimModule(qsimModule);
+			}
+		});
+    }
+    
+    public final void configureQSimComponents(QSimComponentsConfigurator configurator) {
+    	this.addOverridingModule(new AbstractModule() {
+			@Override
+			public void install() {
+				QSimComponents components = new QSimComponents();
+				new StandardQSimComponentsConfigurator(config).configure(components);
+				configurator.configure(components);
+				bind(QSimComponents.class).toInstance(components);
+			}
+		});
+    }
 }

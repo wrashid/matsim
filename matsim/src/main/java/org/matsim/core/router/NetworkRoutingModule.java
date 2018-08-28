@@ -58,26 +58,36 @@ public final class NetworkRoutingModule implements RoutingModule {
 			final PopulationFactory populationFactory,
 			final Network network,
 			final LeastCostPathCalculator routeAlgo) {
-		this.network = network;
-		this.routeAlgo = routeAlgo;
-		this.mode = mode;
-		this.populationFactory = populationFactory;
+		 Gbl.assertNotNull(network);
+//		 Gbl.assertIf( network.getLinks().size()>0 ) ; // otherwise network for mode probably not defined
+		 // makes many tests fail.  
+		 this.network = network;
+		 this.routeAlgo = routeAlgo;
+		 this.mode = mode;
+		 this.populationFactory = populationFactory;
 	}
 
 	@Override
 	public List<? extends PlanElement> calcRoute(final Facility<?> fromFacility, final Facility<?> toFacility, final double departureTime,
 			final Person person) {		
 		Leg newLeg = this.populationFactory.createLeg( this.mode );
-		
+
 		Gbl.assertNotNull(fromFacility);
 		Gbl.assertNotNull(toFacility);
 
 		Link fromLink = this.network.getLinks().get(fromFacility.getLinkId());
+		if ( fromLink==null ) {
+			Gbl.assertNotNull( fromFacility.getCoord() ) ;
+			fromLink = NetworkUtils.getNearestLink( network, fromFacility.getCoord()) ;
+		}
 		Link toLink = this.network.getLinks().get(toFacility.getLinkId());
-		
+		if ( toLink==null ) {
+			Gbl.assertNotNull( toFacility.getCoord() ) ;
+			toLink = NetworkUtils.getNearestLink(network, toFacility.getCoord());
+		}
 		Gbl.assertNotNull(fromLink);
 		Gbl.assertNotNull(toLink);
-
+		
 		if (toLink != fromLink) {
 			// (a "true" route)
 			Node startNode = fromLink.getToNode(); // start at the end of the "current" link

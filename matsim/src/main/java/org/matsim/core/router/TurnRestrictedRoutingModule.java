@@ -39,7 +39,7 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.router.util.TurnRestrictedLeastCostPathCalculator;
 import org.matsim.core.router.util.TurnRestrictedLeastCostPathCalculatorFactory;
 import org.matsim.facilities.Facility;
-import org.matsim.lanes.data.Lanes;
+import org.matsim.lanes.Lanes;
 
 public class TurnRestrictedRoutingModule implements RoutingModule {
 	

@@ -63,10 +63,10 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.router.util.TurnRestrictedLeastCostPathCalculatorFactory;
 import org.matsim.core.scenario.ScenarioByInstanceModule;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.lanes.data.Lane;
-import org.matsim.lanes.data.Lanes;
-import org.matsim.lanes.data.LanesFactory;
-import org.matsim.lanes.data.LanesToLinkAssignment;
+import org.matsim.lanes.Lane;
+import org.matsim.lanes.Lanes;
+import org.matsim.lanes.LanesFactory;
+import org.matsim.lanes.LanesToLinkAssignment;
 import org.matsim.testcases.MatsimTestUtils;
 
 public class RoutingIT {
@@ -928,8 +928,9 @@ public class RoutingIT {
 		TurnRestrictedRoutingModule routingModule = new TurnRestrictedRoutingModule("car", scenario.getPopulation().getFactory(), scenario.getNetwork(),
 				scenario.getLanes(), provider.getFactory(), travelDisutilityFactory, calculator);
 
-		final TripRouter tripRouter = new TripRouter();
-		tripRouter.setRoutingModule("car", routingModule);
+		TripRouter.Builder tripRouterBuilder = new TripRouter.Builder(scenario.getConfig());
+		tripRouterBuilder.setRoutingModule("car", routingModule);
+		final TripRouter tripRouter = tripRouterBuilder.build();
 		final PersonAlgorithm router = new PlanRouter(tripRouter);
 		
 		for (Person p : scenario.getPopulation().getPersons().values()) {
@@ -951,8 +952,9 @@ public class RoutingIT {
 		LinkToLinkRoutingModuleV2 routingModule = new LinkToLinkRoutingModuleV2("car", scenario.getPopulation().getFactory(), scenario.getNetwork(),
 				scenario.getLanes(), provider.getFactory(), travelDisutilityFactory, calculator);
 
-		final TripRouter tripRouter = new TripRouter();
-		tripRouter.setRoutingModule("car", routingModule);
+		TripRouter.Builder tripRouterBuilder = new TripRouter.Builder(scenario.getConfig());
+		tripRouterBuilder.setRoutingModule("car", routingModule);
+		final TripRouter tripRouter = tripRouterBuilder.build();
 		final PersonAlgorithm router = new PlanRouter(tripRouter);
 		
 		for (Person p : scenario.getPopulation().getPersons().values()) {

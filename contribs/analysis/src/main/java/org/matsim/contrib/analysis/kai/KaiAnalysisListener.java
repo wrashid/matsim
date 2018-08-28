@@ -20,10 +20,13 @@
 
 package org.matsim.contrib.analysis.kai;
 
+import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.events.IterationEndsEvent;
 import org.matsim.core.controler.events.StartupEvent;
 import org.matsim.core.controler.listener.IterationEndsListener;
 import org.matsim.core.controler.listener.StartupListener;
+
+import javax.inject.Inject;
 
 /**
  * 
@@ -35,7 +38,15 @@ public class KaiAnalysisListener implements StartupListener, IterationEndsListen
 	// NOTE: My excel opens tab-separated txt files directly (from the command line).  It does not do this with comma-separated or semicolon-separated.
 	// So tab-separated is the way to go. kai, sep'13
 	
-	KNAnalysisEventsHandler calcLegTimes = null ;
+	public static final class Module extends AbstractModule {
+		@Override public void install() {
+			this.addControlerListenerBinding().to( KaiAnalysisListener.class );
+		}
+	}
+	
+	private KNAnalysisEventsHandler calcLegTimes = null ;
+	
+	// the default constructor can be injected even without annotation!  kai, may'18
 	
 	@Override
 	public void notifyStartup(StartupEvent event) {

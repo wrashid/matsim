@@ -48,7 +48,6 @@ import org.matsim.core.router.util.LinkToLinkTravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.facilities.Facility;
 
-
 /**
  * Tests the routing under consideration of different link to link travel times (turning moves)
  * @author dgrether

@@ -39,7 +39,7 @@ import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.router.util.TurnRestrictedLeastCostPathCalculator;
 import org.matsim.core.router.util.TurnRestrictedLeastCostPathCalculatorFactory;
-import org.matsim.lanes.data.Lanes;
+import org.matsim.lanes.Lanes;
 
 @Singleton
 public class TurnRestrictedFastDijkstraFactory implements TurnRestrictedLeastCostPathCalculatorFactory {

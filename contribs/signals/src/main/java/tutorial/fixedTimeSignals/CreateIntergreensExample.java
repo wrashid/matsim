@@ -24,13 +24,13 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.contrib.signals.data.SignalsDataLoader;
+import org.matsim.contrib.signals.data.intergreens.v10.IntergreenTimesData;
+import org.matsim.contrib.signals.data.intergreens.v10.IntergreenTimesDataFactory;
 import org.matsim.contrib.signals.data.intergreens.v10.IntergreenTimesWriter10;
+import org.matsim.contrib.signals.data.intergreens.v10.IntergreensForSignalSystemData;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.contrib.signals.data.SignalsData;
-import org.matsim.contrib.signals.data.ambertimes.v10.IntergreenTimesData;
-import org.matsim.contrib.signals.data.ambertimes.v10.IntergreenTimesDataFactory;
-import org.matsim.contrib.signals.data.ambertimes.v10.IntergreensForSignalSystemData;
 import org.matsim.contrib.signals.model.SignalGroup;
 import org.matsim.contrib.signals.model.SignalSystem;
 import org.matsim.contrib.signals.SignalSystemsConfigGroup;
@@ -80,7 +80,7 @@ public class CreateIntergreensExample {
 		// read in the existing scenario and add the intergreens data
 		Config config = ConfigUtils.loadConfig(INPUT_DIR + "config.xml");
 		SignalSystemsConfigGroup signalSystemsConfigGroup = 
-				ConfigUtils.addOrGetModule(config, SignalSystemsConfigGroup.GROUPNAME, SignalSystemsConfigGroup.class);
+				ConfigUtils.addOrGetModule(config, SignalSystemsConfigGroup.GROUP_NAME, SignalSystemsConfigGroup.class);
 		signalSystemsConfigGroup.setUseIntergreenTimes(true);
 		SignalsDataLoader signalsDataLoader = new SignalsDataLoader(config);
 		SignalsData signalsData = signalsDataLoader.loadSignalsData();

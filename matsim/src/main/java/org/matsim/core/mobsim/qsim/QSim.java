@@ -36,12 +36,14 @@ import org.matsim.core.mobsim.framework.AgentSource;
 import org.matsim.core.mobsim.framework.MobsimAgent;
 import org.matsim.core.mobsim.framework.MobsimTimer;
 import org.matsim.core.mobsim.framework.listeners.MobsimListener;
+import org.matsim.core.mobsim.qsim.changeeventsengine.NetworkChangeEventsEngineI;
 import org.matsim.core.mobsim.qsim.interfaces.*;
 import org.matsim.core.mobsim.qsim.interfaces.AgentCounter;
 import org.matsim.core.mobsim.qsim.pt.TransitQSimEngine;
 import org.matsim.core.mobsim.qsim.qnetsimengine.NetsimEngine;
 import org.matsim.core.mobsim.qsim.qnetsimengine.QNetsimEngine;
 import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicle;
+import org.matsim.core.network.NetworkChangeEvent;
 import org.matsim.core.utils.misc.Time;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vis.snapshotwriters.AgentSnapshotInfo;
@@ -190,11 +192,11 @@ public final class QSim extends Thread implements VisMobsim, Netsim, ActivityEnd
 	 *
 	 */
 	@Inject
-	public QSim(final Scenario sc, EventsManager events, Injector childInjector ) {
+	private QSim(final Scenario sc, EventsManager events, Injector childInjector ) {
 		this( sc, events ) ;
 		this.childInjector = childInjector ;
 	}
-	public QSim(final Scenario sc, EventsManager events ) {
+	private QSim(final Scenario sc, EventsManager events ) {
 		this.scenario = sc;
 		if (sc.getConfig().qsim().getNumberOfThreads() > 1) {
 			this.events = EventsUtils.getParallelFeedableInstance(events);
@@ -409,7 +411,10 @@ public final class QSim extends Thread implements VisMobsim, Netsim, ActivityEnd
 		case ABORT:
 			this.events.processEvent( new PersonStuckEvent(this.simTimer.getTimeOfDay(), agent.getId(), agent.getCurrentLinkId(), agent.getMode()));
 
-			this.agents.remove(agent) ;
+			// NOTE: in the same way as one can register departure handler or activity handler, we could allow to
+			// register abort handlers.  If someone ever comes to this place here and needs this.  kai, nov'17
+			
+			this.agents.remove(agent.getId()) ;
 			this.agentCounter.decLiving();
 			this.agentCounter.incLost();
 			break ;
@@ -638,11 +643,25 @@ public final class QSim extends Thread implements VisMobsim, Netsim, ActivityEnd
 	public Collection<AgentTracker> getAgentTrackers() {
 		return Collections.unmodifiableCollection(agentTrackers) ;
 	}
-
-//	public void setChildInjector(Injector qSimLocalInjector) {
-//		this.childInjector  = qSimLocalInjector ;
-//	}
+	
 	public Injector getChildInjector() {
 		return this.childInjector  ;
 	}
+	
+	public final void addNetworkChangeEvent( NetworkChangeEvent event ) {
+		// used (and thus implicitly tested) by bdi-abm-integration project.  A separate core test would be good. kai, feb'18
+		
+		boolean processed = false ;
+		for ( MobsimEngine engine : this.mobsimEngines ) {
+			if ( engine instanceof NetworkChangeEventsEngineI ) {
+				((NetworkChangeEventsEngineI) engine).addNetworkChangeEvent( event );
+				processed = true ;
+			}
+		}
+		if ( !processed ) {
+			throw new RuntimeException("received a network change event, but did not process it.  Maybe " +
+											   "the network change events engine was not set up for the qsim?  Aborting ...") ;
+		}
+	}
+	
 }

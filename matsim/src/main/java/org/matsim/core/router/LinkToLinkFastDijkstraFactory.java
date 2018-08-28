@@ -39,7 +39,7 @@ import org.matsim.core.router.util.LinkToLinkTravelTime;
 import org.matsim.core.router.util.PreProcessDijkstra;
 import org.matsim.core.router.util.RoutingNetworkLink;
 import org.matsim.core.router.util.RoutingNetworkNode;
-import org.matsim.lanes.data.Lanes;
+import org.matsim.lanes.Lanes;
 
 @Singleton
 public class LinkToLinkFastDijkstraFactory implements LinkToLinkLeastCostPathCalculatorFactory {

@@ -39,7 +39,7 @@ import org.matsim.core.router.util.LinkToLinkLeastCostPathCalculatorFactory;
 import org.matsim.core.router.util.LinkToLinkTravelDisutility;
 import org.matsim.core.router.util.LinkToLinkTravelTime;
 import org.matsim.facilities.Facility;
-import org.matsim.lanes.data.Lanes;
+import org.matsim.lanes.Lanes;
 
 public class LinkToLinkRoutingModuleV2 implements RoutingModule {
 	

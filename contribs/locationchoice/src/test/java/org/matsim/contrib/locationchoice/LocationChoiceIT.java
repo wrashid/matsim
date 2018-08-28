@@ -20,6 +20,10 @@
 
 package org.matsim.contrib.locationchoice;
 
+import java.util.Random;
+
+import javax.inject.Provider;
+
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -28,13 +32,11 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.Activity;
-import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.contrib.locationchoice.DestinationChoiceConfigGroup.Algotype;
-import org.matsim.contrib.locationchoice.bestresponse.DestinationChoiceBestResponseContext;
+import org.matsim.contrib.locationchoice.bestresponse.DestinationChoiceContext;
 import org.matsim.contrib.locationchoice.bestresponse.preprocess.MaxDCScoreWrapper;
 import org.matsim.contrib.locationchoice.bestresponse.preprocess.ReadOrComputeMaxDCScore;
 import org.matsim.contrib.locationchoice.bestresponse.scoring.DCActivityWOFacilitiesScoringFunction;
@@ -52,7 +54,7 @@ import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.mobsim.framework.Mobsim;
 import org.matsim.core.mobsim.framework.MobsimFactory;
 import org.matsim.core.mobsim.qsim.QSim;
-import org.matsim.core.mobsim.qsim.QSimUtils;
+import org.matsim.core.mobsim.qsim.QSimBuilder;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.replanning.PlanStrategy;
@@ -74,9 +76,6 @@ import org.matsim.utils.objectattributes.ObjectAttributes;
 import org.matsim.vis.otfvis.OTFClientLive;
 import org.matsim.vis.otfvis.OTFVisConfigGroup;
 import org.matsim.vis.otfvis.OnTheFlyServer;
-
-import javax.inject.Provider;
-import java.util.Random;
 
 public class LocationChoiceIT extends MatsimTestCase {
 
@@ -100,7 +99,7 @@ public class LocationChoiceIT extends MatsimTestCase {
 		Person person = localCreatePopWOnePerson(scenario, ll1, ff1, 8.*60*60+5*60);
 
 		// joint context (based on scenario):
-		final DestinationChoiceBestResponseContext lcContext = new DestinationChoiceBestResponseContext(scenario) ;
+		final DestinationChoiceContext lcContext = new DestinationChoiceContext(scenario) ;
 		lcContext.init();
 
 		// CONTROL(L)ER:
@@ -126,7 +125,7 @@ public class LocationChoiceIT extends MatsimTestCase {
 
 		MaxDCScoreWrapper dcScore = new MaxDCScoreWrapper();
 		dcScore.setPersonsMaxDCScoreUnscaled(personsMaxDCScoreUnscaled);
-		controler.getScenario().addScenarioElement(DestinationChoiceBestResponseContext.ELEMENT_NAME , lcContext);
+		controler.getScenario().addScenarioElement(DestinationChoiceContext.ELEMENT_NAME , lcContext);
 		controler.getScenario().addScenarioElement(MaxDCScoreWrapper.ELEMENT_NAME , dcScore);
 
 		// add locachoice strategy factory:
@@ -177,7 +176,7 @@ public class LocationChoiceIT extends MatsimTestCase {
 		ActivityFacility ff1 = scenario.getActivityFacilities().getFacilities().get(Id.create(1, ActivityFacility.class)) ;
 		Person person = localCreatePopWOnePerson(scenario, ll1, ff1, 8.*60*60+5*60);
 
-		final DestinationChoiceBestResponseContext lcContext = new DestinationChoiceBestResponseContext(scenario) ;
+		final DestinationChoiceContext lcContext = new DestinationChoiceContext(scenario) ;
 		lcContext.init();
 
 		// CONTROL(L)ER:
@@ -196,7 +195,7 @@ public class LocationChoiceIT extends MatsimTestCase {
 
 		MaxDCScoreWrapper dcScore = new MaxDCScoreWrapper();
 		dcScore.setPersonsMaxDCScoreUnscaled(personsMaxDCScoreUnscaled);
-		controler.getScenario().addScenarioElement(DestinationChoiceBestResponseContext.ELEMENT_NAME, lcContext);
+		controler.getScenario().addScenarioElement(DestinationChoiceContext.ELEMENT_NAME, lcContext);
 		controler.getScenario().addScenarioElement(MaxDCScoreWrapper.ELEMENT_NAME , dcScore);
 
 		// set locachoice strategy:
@@ -414,7 +413,7 @@ public class LocationChoiceIT extends MatsimTestCase {
 	class FactoryForMobsimWithOTFVis implements MobsimFactory {
 		@Override
 		public Mobsim createMobsim(Scenario sc, EventsManager eventsManager) {
-			QSim qSim = (QSim) QSimUtils.createDefaultQSim(sc, eventsManager);
+			QSim qSim = new QSimBuilder(sc.getConfig()).useDefaults().build(sc, eventsManager);
 			OnTheFlyServer server = OTFVis.startServerAndRegisterWithQSim(sc.getConfig(), sc, eventsManager, qSim);
 			OTFClientLive.run(sc.getConfig(), server);
 			return qSim ;

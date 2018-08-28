@@ -34,7 +34,7 @@ import org.matsim.core.controler.PrepareForSimUtils;
 import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.mobsim.framework.Mobsim;
-import org.matsim.core.mobsim.qsim.QSimUtils;
+import org.matsim.core.mobsim.qsim.QSimBuilder;
 import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.population.io.PopulationReader;
 import org.matsim.core.scenario.MutableScenario;
@@ -89,11 +89,13 @@ public class EquilTest extends MatsimTestCase {
 
 		//		SimulationTimer.setTime(0); // I don't think this is needed. kai, may'10
 		PrepareForSimUtils.createDefaultPrepareForSim(scenario).run();
-		Mobsim sim = QSimUtils.createDefaultQSim(scenario, events);
-		sim.run();
+		new QSimBuilder(scenario.getConfig()) //
+			.useDefaults() //
+			.build(scenario, events) //
+			.run();
 
 		writer.closeFile();
 
-		assertEquals("different event files.", EventsFileComparator.compare(referenceFileName, eventsFileName), 0);
+		assertEquals("different event files.", EventsFileComparator.compareAndReturnInt(referenceFileName, eventsFileName), 0);
 	}
 }
