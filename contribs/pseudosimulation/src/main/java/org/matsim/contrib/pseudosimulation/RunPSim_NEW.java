@@ -121,7 +121,7 @@ public class RunPSim_NEW {
 		// Installing logic for selection of replanning agents.
 
 		if (useAcceleration) {
-			accelerationConfigGroup.configure(this.scenario.getNetwork(), pSimConfigGroup.getIterationsPerCycle());
+			accelerationConfigGroup.configure(this.scenario, pSimConfigGroup.getIterationsPerCycle());
 			this.matsimControler.addOverridingModule(new AbstractModule() {
 				@Override
 				public void install() {
@@ -161,33 +161,46 @@ public class RunPSim_NEW {
 		final Config config;
 		config = ConfigUtils.loadConfig(args[0]);
 
-		if (useAcceleration) {
-			AcceptIntendedReplanningStrategy.addOwnStrategySettings(config);
-		}
+//		if (useAcceleration) {
+//			AcceptIntendedReplanningStrategy.addOwnStrategySettings(config);
+//		}
 
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-		config.qsim().setEndTime(30 * 3600);
+		config.qsim().setEndTime(30 * 3600); // FIXME
 
+		Greedo greedo = new Greedo();
+		greedo.meet(config);
+		
 		/*
 		 * Run pSim/acceleration.
 		 */
+		
+		Scenario scenario = ScenarioUtils.loadScenario(config);
+		greedo.meet(scenario);
+		
+		Controler controler = new Controler(scenario);
+		greedo.meet(controler);
+		
+//		controler.addOverridingModule(greedo);
 
-		final PSimConfigGroup pSimConfigGroup = ConfigUtils.addOrGetModule(config, PSimConfigGroup.class);
-
-		final AccelerationConfigGroup accelerationConfigGroup = ConfigUtils.addOrGetModule(config,
-				AccelerationConfigGroup.class);
-
-		final RunPSim_NEW pSim = new RunPSim_NEW(config, pSimConfigGroup, accelerationConfigGroup);
-
-		// the following for best response
-		// final RemoveAllButSelectedPlan br = new RemoveAllButSelectedPlan();
-		// pSim.overridingModules.add(new AbstractModule() {
-		// @Override
-		// public void install() {
-		// this.addControlerListenerBinding().toInstance(br);
-		// }
-		// });
-
-		pSim.run();
+		controler.run();
+		
+//		final PSimConfigGroup pSimConfigGroup = ConfigUtils.addOrGetModule(config, PSimConfigGroup.class);
+//
+//		final AccelerationConfigGroup accelerationConfigGroup = ConfigUtils.addOrGetModule(config,
+//				AccelerationConfigGroup.class);
+//
+//		final RunPSim_NEW pSim = new RunPSim_NEW(config, pSimConfigGroup, accelerationConfigGroup);
+//
+//		// the following for best response
+//		// final RemoveAllButSelectedPlan br = new RemoveAllButSelectedPlan();
+//		// pSim.overridingModules.add(new AbstractModule() {
+//		// @Override
+//		// public void install() {
+//		// this.addControlerListenerBinding().toInstance(br);
+//		// }
+//		// });
+//
+//		pSim.run();
 	}
 }

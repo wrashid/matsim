@@ -283,12 +283,18 @@ public class SearchAccelerator
 		this.matsimMobsimUsageListener = new LinkUsageListener(this.replanningParameters().getTimeDiscretization());
 
 		this.expectedUtilityChangeSumAccelerated = new RecursiveMovingAverage(
-				this.replanningParameters().getAverageIterations());
+				// this.replanningParameters().getAverageIterations()
+				1);
 		this.expectedUtilityChangeSumUniform = new RecursiveMovingAverage(
-				this.replanningParameters().getAverageIterations());
-		this.realizedUtilityChangeSum = new RecursiveMovingAverage(this.replanningParameters().getAverageIterations());
+				// this.replanningParameters().getAverageIterations()
+				1);
+		this.realizedUtilityChangeSum = new RecursiveMovingAverage(
+				// this.replanningParameters().getAverageIterations()
+				1);
 
-		this.utilities = new Utilities(this.replanningParameters().getAverageIterations());
+		this.utilities = new Utilities(
+				// this.replanningParameters().getAverageIterations()
+				1);
 
 		this.statsWriter = new StatisticsWriter<>(
 				new File(this.services.getConfig().controler().getOutputDirectory(), "acceleration.log").toString(),
@@ -386,8 +392,7 @@ public class SearchAccelerator
 				this.utilities.update(person.getId(), realizedUtility, expectedUtility);
 			}
 
-			final Utilities.SummaryStatistics utilityStatsBeforeReplanning = this.utilities
-					.newSummaryStatistics(this.replanningParameters().getReplanningEfficiencyThreshold());
+			final Utilities.SummaryStatistics utilityStatsBeforeReplanning = this.utilities.newSummaryStatistics();
 
 			if (utilityStatsBeforeReplanning.previousDataValid) {
 
@@ -415,56 +420,91 @@ public class SearchAccelerator
 
 				// Identify to what delta percentile the current re-planning corresponds.
 
-				int percentileIndex = 0;
-				while ((this.individualReplanningResultsList.get(percentileIndex).deltaForUniformReplanning < 0.0)
-						&& (percentileIndex + 1 < this.individualReplanningResultsList.size())) {
-					percentileIndex++;
-				}
-				this.previouslyRealizedDeltaPercentile = Math.max(0, Math.min(100,
-						(percentileIndex * 100.0) / this.services.getScenario().getPopulation().getPersons().size()));
+				// int percentileIndex = 0;
+				// while
+				// ((this.individualReplanningResultsList.get(percentileIndex).deltaForUniformReplanning
+				// < 0.0)
+				// && (percentileIndex + 1 < this.individualReplanningResultsList.size())) {
+				// percentileIndex++;
+				// }
+				// this.previouslyRealizedDeltaPercentile = Math.max(0, Math.min(100,
+				// (percentileIndex * 100.0) /
+				// this.services.getScenario().getPopulation().getPersons().size()));
 
 				// Compute target percentile and corresponding delta for the next iteration.
 
-				final double upperBound = this.getLastExpectedUtilityChangeSumUniform()
-						+ Math.max(0, this.getLastRealizedUtilityChangeSum());
-				double currentVal = this.getLastExpectedUtilityChangeSumAccelerated();
+				// final double upperBound = this.getLastExpectedUtilityChangeSumUniform()
+				// + Math.max(0, this.getLastRealizedUtilityChangeSum());
+				// double currentVal = this.getLastExpectedUtilityChangeSumUniform();
 
-				if (currentVal > upperBound) { // TODO Use relative threshold?
+				final double upperBound = this.expectedUtilityChangeSumUniform.mostRecentValue()
+						+ Math.max(0, this.realizedUtilityChangeSum.mostRecentValue());
+				double currentVal = this.expectedUtilityChangeSumUniform.mostRecentValue();
 
-					while ((currentVal > upperBound)
-							&& (percentileIndex + 1 < this.individualReplanningResultsList.size())) {
-						percentileIndex++;
-						final IndividualReplanningResult individualResult = this.individualReplanningResultsList
-								.get(percentileIndex);
-						if (individualResult.isActualReplanner && !individualResult.wouldBeUniformReplanner) {
-							currentVal -= individualResult.expectedScoreChange;
-						} else if (!individualResult.isActualReplanner && individualResult.wouldBeUniformReplanner) {
+				// TODO hedge against negative expectations
+
+				int percentileIndex = this.individualReplanningResultsList.size() - 1;
+
+				while ((currentVal < upperBound) && (percentileIndex > 0)) {
+					percentileIndex--;
+					final IndividualReplanningResult individualResult = this.individualReplanningResultsList
+							.get(percentileIndex);
+					if (individualResult.wouldBeGreedyReplanner) {
+						if (!individualResult.wouldBeUniformReplanner) {
 							currentVal += individualResult.expectedScoreChange;
 						}
-					}
-
-				} else { // TODO Use relative threshold?
-
-					while ((currentVal < upperBound) && (percentileIndex - 1 >= 0)) {
-						percentileIndex--;
-						final IndividualReplanningResult individualResult = this.individualReplanningResultsList
-								.get(percentileIndex);
-						if (individualResult.isActualReplanner && !individualResult.wouldBeUniformReplanner) {
-							currentVal += individualResult.expectedScoreChange;
-						} else if (!individualResult.isActualReplanner && individualResult.wouldBeUniformReplanner) {
+					} else { // would not be greedy
+						if (individualResult.wouldBeUniformReplanner) {
 							currentVal -= individualResult.expectedScoreChange;
 						}
-					}
-					if (currentVal > upperBound) {
-						percentileIndex = Math.min(this.individualReplanningResultsList.size() - 1,
-								percentileIndex + 1);
 					}
 				}
+				if (currentVal > upperBound) {
+					percentileIndex = Math.min(this.individualReplanningResultsList.size() - 1, percentileIndex + 1);
+				}
+
+				// if (currentVal > upperBound) { // TODO Use relative threshold?
+				//
+				// while ((currentVal > upperBound)
+				// && (percentileIndex + 1 < this.individualReplanningResultsList.size())) {
+				// percentileIndex++;
+				// final IndividualReplanningResult individualResult =
+				// this.individualReplanningResultsList
+				// .get(percentileIndex);
+				// if (individualResult.isActualReplanner &&
+				// !individualResult.wouldBeUniformReplanner) {
+				// currentVal -= individualResult.expectedScoreChange;
+				// } else if (!individualResult.isActualReplanner &&
+				// individualResult.wouldBeUniformReplanner) {
+				// currentVal += individualResult.expectedScoreChange;
+				// }
+				// }
+				//
+				// } else { // TODO Use relative threshold?
+				//
+				// while ((currentVal < upperBound) && (percentileIndex - 1 >= 0)) {
+				// percentileIndex--;
+				// final IndividualReplanningResult individualResult =
+				// this.individualReplanningResultsList
+				// .get(percentileIndex);
+				// if (individualResult.isActualReplanner &&
+				// !individualResult.wouldBeUniformReplanner) {
+				// currentVal += individualResult.expectedScoreChange;
+				// } else if (!individualResult.isActualReplanner &&
+				// individualResult.wouldBeUniformReplanner) {
+				// currentVal -= individualResult.expectedScoreChange;
+				// }
+				// }
+				// if (currentVal > upperBound) {
+				// percentileIndex = Math.min(this.individualReplanningResultsList.size() - 1,
+				// percentileIndex + 1);
+				// }
+				// }
 
 				this.targetDeltaPercentile = Math.max(0, Math.min(100,
 						(percentileIndex * 100.0) / this.services.getScenario().getPopulation().getPersons().size()));
 				this.currentDelta = Math.max(0.0,
-						this.individualReplanningResultsList.get(percentileIndex).deltaForUniformReplanning);
+						this.individualReplanningResultsList.get(percentileIndex).criticalDelta);
 			}
 
 			/*

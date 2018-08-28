@@ -85,20 +85,21 @@ public class Utilities {
 		public double getCurrentExpectedUtility() {
 			return currentExpectedUtility;
 		}
-		
+
 		public Double getPreviousExpectedUtilityChange() {
 			return this.previousExpectedUtility - this.previousRealizedUtility;
 		}
 
-		public boolean isImprover(final double relativeThreshold) {
-			if (this.averageExpectedImprovement.size() < this.averageExpectedImprovement.memoryLength()) {
-				return true;
-			} else {
-				// TODO may need refinement
-				return (this.averageRealizedImprovement.average() >= relativeThreshold
-						* this.averageExpectedImprovement.average());
-			}
-		}
+		// public boolean isImprover(final double relativeThreshold) {
+		// if (this.averageExpectedImprovement.size() <
+		// this.averageExpectedImprovement.memoryLength()) {
+		// return true;
+		// } else {
+		// // TODO may need refinement
+		// return (this.averageRealizedImprovement.average() >= relativeThreshold
+		// * this.averageExpectedImprovement.average());
+		// }
+		// }
 	}
 
 	// -------------------- INNER SummaryStatistics CLASS --------------------
@@ -124,12 +125,14 @@ public class Utilities {
 
 		public final Double previousExpectedUtilityImprovementSum;
 
-		public final Double shareOfImprovers;
+		// public final Double shareOfImprovers;
 
 		private SummaryStatistics(final double currentRealizedUtilitySum, final double currentExpectedUtilitySum,
 				final Map<Id<Person>, Double> personId2currentDeltaUtility, final double currentDeltaUtilitySum,
 				final boolean previousDataValid, final Double previousRealizedUtilitySum,
-				final Double previousExpectedUtilitySum, final Double shareOfImprovers) {
+				final Double previousExpectedUtilitySum
+				// , final Double shareOfImprovers
+				) {
 
 			this.currentRealizedUtilitySum = currentRealizedUtilitySum;
 			this.currentExpectedUtilitySum = currentExpectedUtilitySum;
@@ -143,13 +146,13 @@ public class Utilities {
 				this.realizedUtilityImprovementSum = this.currentRealizedUtilitySum - this.previousRealizedUtilitySum;
 				this.previousExpectedUtilityImprovementSum = this.previousExpectedUtilitySum
 						- this.previousRealizedUtilitySum;
-				this.shareOfImprovers = shareOfImprovers;
+				// this.shareOfImprovers = shareOfImprovers;
 			} else {
 				this.previousRealizedUtilitySum = null;
 				this.previousExpectedUtilitySum = null;
 				this.realizedUtilityImprovementSum = null;
 				this.previousExpectedUtilityImprovementSum = null;
-				this.shareOfImprovers = null;
+				// this.shareOfImprovers = null;
 			}
 		}
 	}
@@ -168,8 +171,7 @@ public class Utilities {
 
 	// -------------------- CONTENT ACCESS --------------------
 
-	public void update(final Id<Person> personId, final Double newRealizedUtility,
-			final double newExpectedUtility) {
+	public void update(final Id<Person> personId, final Double newRealizedUtility, final double newExpectedUtility) {
 		Entry entry = this.personId2entry.get(personId);
 		if (entry == null) {
 			this.personId2entry.put(personId, new Entry(newRealizedUtility, newExpectedUtility, this.memoryLength));
@@ -182,7 +184,7 @@ public class Utilities {
 		return this.personId2entry.get(personId);
 	}
 
-	public SummaryStatistics newSummaryStatistics(final double relativeImprovementThreshold) {
+	public SummaryStatistics newSummaryStatistics() {
 
 		if (this.personId2entry.size() == 0) {
 
@@ -198,7 +200,7 @@ public class Utilities {
 			boolean previousDataValid = true;
 			double previousRealizedUtilitySum = 0.0;
 			double previousExpectedUtilitySum = 0.0;
-			double improverCnt = 0.0;
+//			double improverCnt = 0.0;
 
 			for (Map.Entry<Id<Person>, Entry> mapEntry : this.personId2entry.entrySet()) {
 				final Id<Person> personId = mapEntry.getKey();
@@ -215,9 +217,9 @@ public class Utilities {
 				if (previousDataValid) {
 					previousRealizedUtilitySum += entry.getPreviousRealizedUtility();
 					previousExpectedUtilitySum += entry.getPreviousExpectedUtility();
-					if (entry.isImprover(relativeImprovementThreshold)) {
-						improverCnt++;
-					}
+//					if (entry.isImprover(relativeImprovementThreshold)) {
+//						improverCnt++;
+//					}
 				}
 			}
 
@@ -231,7 +233,9 @@ public class Utilities {
 			return new SummaryStatistics(currentRealizedUtilitySum, currentExpectedUtilitySum,
 					personId2currentDeltaUtility, currentDeltaUtilitySum, previousDataValid,
 					previousDataValid ? previousRealizedUtilitySum : null,
-					previousDataValid ? previousExpectedUtilitySum : null, previousDataValid ? improverCnt : null);
+					previousDataValid ? previousExpectedUtilitySum : null
+//							, previousDataValid ? improverCnt : null
+									);
 		}
 	}
 }

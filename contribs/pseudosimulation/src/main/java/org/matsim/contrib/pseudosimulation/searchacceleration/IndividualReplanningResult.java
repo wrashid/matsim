@@ -26,17 +26,19 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
  */
 class IndividualReplanningResult implements Comparable<IndividualReplanningResult> {
 
-	final double deltaForUniformReplanning;
+	final double criticalDelta;
 	final double expectedScoreChange;
 	final boolean isActualReplanner;
 	final boolean wouldBeUniformReplanner;
+	final boolean wouldBeGreedyReplanner;
 
 	IndividualReplanningResult(final double deltaForUniformReplanning, final double expectedScoreChange,
-			final boolean isActualReplanner, final boolean wouldBeUniformReplanner) {
-		this.deltaForUniformReplanning = deltaForUniformReplanning;
+			final boolean isActualReplanner, final boolean wouldBeUniformReplanner, final boolean wouldBeGreedyReplanner) {
+		this.criticalDelta = deltaForUniformReplanning;
 		this.expectedScoreChange = expectedScoreChange;
 		this.isActualReplanner = isActualReplanner;
 		this.wouldBeUniformReplanner = wouldBeUniformReplanner;
+		this.wouldBeGreedyReplanner = wouldBeGreedyReplanner;
 	}
 	
 	int getIsActualReplannerIndicator() {
@@ -49,7 +51,7 @@ class IndividualReplanningResult implements Comparable<IndividualReplanningResul
 
 	@Override
 	public int compareTo(final IndividualReplanningResult other) {
-		return Double.compare(this.deltaForUniformReplanning, other.deltaForUniformReplanning);
+		return Double.compare(this.criticalDelta, other.criticalDelta);
 	}
 
 }

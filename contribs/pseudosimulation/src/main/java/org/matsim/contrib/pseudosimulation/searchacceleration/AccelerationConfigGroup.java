@@ -19,13 +19,20 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.math3.distribution.BinomialDistribution;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.Well19937c;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.config.ReflectiveConfigGroup;
+import org.matsim.core.gbl.MatsimRandom;
 
 import floetteroed.utilities.TimeDiscretization;
 import floetteroed.utilities.Units;
@@ -50,8 +57,9 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	}
 
 	// TODO No way to access the network directly?
-	public void configure(final Network network, final int pSimIterations) {
-		this.network = network;
+	public void configure(final Scenario scenario, final int pSimIterations) {
+		this.network = scenario.getNetwork();
+		this.populationSize = scenario.getPopulation().getPersons().size();
 		this.pSimIterations = pSimIterations;
 	}
 
@@ -61,7 +69,7 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		off, accelerate, mah2007, mah2009
 	};
 
-	private ModeType modeTypeField = null;
+	private ModeType modeTypeField = ModeType.accelerate;
 
 	@StringGetter("mode")
 	public ModeType getModeTypeField() {
@@ -89,7 +97,7 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 
 	// -------------------- binSize_s --------------------
 
-	private int binSize_s = 0;
+	private int binSize_s = 3600;
 
 	@StringGetter("binSize_s")
 	public int getBinSize_s() {
@@ -103,7 +111,7 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 
 	// -------------------- binCnt_s --------------------
 
-	private int binCnt = 0;
+	private int binCnt = 24;
 
 	@StringGetter("binCnt")
 	public int getBinCnt() {
@@ -117,7 +125,7 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 
 	// -------------------- meanReplanningRate --------------------
 
-	private double initialMeanReplanningRate = Double.NaN;
+	private double initialMeanReplanningRate = 0.2;
 
 	@StringGetter("initialMeanReplanningRate")
 	public double getInitialMeanReplanningRate() {
@@ -146,7 +154,7 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 
 	// -------------------- replanningRateIterationExponent --------------------
 
-	private double replanningRateIterationExponent = Double.NaN;
+	private double replanningRateIterationExponent = 0.0;
 
 	@StringGetter("replanningRateIterationExponent")
 	public double getReplanningRateIterationExponent() {
@@ -198,7 +206,7 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		uniform, oneOverCapacity
 	};
 
-	private LinkWeighting weightingField = null;
+	private LinkWeighting weightingField = LinkWeighting.oneOverCapacity;
 
 	@StringGetter("linkWeighting")
 	public LinkWeighting getWeighting() {
@@ -240,49 +248,63 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	// }
 
 	// -------------------- replanningEfficiencyThreshold --------------------
-
-	private double replanningEfficiencyThreshold;
-
-	@StringGetter("replanningEfficiencyThreshold")
-	public double getReplanningEfficiencyThreshold() {
-		return this.replanningEfficiencyThreshold;
-	}
-
-	@StringSetter("replanningEfficiencyThreshold")
-	public void setReplanningEfficiencyThreshold(final double replanningEfficiencyThreshold) {
-		this.replanningEfficiencyThreshold = replanningEfficiencyThreshold;
-	}
+	//
+	// private double replanningEfficiencyThreshold;
+	//
+	// @StringGetter("replanningEfficiencyThreshold")
+	// public double getReplanningEfficiencyThreshold() {
+	// return this.replanningEfficiencyThreshold;
+	// }
+	//
+	// @StringSetter("replanningEfficiencyThreshold")
+	// public void setReplanningEfficiencyThreshold(final double
+	// replanningEfficiencyThreshold) {
+	// this.replanningEfficiencyThreshold = replanningEfficiencyThreshold;
+	// }
 
 	// -------------------- replanningEfficiencyThreshold --------------------
-
-	private int averageIterations;
-
-	@StringGetter("averageIterations")
-	public int getAverageIterations() {
-		return this.averageIterations;
-	}
-
-	@StringSetter("averageIterations")
-	public void setAverageIterations(final int averageIterations) {
-		this.averageIterations = averageIterations;
-	}
+	//
+	// private int averageIterations;
+	//
+	// @StringGetter("averageIterations")
+	// public int getAverageIterations() {
+	// return this.averageIterations;
+	// }
+	//
+	// @StringSetter("averageIterations")
+	// public void setAverageIterations(final int averageIterations) {
+	// this.averageIterations = averageIterations;
+	// }
 
 	// -------------------- deltaRecipe --------------------
+	//
+	// public static enum DeltaRecipeType {
+	// linearInPercentile, linearInDelta
+	// };
+	//
+	// private DeltaRecipeType deltaRecipeField = null;
+	//
+	// @StringGetter("deltaRecipe")
+	// public DeltaRecipeType getDeltaRecipeField() {
+	// return this.deltaRecipeField;
+	// }
+	//
+	// @StringSetter("deltaRecipe")
+	// public void setDeltaRecipeFiled(final DeltaRecipeType deltaRecipeField) {
+	// this.deltaRecipeField = deltaRecipeField;
 
-	public static enum DeltaRecipeType {
-		linearInPercentile, linearInDelta
-	};
+	// -------------------- binomialNumberOfReplanners --------------------
 
-	private DeltaRecipeType deltaRecipeField = null;
+	private boolean binomialNumberOfReplanners = false;
 
-	@StringGetter("deltaRecipe")
-	public DeltaRecipeType getDeltaRecipeField() {
-		return this.deltaRecipeField;
+	@StringGetter("binomialNumberOfReplanners")
+	public boolean getBinomialNumberOfReplanners() {
+		return this.binomialNumberOfReplanners;
 	}
 
-	@StringSetter("deltaRecipe")
-	public void setDeltaRecipeFiled(final DeltaRecipeType deltaRecipeField) {
-		this.deltaRecipeField = deltaRecipeField;
+	@StringSetter("binomialNumberOfReplanners")
+	public void setBinomialNumberOfReplanners(final boolean binomialNumberOfReplanners) {
+		this.binomialNumberOfReplanners = binomialNumberOfReplanners;
 	}
 
 	// ==================== SUPPLEMENTARY FUNCTIONALITY ====================
@@ -315,9 +337,14 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 
 	private Network network = null; // needs to be explicitly set
 
+	private Integer populationSize = null; // needs to be explicitly set
+
 	private TimeDiscretization myTimeDiscretization = null; // lazy initialization
 
 	private Map<Id<Link>, Double> linkWeights = null; // lazy initialization
+
+	// keeping track of this to avoid a re-randomization
+	private List<Double> meanReplanningRates = new ArrayList<>();
 
 	// -------------------- IMPLEMENTATION --------------------
 
@@ -330,16 +357,28 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	}
 
 	public double getMeanReplanningRate(int iteration) {
-		return this.getInitialMeanReplanningRate()
-				* Math.pow(1.0 + iteration / this.pSimIterations, this.getReplanningRateIterationExponent());
+		final int outerIteration = iteration / this.pSimIterations;
+		while (outerIteration >= this.meanReplanningRates.size()) {
+			double rate = this.getInitialMeanReplanningRate()
+					* Math.pow(1.0 + iteration / this.pSimIterations, this.getReplanningRateIterationExponent());
+			if (this.getBinomialNumberOfReplanners()) {
+				final RandomGenerator rng = new Well19937c(MatsimRandom.getRandom().nextLong());
+				final BinomialDistribution distr = new BinomialDistribution(rng, this.populationSize, rate);
+				rate = ((double) distr.sample()) / this.populationSize;
+			}
+			this.meanReplanningRates.add(rate);
+		}
+		return this.meanReplanningRates.get(outerIteration);
 	}
 
-	public double getAdaptiveRegularizationWeight(final double currentReplanningEfficiency,
-			final double criticalDelta) {
-		final double boundedFactor = Math.max(0,
-				Math.min(10.0, this.getReplanningEfficiencyThreshold() / currentReplanningEfficiency));
-		return boundedFactor * criticalDelta;
-	}
+	// public double getAdaptiveRegularizationWeight(final double
+	// currentReplanningEfficiency,
+	// final double criticalDelta) {
+	// final double boundedFactor = Math.max(0,
+	// Math.min(10.0, this.getReplanningEfficiencyThreshold() /
+	// currentReplanningEfficiency));
+	// return boundedFactor * criticalDelta;
+	// }
 
 	// public double getRegularizationWeight(int iteration, Double deltaN2) {
 	// double result = Math.pow(1.0 + iteration / this.pSimIterations,

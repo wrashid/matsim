@@ -50,7 +50,7 @@ public class AcceptIntendedReplanningStrategy implements PlanStrategy {
 
 	public static void addOwnStrategySettings(final Config config) {
 		final StrategySettings stratSets = new StrategySettings();
-		stratSets.setStrategyName(STRATEGY_NAME);
+		stratSets.setStrategyName(AcceptIntendedReplanningStrategy.STRATEGY_NAME);
 		stratSets.setWeight(0.0); // changed dynamically
 		config.strategy().addStrategySettings(stratSets);
 	}

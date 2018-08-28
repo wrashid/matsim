@@ -298,9 +298,9 @@ public class ReplannerIdentifier {
 			// this.expectedScoreChangeList.add(this.personId2utilityChange.get(driverId));
 			// this.deltaForUniformReplanningList.add(uniformScoreUpdater.getDeltaForUniformReplanning());
 
-			this.individualReplanningResults.add(new IndividualReplanningResult(
-					uniformScoreUpdater.getDeltaForUniformReplanning(), this.personId2utilityChange.get(driverId),
-					replanner, scoreUpdater.wouldBeUniformReplanner));
+			this.individualReplanningResults.add(new IndividualReplanningResult(uniformScoreUpdater.getCriticalDelta(),
+					this.personId2utilityChange.get(driverId), replanner, scoreUpdater.wouldBeUniformReplanner,
+					scoreUpdater.wouldBeGreedyReplanner));
 		}
 
 		this.shareOfScoreImprovingReplanners = ((double) scoreImprovingReplanners) / allPersonIdsShuffled.size();

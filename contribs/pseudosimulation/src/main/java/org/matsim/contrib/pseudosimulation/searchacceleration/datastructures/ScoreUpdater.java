@@ -155,7 +155,7 @@ public class ScoreUpdater<L> {
 		final double deltaRegularization = regularizationIfOne - regularizationIfZero;
 
 		final double deltaRegularizationWellBehaved = Math.signum(deltaRegularization)
-				* Math.max(1e-8, Math.abs(deltaRegularization));
+				* Math.max(1.0, Math.abs(deltaRegularization));
 		this.deltaForUniformReplanning = -(deltaInteraction + beta * deltaInertia) / deltaRegularizationWellBehaved;
 
 		this.wouldBeUniformReplanner = (this.regularizationResidual <= -0.5);
@@ -233,7 +233,7 @@ public class ScoreUpdater<L> {
 		return this.greedyScoreChangeIfZero;
 	}
 
-	public Double getDeltaForUniformReplanning() {
+	public Double getCriticalDelta() {
 		return this.deltaForUniformReplanning;
 	}
 
