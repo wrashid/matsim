@@ -66,9 +66,9 @@ public class Greedo extends AbstractModule {
 
 	// -------------------- MEMBERS --------------------
 
-	private final Set<String> bestResponseStrategyNames = new LinkedHashSet<>();
+	private final Set<String> bestResponseInnovationStrategyNames = new LinkedHashSet<>();
 
-	private final Set<String> randomStrategies = new LinkedHashSet<>();
+	private final Set<String> randomInnovationStrategyNames = new LinkedHashSet<>();
 
 	private Config config = null;
 
@@ -76,19 +76,24 @@ public class Greedo extends AbstractModule {
 
 	private Controler controler = null;
 
-	// -------------------- CONSTRUCTION AND SETUP --------------------
+	// -------------------- CONSTRUCTION --------------------
 
 	public Greedo() {
 		this.addBestResponseStrategyName("ReRoute");
 		this.addRandomStrategyName("TimeAllocationMutator");
+		this.addRandomStrategyName("ChangeLegMode");
+		this.addRandomStrategyName("ChangeSingleLegMode");
+		this.addRandomStrategyName("SubtoutModeChoice");
 	}
 
+	// -------------------- IMPLEMENTATION --------------------
+
 	public void addBestResponseStrategyName(final String strategyName) {
-		this.bestResponseStrategyNames.add(strategyName);
+		this.bestResponseInnovationStrategyNames.add(strategyName);
 	}
 
 	public void addRandomStrategyName(final String strategyName) {
-		this.randomStrategies.add(strategyName);
+		this.randomInnovationStrategyNames.add(strategyName);
 	}
 
 	public void meet(final Config config) {
@@ -99,7 +104,7 @@ public class Greedo extends AbstractModule {
 		this.config = config;
 
 		/*
-		 * This should not be strictly necessary but is currently assumed when computing
+		 * The following should not be necessary but is currently assumed when handling
 		 * iteration-dependent replanning rates.
 		 */
 		config.controler()
@@ -122,13 +127,12 @@ public class Greedo extends AbstractModule {
 		if (!pSimConfigExists) {
 			pSimConf.setIterationsPerCycle(this.defaultIterationsPerCycle);
 			pSimConf.setFullTransitPerformanceTransmission(this.defaultFullTransitPerformanceTransmission);
-			// If one has not set the pSim, one has (probably) not accounted for its
-			// iteration overhead.
+			// The following accounts for the pSim iteration overhead.
 			config.controler().setLastIteration(config.controler().getLastIteration() * this.defaultIterationsPerCycle);
 			config.controler().setWriteEventsInterval(
 					config.controler().getWriteEventsInterval() * this.defaultIterationsPerCycle);
-			config.controler().setWritePlansInterval(
-					config.controler().getWriteEventsInterval() * this.defaultIterationsPerCycle);
+			config.controler()
+					.setWritePlansInterval(config.controler().getWritePlansInterval() * this.defaultIterationsPerCycle);
 			config.controler().setWriteSnapshotsInterval(
 					config.controler().getWriteSnapshotsInterval() * this.defaultIterationsPerCycle);
 		}
@@ -140,63 +144,74 @@ public class Greedo extends AbstractModule {
 		ConfigUtils.addOrGetModule(config, AccelerationConfigGroup.class);
 
 		/*
-		 * Keep minimal choice set, always remove the worse plan -> as close to
-		 * best-response as one gets even with random plan strategies.
+		 * Use minimal choice set and always remove the worse plan. This probably as
+		 * close as it can get to best-response in the presence of random innovation
+		 * strategies.
 		 */
 		config.strategy().setMaxAgentPlanMemorySize(1);
 		config.strategy().setPlanSelectorForRemoval("WorstPlanSelector");
 
 		/*
-		 * Keep (and re-weight) only plan innovation strategies.
+		 * Keep only plan innovation strategies. Re-weight for maximum pSim efficiency.
+		 * 
+		 * TODO: Weights could be more efficiently chosen by (i) estimating how random a
+		 * strategy is and (ii) how many different plan instances can be reached through
+		 * random variations. For instance, time mutation can reach a continuum of new
+		 * plans, whereas mode choice may only switch between two different
+		 * alternatives.
 		 * 
 		 */
 		double bestResponseStrategyWeightSum = 0.0;
 		double randomStrategyWeightSum = 0.0;
 		for (StrategySettings strategySettings : config.strategy().getStrategySettings()) {
-			if (this.bestResponseStrategyNames.contains(strategySettings.getStrategyName())) {
+			if (this.bestResponseInnovationStrategyNames.contains(strategySettings.getStrategyName())) {
 				strategySettings.setWeight(1.0 / pSimConf.getIterationsPerCycle());
 				bestResponseStrategyWeightSum += strategySettings.getWeight();
-			} else if (this.randomStrategies.contains(strategySettings.getStrategyName())) {
+			} else if (this.randomInnovationStrategyNames.contains(strategySettings.getStrategyName())) {
 				randomStrategyWeightSum += strategySettings.getWeight();
 			} else {
-				strategySettings.setWeight(0.0);
+				strategySettings.setWeight(0.0); // i.e., dismiss
 			}
 		}
 		final double randomStrategyFactor = (1.0 - bestResponseStrategyWeightSum) / randomStrategyWeightSum;
 		for (StrategySettings strategySettings : config.strategy().getStrategySettings()) {
-			if (this.randomStrategies.contains(strategySettings.getStrategyName())) {
+			if (this.randomInnovationStrategyNames.contains(strategySettings.getStrategyName())) {
 				strategySettings.setWeight(randomStrategyFactor * strategySettings.getWeight());
 			}
 		}
 
 		/*
-		 * Add a strategy that reacts to the near-optimal re-planning decisions made by
-		 * the search acceleration logic.
+		 * Add a strategy that decides which of the better-response re-planning
+		 * decisions coming out of the pSim is allowed to be implemented.
 		 */
-		final StrategySettings stratSets = new StrategySettings();
-		stratSets.setStrategyName(AcceptIntendedReplanningStrategy.STRATEGY_NAME);
-		stratSets.setWeight(0.0); // changed dynamically
-		config.strategy().addStrategySettings(stratSets);
+		final StrategySettings acceptIntendedReplanningStrategySettings = new StrategySettings();
+		acceptIntendedReplanningStrategySettings.setStrategyName(AcceptIntendedReplanningStrategy.STRATEGY_NAME);
+		acceptIntendedReplanningStrategySettings.setWeight(0.0); // changed dynamically
+		config.strategy().addStrategySettings(acceptIntendedReplanningStrategySettings);
 	}
 
 	public void meet(final Scenario scenario) {
+
 		if (this.config == null) {
 			throw new RuntimeException("First meet the config.");
 		} else if (this.scenario != null) {
 			throw new RuntimeException("Have already met the scenario.");
 		}
 		this.scenario = scenario;
+		
 		ConfigUtils.addOrGetModule(this.config, AccelerationConfigGroup.class).configure(this.scenario,
 				ConfigUtils.addOrGetModule(this.config, PSimConfigGroup.class).getIterationsPerCycle());
 	}
 
 	public void meet(final Controler controler) {
+
 		if (this.scenario == null) {
 			throw new RuntimeException("First meet the scenario.");
 		} else if (this.controler != null) {
 			throw new RuntimeException("Have already met the controler.");
 		}
 		this.controler = controler;
+		
 		controler.addOverridingModule(this);
 	}
 
@@ -204,6 +219,7 @@ public class Greedo extends AbstractModule {
 
 	@Override
 	public void install() {
+		
 		if (this.controler == null) {
 			throw new RuntimeException("First meet the controler.");
 		}
@@ -211,7 +227,8 @@ public class Greedo extends AbstractModule {
 		final PSimConfigGroup pSimConf = ConfigUtils.addOrGetModule(this.config, PSimConfigGroup.class);
 		final PSimProvider pSimProvider = new PSimProvider(this.scenario, this.controler.getEvents());
 		final MobSimSwitcher mobSimSwitcher = new MobSimSwitcher(pSimConf, this.scenario);
-		// >>> TODO I don't know what this is good for. Gunnar aug'18>>>
+		
+		// TODO I don't know what this is good for. Gunnar aug'18
 		// final TransitPerformanceRecorder transitPerformanceRecorder;
 		// if (this.controler.getConfig().transit().isUseTransit()) {
 		// if (pSimConf.isFullTransitPerformanceTransmission()) {
@@ -222,7 +239,7 @@ public class Greedo extends AbstractModule {
 		// transitPerformanceRecorder = null;
 		// }
 		// }
-		// <<< TODO <<<
+
 		this.addControlerListenerBinding().toInstance(mobSimSwitcher);
 		this.bind(MobSimSwitcher.class).toInstance(mobSimSwitcher);
 		this.bindMobsim().toProvider(SwitchingMobsimProvider.class);
@@ -255,7 +272,7 @@ public class Greedo extends AbstractModule {
 
 		/*
 		 * Create the Greedo. Indicate all relevant plan innovation strategies. TODO
-		 * Standard strategies should eventually be pre-configured.
+		 * Are all standard strategies pre-configured?
 		 */
 
 		Greedo greedo = new Greedo();
@@ -270,7 +287,7 @@ public class Greedo extends AbstractModule {
 
 		Config config = ConfigUtils.loadConfig(args[0]);
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-		config.qsim().setEndTime(30 * 3600); // FIXME QSim seems to interpret zero opening time wrong.
+		config.qsim().setEndTime(30 * 3600); // FIXME QSim seems to interpret zero end time wrong.
 		greedo.meet(config);
 
 		Scenario scenario = ScenarioUtils.loadScenario(config);
