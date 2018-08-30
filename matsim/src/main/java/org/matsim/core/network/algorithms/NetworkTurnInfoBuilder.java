@@ -56,12 +56,11 @@ public Map<Id<Link>, List<TurnInfo>> createAllowedTurnInfos(){
     
         createAndAddTurnInfo(TransportMode.car, allowedInLinkTurnInfoMap);
     
-        if ( scenario.getConfig().network().getLaneDefinitionsFile()!=null || //
-                scenario.getConfig().qsim().isUseLanes()) {
-            Lanes ld = scenario.getLanes();
-            Map<Id<Link>, List<TurnInfo>> lanesTurnInfoMap = createTurnInfos(ld);
-            mergeTurnInfoMaps(allowedInLinkTurnInfoMap, lanesTurnInfoMap);
-        }
+		if (scenario.getConfig().qsim().isUseLanes()) {
+			Lanes ld = scenario.getLanes();
+			Map<Id<Link>, List<TurnInfo>> lanesTurnInfoMap = createTurnInfos(ld);
+			mergeTurnInfoMaps(allowedInLinkTurnInfoMap, lanesTurnInfoMap);
+		}
         return allowedInLinkTurnInfoMap;
     }
 
