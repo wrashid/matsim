@@ -6,7 +6,8 @@
 
 <!ELEMENT person         (attributes?,plan*)>
 <!ATTLIST person
-          id             CDATA                    #REQUIRED>
+          id             CDATA    #REQUIRED
+          subpopulation  CDATA    #REQUIRED>
 
 <!ELEMENT attributes    (attribute*)>
 
