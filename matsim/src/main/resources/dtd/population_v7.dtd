@@ -36,9 +36,10 @@
 
 <!ELEMENT leg            (attributes?,route?)>
 <!ATTLIST leg
-          mode           CDATA                                                 #REQUIRED
-          dep_time       CDATA                                                 #IMPLIED
-          trav_time      CDATA                                                 #IMPLIED>
+          mode             CDATA         #IMPLIED
+          routingHandler   CDATA         #REQUIRED
+          dep_time         CDATA         #IMPLIED
+          trav_time        CDATA         #IMPLIED>
 
 <!ELEMENT route          (#PCDATA)>
 <!ATTLIST route
