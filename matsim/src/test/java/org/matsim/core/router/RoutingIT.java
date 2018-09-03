@@ -47,6 +47,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Injector;
+import org.matsim.core.network.algorithms.NetworkTurnInfoBuilder;
 import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.algorithms.PersonAlgorithm;
@@ -299,67 +300,83 @@ public class RoutingIT {
 	
 	@Test
 	public void testDijkstra() {
-		doTest(getDijkstraProvider());
+		doTestUsualRouter(getDijkstraProvider());
 	}
 	@Test
 	public void testFastDijkstra() {
-		doTest(getFastDijkstraProvider());
+		doTestUsualRouter(getFastDijkstraProvider());
 	}
 	@Test
 	public void testTurnRestrictedFastDijkstra() {
-		doTest(getTurnRestrictedFastDijkstraProvider());
+		doTestRestrictedRouter(getTurnRestrictedFastDijkstraProvider());
 	}
 	@Test
 	public void testLinkToLinkFastDijkstra() {
-		doTest(getLinkToLinkFastDijkstraProvider());
+		doTestLinkToLinkRouter(getLinkToLinkFastDijkstraProvider());
+	}
+	@Test
+	public void testInvertedNetowrkFastDijkstra() {
+		doTestInvertedNetworkUsualRouter(getFastDijkstraProvider());
 	}
 	@Test
 	public void testDijkstraPruneDeadEnds() {
-		doTest(getDijkstraPruneDeadEndsProvider());
+		doTestUsualRouter(getDijkstraPruneDeadEndsProvider());
 	}
 	@Test
 	public void testFastDijkstraPruneDeadEnds() {
-		doTest(getFastDijkstraPruneDeadEndsProvider());
+		doTestUsualRouter(getFastDijkstraPruneDeadEndsProvider());
 	}
 	@Test
 	public void testTurnRestrictedFastDijkstraPruneDeadEnds() {
-		doTest(getTurnRestrictedFastDijkstraPruneDeadEndsProvider());
+		doTestRestrictedRouter(getTurnRestrictedFastDijkstraPruneDeadEndsProvider());
 	}
 	@Test
 	public void testLinkToLinkFastDijkstraPruneDeadEnds() {
-		doTest(getLinkToLinkFastDijkstraPruneDeadEndsProvider());
+		doTestLinkToLinkRouter(getLinkToLinkFastDijkstraPruneDeadEndsProvider());
+	}
+	@Test
+	public void testInvertedNetowrkFastDijkstraPruneDeadEnds() {
+		doTestInvertedNetworkUsualRouter(getFastDijkstraPruneDeadEndsProvider());
 	}
 	@Test	
 	public void testAStarEuclidean() {
-		doTest(getAStarEuclideanProvider());
+		doTestUsualRouter(getAStarEuclideanProvider());
 	}
 	@Test
 	public void testFastAStarEuclidean() {
-		doTest(getFastAStarEuclideanProvider());
+		doTestUsualRouter(getFastAStarEuclideanProvider());
 	}
 	@Test
 	public void testTurnRestrictedFastAStarEuclidean() {
-		doTest(getTurnRestrictedFastAStarEuclideanProvider());
+		doTestRestrictedRouter(getTurnRestrictedFastAStarEuclideanProvider());
 	}
 	@Test
 	public void testLinkToLinkFastAStarEuclidean() {
-		doTest(getLinkToLinkFastAStarEuclideanProvider());
+		doTestLinkToLinkRouter(getLinkToLinkFastAStarEuclideanProvider());
+	}
+	@Test
+	public void testInvertedNetowrkFastAStarEuclidean() {
+		doTestInvertedNetworkUsualRouter(getFastAStarEuclideanProvider());
 	}
 	@Test	
 	public void testAStarLandmarks() {
-		doTest(getAStarLandmarksProvider());
+		doTestUsualRouter(getAStarLandmarksProvider());
 	}
 	@Test
 	public void testFastAStarLandmarks() {
-		doTest(getFastAStarLandmarksProvider());
+		doTestUsualRouter(getFastAStarLandmarksProvider());
 	}
 	@Test
 	public void testTurnRestrictedFastAStarLandmarks() {
-		doTest(getTurnRestrictedFastAStarLandmarksProvider());
+		doTestRestrictedRouter(getTurnRestrictedFastAStarLandmarksProvider());
 	}
 	@Test
 	public void testLinkToLinkFastAStarLandmarks() {
-		doTest(getLinkToLinkFastAStarLandmarksProvider());
+		doTestLinkToLinkRouter(getLinkToLinkFastAStarLandmarksProvider());
+	}
+	@Test
+	public void testInvertedNetowrkFastAStarLandmarks() {
+		doTestInvertedNetworkUsualRouter(getFastAStarLandmarksProvider());
 	}
 	@Test
 	public void testTurnRestrictions() {
@@ -425,6 +442,23 @@ public class RoutingIT {
 			
 			Assert.assertEquals(expected, ((Leg) plan.getPlanElements().get(1)).getRoute().getDistance(), 0.0);
 		}
+		
+		// Fast routers on inverted network
+		for (RouterProvider provider : fastProviders) {
+			log.info("testing " + provider.getName());
+			final Scenario scenario = getTurnRestrictionsScenario();
+			calcInvertedNetworkRoute(provider, scenario);
+
+			// at the moment, the length of the from-link is ignored but the length of the
+			// to-link is taken into account
+			double expected = scenario.getNetwork().getLinks().get(Id.createLinkId("BC")).getLength()
+					+ scenario.getNetwork().getLinks().get(Id.createLinkId("CD")).getLength()
+					+ scenario.getNetwork().getLinks().get(Id.createLinkId("DE")).getLength();
+
+			Plan plan = scenario.getPopulation().getPersons().get(Id.createPersonId("P")).getSelectedPlan();
+
+			Assert.assertEquals(expected, ((Leg) plan.getPlanElements().get(1)).getRoute().getDistance(), 0.0);
+		}	
 	}
 	
 	@Test
@@ -460,6 +494,26 @@ public class RoutingIT {
 			log.info("testing " + provider.getName());			
 			final Scenario scenario = getMultipleToNodesScenario();		
 			calcLinkToLinkRoute(provider, scenario);
+			
+			// at the moment, the length of the from-link is ignored but the length of the to-link is taken into account
+			double expected = scenario.getNetwork().getLinks().get(Id.createLinkId("BD")).getLength() + 
+					scenario.getNetwork().getLinks().get(Id.createLinkId("DE")).getLength();
+			
+			Plan plan = scenario.getPopulation().getPersons().get(Id.createPersonId("P")).getSelectedPlan();
+			
+			Assert.assertEquals(expected, ((Leg) plan.getPlanElements().get(1)).getRoute().getDistance(), 0.0);
+		}
+		
+		// Fast routers on inverted network
+		List<RouterProvider> fastProviders = new ArrayList<>();
+		fastProviders.add(getFastDijkstraProvider()); // FastDijkstra
+		fastProviders.add(getFastDijkstraPruneDeadEndsProvider()); // FastDijkstraPruneDeadEnds
+		fastProviders.add(getFastAStarEuclideanProvider()); // FastAStarEuclidean
+		fastProviders.add(getFastAStarLandmarksProvider()); // FastAStarLandmarks
+		for (RouterProvider provider : fastProviders) {
+			log.info("testing " + provider.getName());			
+			final Scenario scenario = getMultipleToNodesScenario();		
+			calcInvertedNetworkRoute(provider, scenario);
 			
 			// at the moment, the length of the from-link is ignored but the length of the to-link is taken into account
 			double expected = scenario.getNetwork().getLinks().get(Id.createLinkId("BD")).getLength() + 
@@ -520,9 +574,31 @@ public class RoutingIT {
 			
 			Assert.assertEquals(expected, ((Leg) plan.getPlanElements().get(1)).getRoute().getDistance(), 0.0);
 		}
+		
+		// Fast routers on inverted network
+		List<RouterProvider> fastProviders = new ArrayList<>();
+		fastProviders.add(getFastDijkstraProvider()); // FastDijkstra
+		fastProviders.add(getFastDijkstraPruneDeadEndsProvider()); // FastDijkstraPruneDeadEnds
+		fastProviders.add(getFastAStarEuclideanProvider()); // FastAStarEuclidean
+		fastProviders.add(getFastAStarLandmarksProvider()); // FastAStarLandmarks
+		for (RouterProvider provider : fastProviders) {
+			log.info("testing " + provider.getName());
+			final Scenario scenario = getTurnRestrictionsDetourScenario();
+			calcInvertedNetworkRoute(provider, scenario);
+			
+			// at the moment, the length of the from-link is ignored but the length of the to-link is taken into account
+			double expected = scenario.getNetwork().getLinks().get(Id.createLinkId("BD")).getLength() + 
+					scenario.getNetwork().getLinks().get(Id.createLinkId("DC")).getLength() + 
+					scenario.getNetwork().getLinks().get(Id.createLinkId("CD")).getLength() +
+					scenario.getNetwork().getLinks().get(Id.createLinkId("DE")).getLength();
+			
+			Plan plan = scenario.getPopulation().getPersons().get(Id.createPersonId("P")).getSelectedPlan();
+			
+			Assert.assertEquals(expected, ((Leg) plan.getPlanElements().get(1)).getRoute().getDistance(), 0.0);
+		}
 	}
 	
-	private void doTest(final RouterProvider provider) {
+	private void doTestUsualRouter(final RouterProvider provider) {
 //		final Config config = loadConfig("test/input/" + this.getClass().getCanonicalName().replace('.', '/') + "/config.xml");
 		final Config config = ConfigUtils.loadConfig(this.utils.getClassInputDirectory() + "/config.xml" );
 		final Scenario scenario = ScenarioUtils.createScenario(config);
@@ -545,7 +621,7 @@ public class RoutingIT {
 		Assert.assertTrue("different plans files.", isEqual);
 	}
 
-	private void doTest(final RestrictedRouterProvider provider) {
+	private void doTestRestrictedRouter(final RestrictedRouterProvider provider) {
 //		final Config config = loadConfig("test/input/" + this.getClass().getCanonicalName().replace('.', '/') + "/config.xml");
 		final Config config = ConfigUtils.loadConfig(this.utils.getClassInputDirectory() + "/config.xml" );
 		final Scenario scenario = ScenarioUtils.createScenario(config);
@@ -568,7 +644,7 @@ public class RoutingIT {
 		Assert.assertTrue("different plans files.", isEqual);
 	}
 	
-	private void doTest(final LinkToLinkRouterProvider provider) {
+	private void doTestLinkToLinkRouter(final LinkToLinkRouterProvider provider) {
 //		final Config config = loadConfig("test/input/" + this.getClass().getCanonicalName().replace('.', '/') + "/config.xml");
 		final Config config = ConfigUtils.loadConfig(this.utils.getClassInputDirectory() + "/config.xml" );
 		final Scenario scenario = ScenarioUtils.createScenario(config);
@@ -578,6 +654,31 @@ public class RoutingIT {
 		new PopulationReader(scenario).readFile(inPlansName);
 			
 		calcLinkToLinkRoute(provider, scenario);
+
+		final Scenario referenceScenario = ScenarioUtils.createScenario(config);
+		new MatsimNetworkReader(referenceScenario.getNetwork()).readFile(config.network().getInputFile());
+		new PopulationReader(referenceScenario).readFile(inPlansName);
+		
+		final boolean isEqual = PopulationUtils.equalPopulation(referenceScenario.getPopulation(), scenario.getPopulation());
+		if (!isEqual) {
+			new PopulationWriter(referenceScenario.getPopulation(), scenario.getNetwork()).write(this.utils.getOutputDirectory() + "/reference_population.xml.gz");
+			new PopulationWriter(scenario.getPopulation(), scenario.getNetwork()).write(this.utils.getOutputDirectory() + "/output_population.xml.gz");
+		}
+		Assert.assertTrue("different plans files.", isEqual);
+	}
+	
+	private void doTestInvertedNetworkUsualRouter(final RouterProvider provider) {
+//		final Config config = loadConfig("test/input/" + this.getClass().getCanonicalName().replace('.', '/') + "/config.xml");
+		final Config config = ConfigUtils.loadConfig(this.utils.getClassInputDirectory() + "/config.xml" );
+		config.controler().setLinkToLinkRoutingEnabled(true);
+		config.travelTimeCalculator().setCalculateLinkToLinkTravelTimes(true);
+		final Scenario scenario = ScenarioUtils.createScenario(config);
+		new MatsimNetworkReader(scenario.getNetwork()).readFile(config.network().getInputFile());
+//		final String inPlansName = "test/input/" + this.getClass().getCanonicalName().replace('.', '/') + "/plans.xml.gz";
+		final String inPlansName = this.utils.getClassInputDirectory() + "/plans.xml.gz" ;
+		new PopulationReader(scenario).readFile(inPlansName);
+			
+		calcInvertedNetworkRoute(provider, scenario);
 
 		final Scenario referenceScenario = ScenarioUtils.createScenario(config);
 		new MatsimNetworkReader(referenceScenario.getNetwork()).readFile(config.network().getInputFile());
@@ -605,6 +706,7 @@ public class RoutingIT {
 	private Scenario getTurnRestrictionsScenario() {
 		
 		Config config = ConfigUtils.createConfig();
+		config.qsim().setUseLanes(true);
 		Scenario scenario = ScenarioUtils.createScenario(config);
 		
 		Network network = scenario.getNetwork();
@@ -691,6 +793,7 @@ public class RoutingIT {
 	private Scenario getMultipleToNodesScenario() {
 		
 		Config config = ConfigUtils.createConfig();
+		config.qsim().setUseLanes(true);
 		Scenario scenario = ScenarioUtils.createScenario(config);
 		
 		Network network = scenario.getNetwork();
@@ -799,6 +902,7 @@ public class RoutingIT {
 	private Scenario getTurnRestrictionsDetourScenario() {
 		
 		Config config = ConfigUtils.createConfig();
+		config.qsim().setUseLanes(true);
 		Scenario scenario = ScenarioUtils.createScenario(config);
 		
 		Network network = scenario.getNetwork();
@@ -951,6 +1055,31 @@ public class RoutingIT {
 		
 		LinkToLinkRoutingModuleV2 routingModule = new LinkToLinkRoutingModuleV2("car", scenario.getPopulation().getFactory(), scenario.getNetwork(),
 				scenario.getLanes(), provider.getFactory(), travelDisutilityFactory, calculator);
+
+		TripRouter.Builder tripRouterBuilder = new TripRouter.Builder(scenario.getConfig());
+		tripRouterBuilder.setRoutingModule("car", routingModule);
+		final TripRouter tripRouter = tripRouterBuilder.build();
+		final PersonAlgorithm router = new PlanRouter(tripRouter);
+		
+		for (Person p : scenario.getPopulation().getPersons().values()) {
+			router.run(p);
+		}
+	}
+	
+	private static void calcInvertedNetworkRoute(final RouterProvider provider, final Scenario scenario) {
+		log.info("### calcRoute with router " + provider.getName());
+		
+		final FreespeedTravelTimeAndDisutility calculator = new FreespeedTravelTimeAndDisutility(scenario.getConfig().planCalcScore());
+		final TravelDisutilityFactory travelDisutilityFactory = new TravelDisutilityFactory() {		
+			@Override
+			public TravelDisutility createTravelDisutility(TravelTime timeCalculator) {
+				return calculator;
+			}
+		};
+		NetworkTurnInfoBuilder turnInfoBuilder = new NetworkTurnInfoBuilder(scenario);
+		
+		LinkToLinkRoutingModule routingModule = new LinkToLinkRoutingModule("car", scenario.getPopulation().getFactory(), scenario.getNetwork(),
+				provider.getFactory(), travelDisutilityFactory, calculator, turnInfoBuilder);
 
 		TripRouter.Builder tripRouterBuilder = new TripRouter.Builder(scenario.getConfig());
 		tripRouterBuilder.setRoutingModule("car", routingModule);
