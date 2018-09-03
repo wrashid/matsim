@@ -65,15 +65,17 @@ class LinkToLinkRoutingModule implements RoutingModule
     private final LeastCostPathCalculator leastCostPathCalculator;
     private final PopulationFactory populationFactory;
     private final String mode;
+    private final LinkToLinkTravelTime l2ltravelTimes;
 
     LinkToLinkRoutingModule(final String mode, final PopulationFactory populationFactory,
             Network network, LeastCostPathCalculatorFactory leastCostPathCalcFactory,
             TravelDisutilityFactory travelCostCalculatorFactory,
             LinkToLinkTravelTime l2ltravelTimes, NetworkTurnInfoBuilderI turnInfoBuilder)
     {
-    	this.network = network;
-    	this.populationFactory = populationFactory;
-    	this.mode = mode;
+		this.network = network;
+		this.populationFactory = populationFactory;
+		this.mode = mode;
+		this.l2ltravelTimes = l2ltravelTimes;
     	
         invertedNetwork = new NetworkInverter(network, turnInfoBuilder.createAllowedTurnInfos()).getInvertedNetwork();
 
@@ -111,11 +113,14 @@ class LinkToLinkRoutingModule implements RoutingModule
 		    
 			NetworkRoute route = this.populationFactory.getRouteFactories().createRoute(NetworkRoute.class, fromFacility.getLinkId(), toFacility.getLinkId());
 			route.setLinkIds(fromFacility.getLinkId(), NetworkUtils.getLinkIds(path.links), toFacility.getLinkId());
-			route.setTravelTime(path.travelTime);
+			Link fromLink = network.getLinks().get(fromFacility.getLinkId());
+			Link toLink = network.getLinks().get(toFacility.getLinkId());
+			// substract the first link from the travel time
+			route.setTravelTime(Math.max(0, path.travelTime - l2ltravelTimes.getLinkToLinkTravelTime(fromLink, toLink, departureTime)));
 			route.setTravelCost(path.travelCost);
 			route.setDistance(RouteUtils.calcDistance(route, 1.0, 1.0, this.network));
 			newLeg.setRoute(route);
-			newLeg.setTravelTime(path.travelTime);
+			newLeg.setTravelTime(route.getTravelTime());
 		} else {
 			// create an empty route == staying on place if toLink == endLink
 			// note that we still do a route: someone may drive from one location to another on the link. kai, dec'15
