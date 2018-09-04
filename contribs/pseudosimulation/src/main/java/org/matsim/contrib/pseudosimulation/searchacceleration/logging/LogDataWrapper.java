@@ -143,5 +143,9 @@ public class LogDataWrapper {
 	public Double getTargetPercentile() {
 		return this.accelerator.getTargetPercentile();
 	}
+	
+	public Double getAverageUtility() {
+		return this.accelerator.getLastAverageUtility();
+	}
 
 }

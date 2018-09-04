@@ -262,19 +262,19 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	// this.replanningEfficiencyThreshold = replanningEfficiencyThreshold;
 	// }
 
-	// -------------------- replanningEfficiencyThreshold --------------------
-	//
-	// private int averageIterations;
-	//
-	// @StringGetter("averageIterations")
-	// public int getAverageIterations() {
-	// return this.averageIterations;
-	// }
-	//
-	// @StringSetter("averageIterations")
-	// public void setAverageIterations(final int averageIterations) {
-	// this.averageIterations = averageIterations;
-	// }
+	// --------------------replanningEfficiencyThreshold--------------------
+
+	private int averageIterations = 1; // TODO revisit
+
+	@StringGetter("averageIterations")
+	public int getAverageIterations() {
+		return this.averageIterations;
+	}
+
+	@StringSetter("averageIterations")
+	public void setAverageIterations(final int averageIterations) {
+		this.averageIterations = averageIterations;
+	}
 
 	// -------------------- deltaRecipe --------------------
 	//

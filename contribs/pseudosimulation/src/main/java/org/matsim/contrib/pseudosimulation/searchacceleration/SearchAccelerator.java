@@ -46,6 +46,7 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.Spa
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.Utilities;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AverageDeltaForUniformReplanning;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AverageReplanningEfficiency;
+import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AverageUtility;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DeltaForUniformReplanning;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DeltaForUniformReplanningExact;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.DeltaPercentile;
@@ -146,6 +147,8 @@ public class SearchAccelerator
 
 	private Double previouslyRealizedDeltaPercentile = null;
 	private Double targetDeltaPercentile = null;
+
+	public Double lastAverageUtility = null;
 
 	// -------------------- CONSTRUCTION --------------------
 
@@ -275,6 +278,10 @@ public class SearchAccelerator
 		return this.targetDeltaPercentile;
 	}
 
+	public Double getLastAverageUtility() {
+		return this.lastAverageUtility;
+	}
+
 	// --------------- IMPLEMENTATION OF StartupListener ---------------
 
 	@Override
@@ -288,9 +295,10 @@ public class SearchAccelerator
 		this.expectedUtilityChangeSumUniform = new RecursiveMovingAverage(
 				// this.replanningParameters().getAverageIterations()
 				1);
-		this.realizedUtilityChangeSum = new RecursiveMovingAverage(
-				// this.replanningParameters().getAverageIterations()
-				1);
+		
+		// TODO filtering only this because its expectation is a convergence measure
+		// TODO this could as well be consequence of 0/0 numerics in the critical delta computations
+		this.realizedUtilityChangeSum = new RecursiveMovingAverage(this.replanningParameters().getAverageIterations());
 
 		this.utilities = new Utilities(
 				// this.replanningParameters().getAverageIterations()
@@ -322,6 +330,7 @@ public class SearchAccelerator
 		this.statsWriter.addSearchStatistic(new AverageDeltaForUniformReplanning());
 		this.statsWriter.addSearchStatistic(new UniformReplannerShare());
 		// this.statsWriter.addSearchStatistic(new ReplanningSignalAKF());
+		this.statsWriter.addSearchStatistic(new AverageUtility());
 		this.statsWriter.addSearchStatistic(new RealizedDeltaUtility());
 		this.statsWriter.addSearchStatistic(new ExpectedDeltaUtilityUniform());
 		this.statsWriter.addSearchStatistic(new ExpectedDeltaUtilityAccelerated());
@@ -369,6 +378,13 @@ public class SearchAccelerator
 			this.lastPhysicalPopulationState = new PopulationState(this.services.getScenario().getPopulation());
 			this.lastPhysicalLinkUsages = this.matsimMobsimUsageListener.getAndClearIndicators();
 			this.pseudoSimIterationCnt = 0;
+
+			this.lastAverageUtility = 0.0;
+			for (Person person : this.services.getScenario().getPopulation().getPersons().values()) {
+				this.lastAverageUtility += person.getSelectedPlan().getScore();
+			}
+			this.lastAverageUtility /= this.services.getScenario().getPopulation().getPersons().size();
+
 		} else {
 			log.info("pseudoSim run in iteration " + event.getIteration() + " ends");
 			if (this.nextMobsimIsExpectedToBePhysical) {
@@ -394,6 +410,10 @@ public class SearchAccelerator
 
 			final Utilities.SummaryStatistics utilityStatsBeforeReplanning = this.utilities.newSummaryStatistics();
 
+			/*
+			 * Book-keeping and program control parameter update.
+			 */
+
 			if (utilityStatsBeforeReplanning.previousDataValid) {
 
 				// Merely a safeguard.
@@ -418,48 +438,33 @@ public class SearchAccelerator
 				}
 				this.expectedUtilityChangeSumAccelerated.add(previousExpectedUtilityChangeSumAcceleratedTmp);
 
-				// Identify to what delta percentile the current re-planning corresponds.
-
-				// int percentileIndex = 0;
-				// while
-				// ((this.individualReplanningResultsList.get(percentileIndex).deltaForUniformReplanning
-				// < 0.0)
-				// && (percentileIndex + 1 < this.individualReplanningResultsList.size())) {
-				// percentileIndex++;
-				// }
-				// this.previouslyRealizedDeltaPercentile = Math.max(0, Math.min(100,
-				// (percentileIndex * 100.0) /
-				// this.services.getScenario().getPopulation().getPersons().size()));
-
 				// Compute target percentile and corresponding delta for the next iteration.
 
-				// final double upperBound = this.getLastExpectedUtilityChangeSumUniform()
-				// + Math.max(0, this.getLastRealizedUtilityChangeSum());
-				// double currentVal = this.getLastExpectedUtilityChangeSumUniform();
+				// final double upperBound =
+				// this.expectedUtilityChangeSumUniform.mostRecentValue()
+				// + Math.max(0, this.realizedUtilityChangeSum.mostRecentValue());
+				// double currentVal = this.expectedUtilityChangeSumUniform.mostRecentValue();
 
-				final double upperBound = this.expectedUtilityChangeSumUniform.mostRecentValue()
-						+ Math.max(0, this.realizedUtilityChangeSum.mostRecentValue());
-				double currentVal = this.expectedUtilityChangeSumUniform.mostRecentValue();
-
-				// TODO hedge against negative expectations
+				final double upperBound = Math.max(0.0, this.realizedUtilityChangeSum.average());
+				double utilityPredictionError = 0.0; // between accelerated and greedy score, starting at delta=inf
 
 				int percentileIndex = this.individualReplanningResultsList.size() - 1;
 
-				while ((currentVal < upperBound) && (percentileIndex > 0)) {
+				while ((Math.abs(utilityPredictionError) < upperBound) && (percentileIndex > 0)) {
 					percentileIndex--;
 					final IndividualReplanningResult individualResult = this.individualReplanningResultsList
 							.get(percentileIndex);
 					if (individualResult.wouldBeGreedyReplanner) {
 						if (!individualResult.wouldBeUniformReplanner) {
-							currentVal += individualResult.expectedScoreChange;
+							utilityPredictionError += individualResult.expectedScoreChange;
 						}
 					} else { // would not be greedy
 						if (individualResult.wouldBeUniformReplanner) {
-							currentVal -= individualResult.expectedScoreChange;
+							utilityPredictionError -= individualResult.expectedScoreChange;
 						}
 					}
 				}
-				if (currentVal > upperBound) {
+				if (Math.abs(utilityPredictionError) < upperBound) {
 					percentileIndex = Math.min(this.individualReplanningResultsList.size() - 1, percentileIndex + 1);
 				}
 
