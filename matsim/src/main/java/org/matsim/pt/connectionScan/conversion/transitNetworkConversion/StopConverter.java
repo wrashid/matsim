@@ -1,9 +1,9 @@
 package org.matsim.pt.connectionScan.conversion.transitNetworkConversion;
 
 import edu.kit.ifv.mobitopp.publictransport.model.DefaultStation;
-import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
 import edu.kit.ifv.mobitopp.publictransport.model.Station;
 import edu.kit.ifv.mobitopp.publictransport.model.Stop;
+import edu.kit.ifv.mobitopp.time.RelativeTime;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.core.utils.collections.QuadTree;
