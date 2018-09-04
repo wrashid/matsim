@@ -1,6 +1,8 @@
 package org.matsim.pt.connectionScan.conversion.transitNetworkConversion;
 
 import edu.kit.ifv.mobitopp.publictransport.model.*;
+import edu.kit.ifv.mobitopp.time.RelativeTime;
+import edu.kit.ifv.mobitopp.time.Time;
 import org.matsim.api.core.v01.Id;
 import org.matsim.pt.connectionScan.utils.TransitNetworkUtils;
 import org.matsim.pt.transitSchedule.api.Departure;
@@ -84,14 +86,15 @@ class ConnectionConverter {
         int id = idAndMappingHandler.createNewConectionId();
         Stop startStop = start.getStop();
         Stop endStop = end.getStop();
-        Time connectionDeparture = departure.add(TransitNetworkUtils.convertTime(start.getDepartureOffset()));
-        Time connectionArrival = departure.add(TransitNetworkUtils.convertTime(end.getArrivalOffset()));
+        Time connectionDeparture = departure.plus(TransitNetworkUtils.convertTime(start.getDepartureOffset()));
+        Time connectionArrival = departure.plus(TransitNetworkUtils.convertTime(end.getArrivalOffset()));
         RoutePoints route = RoutePoints.from(startStop, endStop);
         return Connection.from(id, startStop, endStop, connectionDeparture, connectionArrival, journey, route);
     }
 
     private Time convertDeparture(Departure departure) {
-        return day.add(RelativeTime.of((long)departure.getDepartureTime(), ChronoUnit.SECONDS));
+        Time time = day.plus(RelativeTime.of((long) departure.getDepartureTime(), ChronoUnit.SECONDS));
+        return time;
     }
 
     public Connections getConnections() {
