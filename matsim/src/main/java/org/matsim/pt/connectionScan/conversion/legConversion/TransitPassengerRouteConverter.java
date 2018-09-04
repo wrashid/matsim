@@ -1,19 +1,16 @@
 package org.matsim.pt.connectionScan.conversion.legConversion;
 
-import edu.kit.ifv.mobitopp.publictransport.connectionscan.PublicTransportRoute;
 import edu.kit.ifv.mobitopp.publictransport.model.Connection;
-import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
-import edu.kit.ifv.mobitopp.publictransport.model.Time;
 import edu.kit.ifv.mobitopp.publictransport.model.TransportSystem;
+import edu.kit.ifv.mobitopp.time.RelativeTime;
+import edu.kit.ifv.mobitopp.time.Time;
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.population.Leg;
 import org.matsim.pt.connectionScan.conversion.transitNetworkConversion.MappingHandler;
 import org.matsim.pt.connectionScan.utils.TransitNetworkUtils;
 import org.matsim.pt.router.RouteSegment;
 import org.matsim.pt.router.TransitPassengerRoute;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,77 +25,149 @@ public class TransitPassengerRouteConverter {
         this.mappingHandler = mappingHandler;
     }
 
-    public TransitPassengerRoute createTransitPassengerRoute(double lastArrivalTime, List<Connection> connections,
-                                                             double initialAccessTime, double initialEgressTime) {
+    public TransitPassengerRoute createTransitPassengerRoute(double lastArrivalTime, List<Connection> connections) {
 
         double cost = 0;
 //        double lastArrivalTime = timeInSecondsFromMidnight(departure);
 
         List<RouteSegment> routeSegments = new ArrayList<>();
 
-        RouteSegment storedRouteSegment = null;
-        for (int i = 0; i < connections.size(); i++) {
-            Connection connection = connections.get(i);
-            TransitStopFacility fromFacility = mappingHandler.getStopId2TransitStopFacility().get(connection.start().id());
-            TransitStopFacility toFacility = mappingHandler.getStopId2TransitStopFacility().get(connection.end().id());
-            RelativeTime duration = connection.duration();
-            double travelTime = TransitNetworkUtils.convertTime(duration);
+//        RouteSegment storedRouteSegment = null;
 
-            double departureOffset = TransitNetworkUtils.convertTime(connection.departure()) - lastArrivalTime;
+        List<List<Connection>> legs = new ArrayList<>();
+
+        //find cohesive connections (that are to be made to legs)
+
+        boolean isFootLeg = connections.get(0).id() == -1;
+        int nextLegStartElement = 0;
+        for (int i = 0; i <= connections.size(); i++) {
+
+            //join same Journey connection
+            //first foot journey belongs to accessWalk
+            //last foot journey belongs to egressWalk
+
+            if (isFootLeg) while (i < connections.size() && connections.get(i).id() == -1) i++;
+            else while (i < connections.size() && connections.get(i).id() != -1) i++;
+            List<Connection> currentLeg = new ArrayList<>();
+            for (int e = nextLegStartElement; e <= i-1; e++) {
+                currentLeg.add(connections.get(e));
+            }
+            nextLegStartElement = i;
+            legs.add(currentLeg);
+            isFootLeg = !isFootLeg;
+        }
+
+        //TODO experimental: delete first and last footJourney
+        if (legs.get(0).get(0).id() == -1) {
+            lastArrivalTime = TransitNetworkUtils.convertTime(legs.get(0).get(legs.get(0).size()-1).arrival());
+            legs.remove(0);
+        }
+        if (legs.get(legs.size()-1).get(0).id() == -1) {
+            legs.remove(legs.size()-1);
+        }
+
+        //convert legs
+        for (List<Connection> currentLeg : legs) {
+
+            Connection startConnection = currentLeg.get(0);
+            Connection endConnection = currentLeg.get(currentLeg.size()-1);
+            TransitStopFacility fromFacility = mappingHandler.getStopId2TransitStopFacility().get(
+                    startConnection.start().id());
+            TransitStopFacility toFacility = mappingHandler.getStopId2TransitStopFacility().get(
+                    endConnection.end().id());
+            Time departure = startConnection.departure();
+            Time arrival = endConnection.arrival();
+            double travelTime = TransitNetworkUtils.convertTime(arrival.differenceTo(departure));
+
+            double departureOffset = TransitNetworkUtils.convertTime(departure);
+            //TODO make prettier
+            if (lastArrivalTime != -1)
+                departureOffset -= lastArrivalTime;
             travelTime += departureOffset;
-            lastArrivalTime = TransitNetworkUtils.convertTime(connection.arrival());
+            lastArrivalTime = TransitNetworkUtils.convertTime(arrival);
 
-            if (connection.id() == -1) {
-                if (storedRouteSegment != null) {
-                    if (storedRouteSegment.getRouteTaken() == null) {
-                        // then join these two route segments
+            Id[] lineAndRouteId = new Id[] {null, null};
+            for (Connection connection : currentLeg) {
 
-                        storedRouteSegment = new RouteSegment(storedRouteSegment.getFromStop(), toFacility,
-                                travelTime + storedRouteSegment.getTravelTime(),
-                                null,null);
-                    } else {
-                        routeSegments.add(storedRouteSegment);
-                        storedRouteSegment = new RouteSegment(fromFacility, toFacility,
-                                travelTime, null, null);
-                    }
-                } else {
-                    storedRouteSegment = new RouteSegment(fromFacility, toFacility,
-                            travelTime, null, null);
-                }
-            } else {
-
-                Id[] lineAndRouteId = mappingHandler.getConnectionId2LineAndRouteId().get(connection.id());
-
-                if (storedRouteSegment != null) {
-                    if (storedRouteSegment.getRouteTaken() != null &&
-                            storedRouteSegment.getRouteTaken().equals(lineAndRouteId[1])) {
-                        // then join these two route segments
-
-                        storedRouteSegment = new RouteSegment(storedRouteSegment.getFromStop(), toFacility,
-                                travelTime + storedRouteSegment.getTravelTime(),
-                                lineAndRouteId[0],
-                                lineAndRouteId[1]);
-                    } else {
-                        routeSegments.add(storedRouteSegment);
-                        storedRouteSegment = new RouteSegment(fromFacility, toFacility,
-                                travelTime,
-                                lineAndRouteId[0],
-                                lineAndRouteId[1]);
-                    }
-                } else {
-                    storedRouteSegment = new RouteSegment(fromFacility, toFacility,
-                            travelTime,
-                            lineAndRouteId[0],
-                            lineAndRouteId[1]);
-                }
+                if (connection.id() != -1)
+                    lineAndRouteId = mappingHandler.getConnectionId2LineAndRouteId().get(connection.id());
             }
 
+            routeSegments.add(new RouteSegment(fromFacility, toFacility,
+                    travelTime, lineAndRouteId[0], lineAndRouteId[1]));
             cost += travelTime;
         }
-        if (storedRouteSegment != null)
-            routeSegments.add(storedRouteSegment);
 
-        cost += initialAccessTime + initialEgressTime;
+//        for (int i = 0; i < connections.size(); i++) {
+//
+//            //join same Journey connection
+//            //first foot journey belongs to first routeSegment
+//            //last foot journey belongs to last routeSegment
+//
+//            Connection connection = connections.get(i);
+//            TransitStopFacility fromFacility = mappingHandler.getStopId2TransitStopFacility().get(connection.start().id());
+//            TransitStopFacility toFacility = mappingHandler.getStopId2TransitStopFacility().get(connection.end().id());
+//            RelativeTime duration = connection.duration();
+//            double travelTime = TransitNetworkUtils.convertTime(duration);
+//
+//            double departureOffset = TransitNetworkUtils.convertTime(connection.departure()) - lastArrivalTime;
+//            travelTime += departureOffset;
+//            lastArrivalTime = TransitNetworkUtils.convertTime(connection.arrival());
+//
+//
+//
+//
+//            //TODO improve readability
+//            if (connection.id() == -1) {
+//                if (storedRouteSegment != null) {
+//                    if (storedRouteSegment.getRouteTaken() == null) {
+//                        // then join these two route segments
+//
+//                        storedRouteSegment = new RouteSegment(storedRouteSegment.getFromStop(), toFacility,
+//                                travelTime + storedRouteSegment.getTravelTime(),
+//                                null,null);
+//                    } else {
+//                        routeSegments.add(storedRouteSegment);
+//                        storedRouteSegment = new RouteSegment(fromFacility, toFacility,
+//                                travelTime, null, null);
+//                    }
+//                } else {
+//                    storedRouteSegment = new RouteSegment(fromFacility, toFacility,
+//                            travelTime, null, null);
+//                }
+//            } else {
+//
+//                Id[] lineAndRouteId = mappingHandler.getConnectionId2LineAndRouteId().get(connection.id());
+//
+//                if (storedRouteSegment != null) {
+//                    if (storedRouteSegment.getRouteTaken() != null &&
+//                            storedRouteSegment.getRouteTaken().equals(lineAndRouteId[1])) {
+//                        // then join these two route segments
+//
+//                        storedRouteSegment = new RouteSegment(storedRouteSegment.getFromStop(), toFacility,
+//                                travelTime + storedRouteSegment.getTravelTime(),
+//                                lineAndRouteId[0],
+//                                lineAndRouteId[1]);
+//                    } else {
+//                        routeSegments.add(storedRouteSegment);
+//                        storedRouteSegment = new RouteSegment(fromFacility, toFacility,
+//                                travelTime,
+//                                lineAndRouteId[0],
+//                                lineAndRouteId[1]);
+//                    }
+//                } else {
+//                    storedRouteSegment = new RouteSegment(fromFacility, toFacility,
+//                            travelTime,
+//                            lineAndRouteId[0],
+//                            lineAndRouteId[1]);
+//                }
+//            }
+//
+//            cost += travelTime;
+//        }
+//
+//        if (storedRouteSegment != null)
+//            routeSegments.add(storedRouteSegment);
 
         if (routeSegments.size()==0) return null;
         else return new TransitPassengerRoute(cost, routeSegments);
@@ -123,13 +192,6 @@ public class TransitPassengerRouteConverter {
         }
         //TODO check if correct
         return duration.seconds();
-    }
-
-    @Deprecated //in favor of TransitNetworkUtils.convertTime(Time time)
-    private double timeInSecondsFromMidnight(Time time) {
-        LocalDateTime localDateTime = time.time();
-        double result = localDateTime.getHour()*60*60 + localDateTime.getMinute()*60 + localDateTime.getSecond();
-        return result;
     }
 
     private Map<TransportSystem, List<Connection>> sortConnectionsByLegMode(List<Connection> connections) {
