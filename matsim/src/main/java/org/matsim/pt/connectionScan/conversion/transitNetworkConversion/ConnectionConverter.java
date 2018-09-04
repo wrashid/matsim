@@ -25,7 +25,7 @@ class ConnectionConverter {
     //Journey attributes
     private Time day;
     //TODO
-    private final int CAPACITY = 2000000000;
+    private final int CAPACITY = Integer.MAX_VALUE;
 
     ConnectionConverter(StopConverter stopConverter, Map<Id<TransitLine>, TransitLine> transitLines,
                         MappingHandler idAndMappingHandler, Time day) {
