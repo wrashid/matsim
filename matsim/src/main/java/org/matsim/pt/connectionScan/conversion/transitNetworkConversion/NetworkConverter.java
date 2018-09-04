@@ -1,20 +1,17 @@
 package org.matsim.pt.connectionScan.conversion.transitNetworkConversion;
 
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.TransitNetwork;
-import edu.kit.ifv.mobitopp.publictransport.model.*;
+import edu.kit.ifv.mobitopp.publictransport.model.Connections;
+import edu.kit.ifv.mobitopp.publictransport.model.Stop;
+import edu.kit.ifv.mobitopp.time.Time;
 import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Id;
-import org.matsim.core.utils.geometry.CoordinateTransformation;
-import org.matsim.pt.connectionScan.plausibilityCheck.LoopFinder;
+import org.matsim.pt.connectionScan.model.Day;
 import org.matsim.pt.router.TransitRouterConfig;
 import org.matsim.pt.router.TransitTravelDisutility;
 import org.matsim.pt.transitSchedule.api.TransitSchedule;
-import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class NetworkConverter {
     private static final Logger log = Logger.getLogger(NetworkConverter.class);
@@ -24,8 +21,6 @@ public class NetworkConverter {
 
     //transformation
     private MappingHandler idAndMappingHandler;
-    //TODO
-    private CoordinateTransformation coordinateTransformation;
 
     //connection-scan
     private List<Stop> stops = new ArrayList<>();
@@ -58,7 +53,6 @@ public class NetworkConverter {
         this.stops = stopConverter.getConnectionScanStops();
         this.connections = connectionConverter.getConnections();
 
-        //TODO on or off?
 //        LoopFinder.hasLoop(this.connections);
 
         TransitNetwork transitNetwork = TransitNetwork.createOf(stops, connections);
@@ -66,7 +60,7 @@ public class NetworkConverter {
         return transitNetwork;
     }
 
-    private void createDay() { this.day = new Time(LocalDateTime.of(2017, 3, 14, 0, 0));} //TODO make constant
+    private void createDay() { this.day = Day.getDay();}
 
     public Time getDay() {
         return day;
