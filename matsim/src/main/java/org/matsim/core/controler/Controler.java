@@ -78,7 +78,6 @@ public final class Controler implements ControlerI, MatsimServices {
 	// * Seems to me that we should try to get everything here final.  Flexibility is provided by the ability to set or add factories.  If this is
 	// not sufficient, people should use AbstractController.  kai, jan'13
 
-	public static final String DIRECTORY_ITERS = "ITERS";
 	public static final String FILENAME_CONFIG = "config.xml";
 	public static final String FILENAME_CONFIG_REDUCED = "config_reduced.xml";
 	public static final String FILENAME_NETWORK = "network.xml.gz";
