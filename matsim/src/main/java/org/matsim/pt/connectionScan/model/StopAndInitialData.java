@@ -1,10 +1,6 @@
 package org.matsim.pt.connectionScan.model;
 
-import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
-import edu.kit.ifv.mobitopp.publictransport.model.Station;
 import edu.kit.ifv.mobitopp.publictransport.model.Stop;
-
-import java.awt.geom.Point2D;
 
 public class StopAndInitialData {
 
