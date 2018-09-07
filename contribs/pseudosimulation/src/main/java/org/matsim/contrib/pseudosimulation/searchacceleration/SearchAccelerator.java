@@ -22,6 +22,7 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +33,12 @@ import javax.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
+import org.matsim.api.core.v01.events.PersonEntersVehicleEvent;
+import org.matsim.api.core.v01.events.PersonLeavesVehicleEvent;
 import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
+import org.matsim.api.core.v01.events.handler.PersonEntersVehicleEventHandler;
+import org.matsim.api.core.v01.events.handler.PersonLeavesVehicleEventHandler;
 import org.matsim.api.core.v01.events.handler.VehicleEntersTrafficEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.HasPlansAndId;
@@ -42,6 +47,7 @@ import org.matsim.api.core.v01.population.Plan;
 import org.matsim.contrib.pseudosimulation.MobSimSwitcher;
 import org.matsim.contrib.pseudosimulation.PSimConfigGroup;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
+import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.Utilities;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AverageDeltaForUniformReplanning;
@@ -83,9 +89,11 @@ import org.matsim.core.events.EventsUtils;
 import org.matsim.core.replanning.GenericPlanStrategy;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.vehicles.Vehicle;
 
 import com.google.inject.Inject;
 
+import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.statisticslogging.StatisticsWriter;
 import floetteroed.utilities.statisticslogging.TimeStampStatistic;
 
@@ -95,8 +103,8 @@ import floetteroed.utilities.statisticslogging.TimeStampStatistic;
  *
  */
 @Singleton
-public class SearchAccelerator
-		implements StartupListener, IterationEndsListener, LinkEnterEventHandler, VehicleEntersTrafficEventHandler {
+public class SearchAccelerator implements StartupListener, IterationEndsListener, LinkEnterEventHandler,
+		VehicleEntersTrafficEventHandler, PersonEntersVehicleEventHandler, PersonLeavesVehicleEventHandler {
 
 	// -------------------- CONSTANTS --------------------
 
@@ -131,7 +139,8 @@ public class SearchAccelerator
 	private double currentDelta = 0.0;
 
 	// >>> created upon startup >>>
-	private LinkUsageListener matsimMobsimUsageListener;
+	private LinkUsageListener matsimIVMobsimUsageListener;
+	private TransitVehicleUsageListener matsimOVMobsimUsageListener;
 	private StatisticsWriter<LogDataWrapper> statsWriter;
 	private Utilities utilities;
 	private RecursiveMovingAverage expectedUtilityChangeSumAccelerated;
@@ -284,10 +293,18 @@ public class SearchAccelerator
 
 	// --------------- IMPLEMENTATION OF StartupListener ---------------
 
+	private AccelerationConfigGroup accelerationConfig = null;
+
 	@Override
 	public void notifyStartup(final StartupEvent event) {
 
-		this.matsimMobsimUsageListener = new LinkUsageListener(this.replanningParameters().getTimeDiscretization());
+		// TODO What would be the typed access structures this deprecation refers to?
+		this.accelerationConfig = (AccelerationConfigGroup) this.services.getConfig()
+				.getModule(AccelerationConfigGroup.GROUP_NAME);
+
+		this.matsimIVMobsimUsageListener = new LinkUsageListener(this.replanningParameters().getTimeDiscretization());
+		this.matsimOVMobsimUsageListener = new TransitVehicleUsageListener(
+				this.replanningParameters().getTimeDiscretization(), this.services.getScenario().getPopulation());
 
 		this.expectedUtilityChangeSumAccelerated = new RecursiveMovingAverage(
 				// this.replanningParameters().getAverageIterations()
@@ -295,9 +312,10 @@ public class SearchAccelerator
 		this.expectedUtilityChangeSumUniform = new RecursiveMovingAverage(
 				// this.replanningParameters().getAverageIterations()
 				1);
-		
+
 		// TODO filtering only this because its expectation is a convergence measure
-		// TODO this could as well be consequence of 0/0 numerics in the critical delta computations
+		// TODO this could as well be consequence of 0/0 numerics in the critical delta
+		// computations
 		this.realizedUtilityChangeSum = new RecursiveMovingAverage(this.replanningParameters().getAverageIterations());
 
 		this.utilities = new Utilities(
@@ -340,20 +358,35 @@ public class SearchAccelerator
 
 	@Override
 	public void reset(final int iteration) {
-		this.matsimMobsimUsageListener.reset(iteration);
+		this.matsimIVMobsimUsageListener.reset(iteration);
+		this.matsimOVMobsimUsageListener.reset(iteration);
 	}
 
 	@Override
 	public void handleEvent(final VehicleEntersTrafficEvent event) {
 		if (this.mobsimSwitcher.isQSimIteration()) {
-			this.matsimMobsimUsageListener.handleEvent(event);
+			this.matsimIVMobsimUsageListener.handleEvent(event);
 		}
 	}
 
 	@Override
 	public void handleEvent(final LinkEnterEvent event) {
 		if (this.mobsimSwitcher.isQSimIteration()) {
-			this.matsimMobsimUsageListener.handleEvent(event);
+			this.matsimIVMobsimUsageListener.handleEvent(event);
+		}
+	}
+
+	@Override
+	public void handleEvent(final PersonEntersVehicleEvent event) {
+		if (this.mobsimSwitcher.isQSimIteration()) {
+			this.matsimOVMobsimUsageListener.handleEvent(event);
+		}
+	}
+
+	@Override
+	public void handleEvent(final PersonLeavesVehicleEvent event) {
+		if (this.mobsimSwitcher.isQSimIteration()) {
+			this.matsimOVMobsimUsageListener.handleEvent(event);
 		}
 	}
 
@@ -376,7 +409,26 @@ public class SearchAccelerator
 				throw new RuntimeException("Did not expect a physical mobsim run!");
 			}
 			this.lastPhysicalPopulationState = new PopulationState(this.services.getScenario().getPopulation());
-			this.lastPhysicalLinkUsages = this.matsimMobsimUsageListener.getAndClearIndicators();
+			this.lastPhysicalLinkUsages = this.matsimIVMobsimUsageListener.getAndClearIndicators();
+
+			// >>>>> TODO >>>>>
+			
+			final Map<Id<Vehicle>, Double> transitVehicleId2sumOfOnboardTimes_s = new LinkedHashMap<>(
+					this.matsimOVMobsimUsageListener.getTransitVehicle2sumOfOnboardTimesView());
+			final Map<Id<Person>, SpaceTimeIndicators<Id<Vehicle>>> lastPhysicalTransitVehicleUsages = this.matsimOVMobsimUsageListener
+					.getAndClearIndicators();
+			final DynamicData<Id<Vehicle>> transitVehicleEntryCounts = CountIndicatorUtils.newUnweightedCounts(
+					this.accelerationConfig.getTimeDiscretization(), lastPhysicalTransitVehicleUsages.values());
+			final Map<Id<Vehicle>, Double> transitVehicleId2weight = this.accelerationConfig
+					.newTransitWeights(transitVehicleEntryCounts, transitVehicleId2sumOfOnboardTimes_s);
+			for (Map.Entry<?, ?> entry : transitVehicleId2weight.entrySet()) {
+				System.out.println(entry);
+			}
+			System.out.println("System.exit(0)");
+			System.exit(0);
+			
+			// <<<<< TODO <<<<<
+
 			this.pseudoSimIterationCnt = 0;
 
 			this.lastAverageUtility = 0.0;

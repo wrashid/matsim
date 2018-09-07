@@ -332,7 +332,8 @@ public class PSim implements Mobsim {
                 return travelTime;
             } else {
 
-                return Double.NEGATIVE_INFINITY;
+            	throw new RuntimeException("Destination not found");
+                // return Double.NEGATIVE_INFINITY;
             }
         }
 

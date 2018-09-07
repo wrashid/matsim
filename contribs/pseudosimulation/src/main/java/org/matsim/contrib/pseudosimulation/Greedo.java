@@ -19,13 +19,19 @@
  */
 package org.matsim.contrib.pseudosimulation;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.contrib.pseudosimulation.distributed.listeners.events.transit.TransitPerformanceRecorder;
+import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTime;
+import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTimeCalculator;
+import org.matsim.contrib.eventsBasedPTRouter.waitTimes.WaitTime;
+import org.matsim.contrib.eventsBasedPTRouter.waitTimes.WaitTimeCalculator;
 import org.matsim.contrib.pseudosimulation.mobsim.PSimProvider;
 import org.matsim.contrib.pseudosimulation.mobsim.SwitchingMobsimProvider;
 import org.matsim.contrib.pseudosimulation.replanning.PlanCatcher;
@@ -33,15 +39,16 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfig
 import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStragetyProvider;
 import org.matsim.contrib.pseudosimulation.searchacceleration.AcceptIntendedReplanningStrategy;
 import org.matsim.contrib.pseudosimulation.searchacceleration.SearchAccelerator;
+import org.matsim.contrib.pseudosimulation.trafficinfo.PSimStopStopTimeCalculator;
 import org.matsim.contrib.pseudosimulation.trafficinfo.PSimTravelTimeCalculator;
+import org.matsim.contrib.pseudosimulation.trafficinfo.PSimWaitTimeCalculator;
+import org.matsim.contrib.pseudosimulation.util.ScoreHistogramLogger;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
-import org.matsim.core.controler.events.IterationStartsEvent;
-import org.matsim.core.controler.listener.IterationStartsListener;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
@@ -64,15 +71,18 @@ public class Greedo extends AbstractModule {
 
 	private static final Logger log = Logger.getLogger(Greedo.class);
 
-	private final int defaultIterationsPerCycle = 3;
+	private final int defaultIterationsPerCycle = 10;
 
-	private final boolean defaultFullTransitPerformanceTransmission = true;
+	private final boolean defaultFullTransitPerformanceTransmission = false;
 
 	// -------------------- MEMBERS --------------------
 
+	private final Map<String, Integer> innovationStrategy2possibleVariationCnt = new LinkedHashMap<>();
+
 	private final Set<String> bestResponseInnovationStrategyNames = new LinkedHashSet<>();
 
-	private final Set<String> randomInnovationStrategyNames = new LinkedHashSet<>();
+	// private final Set<String> randomInnovationStrategyNames = new
+	// LinkedHashSet<>();
 
 	private Config config = null;
 
@@ -83,23 +93,27 @@ public class Greedo extends AbstractModule {
 	// -------------------- CONSTRUCTION --------------------
 
 	public Greedo() {
-		this.addBestResponseStrategyName("ReRoute");
-		this.addRandomStrategyName("TimeAllocationMutator");
-		this.addRandomStrategyName("ChangeLegMode");
-		this.addRandomStrategyName("ChangeTripMode");
-		this.addRandomStrategyName("ChangeSingleLegMode");
-		this.addRandomStrategyName("SubtoutModeChoice");
+		this.setBestResponseStrategy("ReRoute");
+		this.setRandomInnovationStrategy("TimeAllocationMutator", 20);
+		this.setRandomInnovationStrategy("ChangeLegMode", 2); // changes entire plan
+		this.setRandomInnovationStrategy("ChangeTripMode", 2); // changes entire plan
+		this.setRandomInnovationStrategy("ChangeSingleLegMode", 2 * 4); // changes one out of ~4 legs
+		this.setRandomInnovationStrategy("SubtoutModeChoice", 2 * 2); // changes one out of ~2 routes
 	}
 
 	// -------------------- IMPLEMENTATION --------------------
 
-	public void addBestResponseStrategyName(final String strategyName) {
+	public void setBestResponseStrategy(final String strategyName) {
 		this.bestResponseInnovationStrategyNames.add(strategyName);
 	}
 
-	public void addRandomStrategyName(final String strategyName) {
-		this.randomInnovationStrategyNames.add(strategyName);
+	public void setRandomInnovationStrategy(final String strategyName, final int numberOfVariations) {
+		this.innovationStrategy2possibleVariationCnt.put(strategyName, numberOfVariations);
 	}
+
+	// public void addRandomStrategyName(final String strategyName) {
+	// this.randomInnovationStrategyNames.add(strategyName);
+	// }
 
 	public void meet(final Config config) {
 
@@ -129,8 +143,8 @@ public class Greedo extends AbstractModule {
 		 */
 		final boolean pSimConfigExists = config.getModules().containsKey(PSimConfigGroup.GROUP_NAME);
 		final PSimConfigGroup pSimConf = ConfigUtils.addOrGetModule(config, PSimConfigGroup.class);
-		pSimConf.setFullTransitPerformanceTransmission(true); // TODO experimenting ...
 		if (!pSimConfigExists) {
+			// Automagic -- use default values.
 			pSimConf.setIterationsPerCycle(this.defaultIterationsPerCycle);
 			pSimConf.setFullTransitPerformanceTransmission(this.defaultFullTransitPerformanceTransmission);
 			// The following accounts for the pSim iteration overhead.
@@ -160,29 +174,30 @@ public class Greedo extends AbstractModule {
 		/*
 		 * Keep only plan innovation strategies. Re-weight for maximum pSim efficiency.
 		 * 
-		 * TODO: Weights could be more efficiently chosen by (i) estimating how random a
-		 * strategy is and (ii) how many different plan instances can be reached through
-		 * random variations. For instance, time mutation can reach a continuum of new
-		 * plans, whereas mode choice may only switch between two different
-		 * alternatives.
-		 * 
 		 */
 		double bestResponseStrategyWeightSum = 0.0;
 		double randomStrategyWeightSum = 0.0;
+		// for (StrategySettings strategySettings :
+		// config.strategy().getStrategySettings()) {
+		// strategySettings.setWeight(0);
+		// }
 		for (StrategySettings strategySettings : config.strategy().getStrategySettings()) {
-			if (this.bestResponseInnovationStrategyNames.contains(strategySettings.getStrategyName())) {
-				strategySettings.setWeight(0); // 1.0 / pSimConf.getIterationsPerCycle());
+			final String strategyName = strategySettings.getStrategyName();
+			if (this.bestResponseInnovationStrategyNames.contains(strategyName)) {
+				strategySettings.setWeight(1.0 / pSimConf.getIterationsPerCycle());
 				bestResponseStrategyWeightSum += strategySettings.getWeight();
-			} else if (this.randomInnovationStrategyNames.contains(strategySettings.getStrategyName())) {
-				randomStrategyWeightSum += strategySettings.getWeight();
+			} else if (this.innovationStrategy2possibleVariationCnt.containsKey(strategyName)) {
+				randomStrategyWeightSum += this.innovationStrategy2possibleVariationCnt.get(strategyName);
 			} else {
 				strategySettings.setWeight(0.0); // i.e., dismiss
 			}
 		}
 		final double randomStrategyFactor = (1.0 - bestResponseStrategyWeightSum) / randomStrategyWeightSum;
 		for (StrategySettings strategySettings : config.strategy().getStrategySettings()) {
-			if (this.randomInnovationStrategyNames.contains(strategySettings.getStrategyName())) {
-				strategySettings.setWeight(0); // randomStrategyFactor * strategySettings.getWeight());
+			final String strategyName = strategySettings.getStrategyName();
+			if (this.innovationStrategy2possibleVariationCnt.containsKey(strategyName)) {
+				strategySettings.setWeight(
+						randomStrategyFactor * this.innovationStrategy2possibleVariationCnt.get(strategyName));
 			}
 		}
 
@@ -209,10 +224,6 @@ public class Greedo extends AbstractModule {
 				ConfigUtils.addOrGetModule(this.config, PSimConfigGroup.class).getIterationsPerCycle());
 	}
 
-	private PSimConfigGroup pSimConf = null;
-	private PSimProvider pSimProvider = null;
-	private MobSimSwitcher mobSimSwitcher = null;
-
 	public void meet(final Controler controler) {
 
 		if (this.scenario == null) {
@@ -223,23 +234,6 @@ public class Greedo extends AbstractModule {
 		this.controler = controler;
 
 		controler.addOverridingModule(this);
-
-		this.pSimConf = ConfigUtils.addOrGetModule(this.config, PSimConfigGroup.class);
-		this.pSimProvider = new PSimProvider(this.scenario, this.controler.getEvents());
-		this.mobSimSwitcher = new MobSimSwitcher(pSimConf, this.scenario);
-
-		if (this.controler.getConfig().transit().isUseTransit()) {
-			if (pSimConf.isFullTransitPerformanceTransmission()) {
-				final TransitPerformanceRecorder transitPerformanceRecorder = new TransitPerformanceRecorder(
-						this.scenario, this.controler.getEvents(), mobSimSwitcher);
-				controler.addControlerListener(new IterationStartsListener() {
-					@Override
-					public void notifyIterationStarts(IterationStartsEvent event) {
-						pSimProvider.setTransitPerformance(transitPerformanceRecorder.getTransitPerformance());
-					}
-				});
-			}
-		}
 	}
 
 	// -------------------- PREPARE THE CONFIG --------------------
@@ -251,17 +245,21 @@ public class Greedo extends AbstractModule {
 			throw new RuntimeException("First meet the controler.");
 		}
 
+		final PSimConfigGroup pSimConf = ConfigUtils.addOrGetModule(this.config, PSimConfigGroup.class);
+		final PSimProvider pSimProvider = new PSimProvider(this.scenario, this.controler.getEvents());
+		final MobSimSwitcher mobSimSwitcher = new MobSimSwitcher(pSimConf, this.scenario);
+
 		System.out.println("Installing the pSim");
 		this.addControlerListenerBinding().toInstance(mobSimSwitcher);
 		this.bind(MobSimSwitcher.class).toInstance(mobSimSwitcher);
 		this.bindMobsim().toProvider(SwitchingMobsimProvider.class);
-		// this.bind(WaitTimeCalculator.class).to(PSimWaitTimeCalculator.class);
-		// this.bind(WaitTime.class).toProvider(PSimWaitTimeCalculator.class);
-		// this.bind(StopStopTimeCalculator.class).to(PSimStopStopTimeCalculator.class);
-		// this.bind(StopStopTime.class).toProvider(PSimStopStopTimeCalculator.class);
+		this.bind(WaitTimeCalculator.class).to(PSimWaitTimeCalculator.class);
+		this.bind(WaitTime.class).toProvider(PSimWaitTimeCalculator.class);
+
+		this.bind(StopStopTimeCalculator.class).to(PSimStopStopTimeCalculator.class);
+		this.bind(StopStopTime.class).toProvider(PSimStopStopTimeCalculator.class);
 		this.bind(TravelTimeCalculator.class).to(PSimTravelTimeCalculator.class);
 		this.bind(TravelTime.class).toProvider(PSimTravelTimeCalculator.class);
-		// this.bind(TransitRouter.class).toProvider(TransitRouterEventsWSFactory.class);
 		this.bind(PlanCatcher.class).toInstance(new PlanCatcher());
 		this.bind(PSimProvider.class).toInstance(pSimProvider);
 
@@ -278,9 +276,7 @@ public class Greedo extends AbstractModule {
 	public static void runCarOnly() {
 
 		/*
-		 * TODO The "auto-magic" needs refinement for PT and sub-populations (and
-		 * possibly more); it has been tested with car-only and ReRoute +
-		 * TimeAllocationMutator innovation.
+		 * TODO The "auto-magic" needs refinement for sub-populations.
 		 */
 
 		/*
@@ -289,10 +285,6 @@ public class Greedo extends AbstractModule {
 		 */
 
 		Greedo greedo = new Greedo();
-		if (greedo != null) {
-			greedo.addBestResponseStrategyName("ReRoute");
-			greedo.addRandomStrategyName("TimeAllocationMutator");
-		}
 
 		/*
 		 * Create Config, Scenario, Controler in the usual order. Let the Greedo meet
@@ -329,16 +321,25 @@ public class Greedo extends AbstractModule {
 		Config config = ConfigUtils
 				.loadConfig("/Users/GunnarF/NoBackup/data-workspace/pt/production-scenario/config.xml");
 		config.controler().setOverwriteFileSetting(OverwriteFileSetting.deleteDirectoryIfExists);
-		config.qsim().setEndTime(48 * 3600); // FIXME QSim seems to interpret zero end time wrong.
+		// config.qsim().setEndTime(30 * 3600); // FIXME QSim misinterprets default
+		// values.
 		if (greedo != null) {
 			greedo.meet(config);
 			System.out.println("Greedo has met the config.");
 		}
 
 		Scenario scenario = ScenarioUtils.loadScenario(config);
+
 		Network network = scenario.getNetwork();
 		TransitSchedule schedule = scenario.getTransitSchedule();
 		new CreatePseudoNetwork(schedule, network, "tr_").createNetwork();
+		for (Link link : network.getLinks().values()) {
+			if (link.getId().toString().startsWith("tr_")) {
+				System.out.println("updating link " + link.getId());
+				link.setCapacity(1e6);
+				link.setNumberOfLanes(1e3);
+			}
+		}
 
 		if (greedo != null) {
 			greedo.meet(scenario);
@@ -351,9 +352,11 @@ public class Greedo extends AbstractModule {
 			System.out.println("Greedo has met the controler.");
 		}
 
-//		double samplesize = config.qsim().getStorageCapFactor();
-//		PTCapacityAdjusmentPerSample capadjuster = new PTCapacityAdjusmentPerSample();
-//		capadjuster.adjustStoarageAndFlowCapacity(scenario, samplesize);
+		controler.addOverridingModule(new ScoreHistogramLogger(scenario.getPopulation(), config));
+
+		double samplesize = config.qsim().getStorageCapFactor();
+		PTCapacityAdjusmentPerSample capadjuster = new PTCapacityAdjusmentPerSample();
+		capadjuster.adjustStoarageAndFlowCapacity(scenario, samplesize);
 
 		// According to Basil, better add Raptor after the pSim.
 		System.out.println("Adding the Raptor...");
@@ -365,37 +368,11 @@ public class Greedo extends AbstractModule {
 			}
 		});
 
-		// >>> TESTING ONLY >>>
-		//
-		// TransitDriverStartsEventHandler ptChecker = new
-		// TransitDriverStartsEventHandler() {
-		// private Integer iteration = null;
-		//
-		// @Override
-		// public void reset(int iteration) {
-		// this.iteration = iteration;
-		// if (iteration == 2) {
-		// throw new RuntimeException("STOP");
-		// }
-		// }
-		//
-		// @Override
-		// public void handleEvent(TransitDriverStartsEvent event) {
-		// log.info("Iteration " + this.iteration + ": Vehicle " + event.getVehicleId()
-		// + " just departed on line "
-		// + event.getTransitLineId() + ", route " + event.getTransitRouteId() + ",
-		// departure "
-		// + event.getDepartureId() + ", with driver " + event.getDriverId());
-		// }
-		// };
-		// controler.addOverridingModule(new AbstractModule() {
-		// @Override
-		// public void install() {
-		// this.addEventHandlerBinding().toInstance(ptChecker);
-		// }
-		// });
-		//
-		// <<< TESTING ONLY <<<
+		// TODO the event based pt router package misinterprets default values
+		// System.out.println("bin size = " +
+		// config.travelTimeCalculator().getTraveltimeBinSize());
+		// System.out.println("qSim start = " + config.qsim().getStartTime());
+		// System.out.println("qSim end = " + config.qsim().getEndTime());
 
 		System.out.println("Starting the controler...");
 		controler.run();

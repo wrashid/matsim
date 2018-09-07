@@ -1,15 +1,15 @@
 package org.matsim.contrib.pseudosimulation.trafficinfo;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.PersonEntersVehicleEvent;
-import org.matsim.contrib.eventsBasedPTRouter.waitTimes.WaitTimeCalculatorSerializable;
 import org.matsim.contrib.eventsBasedPTRouter.waitTimes.WaitTimeStuckCalculator;
 import org.matsim.contrib.pseudosimulation.MobSimSwitcher;
 import org.matsim.core.api.experimental.events.EventsManager;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 
 /**
@@ -19,15 +19,15 @@ import org.matsim.core.api.experimental.events.EventsManager;
  *         events during QSim iterations.
  */
 @Singleton
-public class PSimWaitTimeCalculator extends WaitTimeCalculatorSerializable {
+public class PSimWaitTimeCalculator extends WaitTimeStuckCalculator {
 	private final MobSimSwitcher switcher;
 
 	@Inject
 	public PSimWaitTimeCalculator(Scenario scenario,
 								  MobSimSwitcher switcher, EventsManager eventsManager) {
-		super(scenario.getTransitSchedule(),scenario.getConfig());
+		super(scenario.getPopulation(), scenario.getTransitSchedule(),scenario.getConfig(), eventsManager);
 		this.switcher = switcher;
-		eventsManager.addHandler(this);
+		// eventsManager.addHandler(this);
 	}
 
 	@Override

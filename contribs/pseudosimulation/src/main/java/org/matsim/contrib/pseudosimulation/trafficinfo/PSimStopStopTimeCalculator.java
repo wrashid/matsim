@@ -1,27 +1,26 @@
 package org.matsim.contrib.pseudosimulation.trafficinfo;
 
-import com.google.inject.Singleton;
+import javax.inject.Inject;
+
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.PersonLeavesVehicleEvent;
-import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTimeCalculatorSerializable;
+import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTimeCalculatorImpl;
 import org.matsim.contrib.pseudosimulation.MobSimSwitcher;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.api.experimental.events.VehicleArrivesAtFacilityEvent;
-import org.matsim.core.config.Config;
-import org.matsim.pt.transitSchedule.api.TransitSchedule;
 
-import javax.inject.Inject;
+import com.google.inject.Singleton;
 
 @Singleton
-public class PSimStopStopTimeCalculator extends StopStopTimeCalculatorSerializable {
+public class PSimStopStopTimeCalculator extends StopStopTimeCalculatorImpl {
 	private final MobSimSwitcher switcher;
 
 	@Inject
 	PSimStopStopTimeCalculator(Scenario scenario, MobSimSwitcher switcher, EventsManager eventsManager) {
-		super(scenario.getTransitSchedule(),scenario.getConfig()  );
+		super(scenario.getTransitSchedule(),scenario.getConfig(), eventsManager  );
 		this.switcher = switcher;
-		eventsManager.addHandler(this);
+		// eventsManager.addHandler(this);
 	}
 
 	@Override

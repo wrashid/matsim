@@ -25,6 +25,7 @@ import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfig
 import org.matsim.contrib.pseudosimulation.searchacceleration.utils.SetUtils;
 
 import floetteroed.utilities.DynamicData;
+import floetteroed.utilities.TimeDiscretization;
 
 /**
  * 
@@ -36,19 +37,18 @@ public class CountIndicatorUtils {
 	private CountIndicatorUtils() {
 	}
 
-	// public static <L> DynamicData<L> newUnweightedCounts(final TimeDiscretization
-	// timeDiscr,
-	// final Collection<SpaceTimeIndicators<L>> allIndicators) {
-	// final DynamicData<L> result = new DynamicData<L>(timeDiscr);
-	// for (SpaceTimeIndicators<L> indicators : allIndicators) {
-	// for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
-	// for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
-	// result.add(locObj, bin, 1.0);
-	// }
-	// }
-	// }
-	// return result;
-	// }
+	public static <L> DynamicData<L> newUnweightedCounts(final TimeDiscretization timeDiscr,
+			final Collection<SpaceTimeIndicators<L>> allIndicators) {
+		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
+		for (SpaceTimeIndicators<L> indicators : allIndicators) {
+			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
+				for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
+					result.add(locObj, bin, 1.0);
+				}
+			}
+		}
+		return result;
+	}
 
 	public static <L> DynamicData<L> newWeightedCounts(final Collection<SpaceTimeIndicators<L>> allIndicators,
 			final AccelerationConfigGroup replParams) {

@@ -21,8 +21,10 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -33,7 +35,11 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.config.ReflectiveConfigGroup;
 import org.matsim.core.gbl.MatsimRandom;
+import org.matsim.vehicles.Vehicle;
+import org.matsim.vehicles.VehicleCapacity;
+import org.matsim.vehicles.Vehicles;
 
+import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
 import floetteroed.utilities.Units;
 
@@ -59,6 +65,7 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	// TODO No way to access the network directly?
 	public void configure(final Scenario scenario, final int pSimIterations) {
 		this.network = scenario.getNetwork();
+		this.transitVehicles = scenario.getTransitVehicles();
 		this.populationSize = scenario.getPopulation().getPersons().size();
 		this.pSimIterations = pSimIterations;
 	}
@@ -331,11 +338,57 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 		return weights;
 	}
 
+	public Map<Id<Vehicle>, Double> newTransitWeights(final DynamicData<Id<Vehicle>> vehicleEntryCounts,
+			final Map<Id<Vehicle>, Double> vehicleId2sumOfOnboardTimes_s) {
+
+		final Map<Id<Vehicle>, Double> result = new LinkedHashMap<>();
+
+		double usedVehiclesOriginalCapacitySum = 0.0;
+		double usedVehiclesAdjustedCapacitySum = 0.0;
+		final Set<Id<Vehicle>> unusedVehicleIds = new LinkedHashSet<>();
+
+		// if (vehicleEntryCounts == null) {
+		// unusedVehicleIds.addAll(this.transitVehicles.getVehicles().keySet());
+		// } else {
+		for (Id<Vehicle> vehicleId : this.transitVehicles.getVehicles().keySet()) {
+			final double totalEntryCnt = vehicleEntryCounts.getSum(vehicleId, 0, this.getBinCnt());
+			if (totalEntryCnt > 0) {
+				final double avgOnboardTime_s = vehicleId2sumOfOnboardTimes_s.get(vehicleId) / totalEntryCnt;
+				if (avgOnboardTime_s <= 0) {
+					throw new RuntimeException("Average onboard time of vehicle " + vehicleId + " is "
+							+ avgOnboardTime_s + " seconds, even though " + totalEntryCnt
+							+ " passengers have entered the vehicle.");
+				}
+				final VehicleCapacity capacity = this.transitVehicles.getVehicles().get(vehicleId).getType()
+						.getCapacity();
+				usedVehiclesOriginalCapacitySum += capacity.getSeats() + capacity.getStandingRoom();
+				final double adjustedCapacity = (capacity.getSeats() + capacity.getStandingRoom())
+						* (this.getBinSize_s() / avgOnboardTime_s);
+				usedVehiclesAdjustedCapacitySum += adjustedCapacity;
+				result.put(vehicleId, 1.0 / adjustedCapacity);
+			} else {
+				unusedVehicleIds.add(vehicleId);
+			}
+		}
+		// }
+
+		final double capacityFactor = ((result.size() == 0) ? 1.0
+				: (usedVehiclesAdjustedCapacitySum / usedVehiclesOriginalCapacitySum));
+		for (Id<Vehicle> vehicleId : unusedVehicleIds) {
+			final VehicleCapacity cap = this.transitVehicles.getVehicles().get(vehicleId).getType().getCapacity();
+			result.put(vehicleId, 1.0 / (capacityFactor * (cap.getSeats() + cap.getStandingRoom())));
+		}
+
+		return result;
+	}
+
 	// -------------------- MEMBERS --------------------
 
 	private int pSimIterations;
 
 	private Network network = null; // needs to be explicitly set
+
+	private Vehicles transitVehicles = null; // needs to be explicitly set
 
 	private Integer populationSize = null; // needs to be explicitly set
 

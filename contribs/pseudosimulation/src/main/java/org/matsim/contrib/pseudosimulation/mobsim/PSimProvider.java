@@ -3,6 +3,7 @@
  */
 package org.matsim.contrib.pseudosimulation.mobsim;
 
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTime;
 import org.matsim.contrib.eventsBasedPTRouter.waitTimes.WaitTime;
@@ -24,9 +25,9 @@ public class PSimProvider implements Provider<Mobsim> {
 	private PlanCatcher plans;
 	@Inject
 	private TravelTime travelTime;
-	// @Inject private WaitTime waitTime;
-	// @Inject private StopStopTime stopStopTime;
-	private TransitPerformance transitPerformance;
+	@Inject private WaitTime waitTime;
+	@Inject private StopStopTime stopStopTime;
+	// private TransitPerformance transitPerformance;
 	private final Scenario scenario;
 	private final EventsManager eventsManager;
 
@@ -43,18 +44,24 @@ public class PSimProvider implements Provider<Mobsim> {
 		// else
 		// iteration++;
 		// if (waitTime != null) {
-		// return new PSim(scenario, eventsManager, plans.getPlansForPSim(), travelTime,
-		// waitTime, stopStopTime, transitPerformance);
+//		 return new PSim(scenario, eventsManager, plans.getPlansForPSim(), travelTime,
+//		 waitTime, stopStopTime, transitPerformance);
 		//
 		// } else {
 		// return new PSim(scenario, eventsManager, plans.getPlansForPSim(), travelTime);
 		// }
+//		 return new PSim(scenario, eventsManager, plans.getPlansForPSim(), travelTime,
+//		 null, null, transitPerformance);	
+		
+		Logger.getLogger(PSimProvider.class).info("number of plans: " + plans.getPlansForPSim().size());
+		
 		 return new PSim(scenario, eventsManager, plans.getPlansForPSim(), travelTime,
-		 null, null, transitPerformance);		
+		 waitTime, stopStopTime, null);
 	}
 
 	public void setTravelTime(TravelTime travelTime) {
-		this.travelTime = travelTime;
+		// this.travelTime = travelTime;
+		throw new UnsupportedOperationException();
 	}
 
 	public void setWaitTime(WaitTime waitTime) {
@@ -68,8 +75,8 @@ public class PSimProvider implements Provider<Mobsim> {
 	}
 
 	public void setTransitPerformance(TransitPerformance transitPerformance) {
-		this.transitPerformance = transitPerformance;
-		// throw new UnsupportedOperationException();
+		// this.transitPerformance = transitPerformance;
+		throw new UnsupportedOperationException();
 	}
 
 	// public void setTimes(TravelTime travelTime, WaitTime waitTime, StopStopTime

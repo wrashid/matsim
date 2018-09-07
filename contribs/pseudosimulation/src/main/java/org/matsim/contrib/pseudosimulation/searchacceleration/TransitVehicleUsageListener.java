@@ -20,108 +20,100 @@
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.PersonEntersVehicleEvent;
 import org.matsim.api.core.v01.events.PersonLeavesVehicleEvent;
-import org.matsim.api.core.v01.events.TransitDriverStartsEvent;
 import org.matsim.api.core.v01.events.handler.PersonEntersVehicleEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonLeavesVehicleEventHandler;
-import org.matsim.api.core.v01.events.handler.TransitDriverStartsEventHandler;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
-import org.matsim.core.api.experimental.events.VehicleDepartsAtFacilityEvent;
-import org.matsim.core.api.experimental.events.handler.VehicleDepartsAtFacilityEventHandler;
-import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 import org.matsim.vehicles.Vehicle;
 
 import floetteroed.utilities.TimeDiscretization;
-import floetteroed.utilities.Tuple;
 
 /**
- *
+ * Keeps track of when every single PT passenger enters which vehicle.
+ * 
  * @author Gunnar Flötteröd
  *
  */
-public class TransitVehicleUsageListener implements PersonEntersVehicleEventHandler, PersonLeavesVehicleEventHandler,
-		VehicleDepartsAtFacilityEventHandler, TransitDriverStartsEventHandler {
-
-	// -------------------- CONSTANTS --------------------
-
-	private static final Set<Id<Person>> emptyPassengerSet = Collections.unmodifiableSet(new HashSet<>(0));
+public class TransitVehicleUsageListener implements PersonEntersVehicleEventHandler, PersonLeavesVehicleEventHandler {
 
 	// -------------------- MEMBERS --------------------
 
+	// TODO redundant; is also encoded in vehicleUsages
 	private final TimeDiscretization timeDiscretization;
 
-	private final Map<Id<Vehicle>, Set<Id<Person>>> vehicleId2passengerIds = new LinkedHashMap<>();
+	private final Population population;
 
-	private final Map<Id<Person>, SpaceTimeIndicators<Tuple<Id<Vehicle>, Id<TransitStopFacility>>>> passengerId2vehicleUsageIndicators = new LinkedHashMap<>();
+	// Maps a person on all vehicle-time-slots used by that person.
+	private final Map<Id<Person>, SpaceTimeIndicators<Id<Vehicle>>> passengerId2Entryindicators = new LinkedHashMap<>();
 
-	private boolean debug = true;
+	// Keeps track of when a person last entered a vehicle.
+	private final Map<Id<Person>, Double> passengerId2lastEntryTime = new LinkedHashMap<>();
+
+	// Keeps track of each vehicle's on-board times.
+	private final Map<Id<Vehicle>, Double> vehicleId2sumOfOnboardTimes = new LinkedHashMap<>();
 
 	// -------------------- CONSTRUCTION --------------------
 
-	public TransitVehicleUsageListener(final TimeDiscretization timeDiscretization) {
+	public TransitVehicleUsageListener(final TimeDiscretization timeDiscretization, final Population population) {
 		this.timeDiscretization = timeDiscretization;
+		this.population = population;
 	}
 
-	public void setDebug(final boolean debug) {
-		this.debug = debug;
+	// -------------------- IMPLEMENTATION --------------------
+
+	Map<Id<Vehicle>, Double> getTransitVehicle2sumOfOnboardTimesView() {
+		return Collections.unmodifiableMap(this.vehicleId2sumOfOnboardTimes);
 	}
 
-	// -------------------- INTERNALS --------------------
+	Map<Id<Person>, SpaceTimeIndicators<Id<Vehicle>>> getAndClearIndicators() {
+		final Map<Id<Person>, SpaceTimeIndicators<Id<Vehicle>>> result = new LinkedHashMap<>(
+				this.passengerId2Entryindicators);
+		this.passengerId2Entryindicators.clear();
+		return result;
+	}
 
-	// -------------------- IMPLEMENTATION OF EVENT LISTENERS --------------------
+	// --------------- IMPLEMENTATION OF EventHandler INTERFACES ---------------
 
 	@Override
-	public void handleEvent(TransitDriverStartsEvent event) {
-		// links vehicle to line, route, departure and driver
+	public void reset(int iteration) {
+		this.passengerId2Entryindicators.clear();
+		this.passengerId2lastEntryTime.clear();
+		this.vehicleId2sumOfOnboardTimes.clear();
 	}
 
 	@Override
 	public void handleEvent(final PersonEntersVehicleEvent event) {
-		Set<Id<Person>> passengers = this.vehicleId2passengerIds.get(event.getVehicleId());
-		if (this.debug && (passengers != null) && passengers.contains(event.getPersonId())) {
-			throw new RuntimeException(
-					"Vehicle " + event.getVehicleId() + " already contains person " + event.getPersonId() + ".");
+		final double time_s = event.getTime();
+		final Id<Person> passengerId = event.getPersonId();
+		if ((time_s >= this.timeDiscretization.getStartTime_s()) && (time_s < this.timeDiscretization.getEndTime_s())
+				&& (this.population.getPersons().containsKey(passengerId))) {
+			SpaceTimeIndicators<Id<Vehicle>> indicators = this.passengerId2Entryindicators.get(passengerId);
+			if (indicators == null) {
+				indicators = new SpaceTimeIndicators<Id<Vehicle>>(this.timeDiscretization.getBinCnt());
+				this.passengerId2Entryindicators.put(passengerId, indicators);
+			}
+			final int bin = this.timeDiscretization.getBin(time_s);
+			indicators.visit(event.getVehicleId(), bin);
+			this.passengerId2lastEntryTime.put(passengerId, time_s);
 		}
-		if (passengers == null) {
-			passengers = new LinkedHashSet<>();
-			this.vehicleId2passengerIds.put(event.getVehicleId(), passengers);
-		}
-		passengers.add(event.getPersonId());
 	}
 
 	@Override
 	public void handleEvent(final PersonLeavesVehicleEvent event) {
-		Set<Id<Person>> passengers = this.vehicleId2passengerIds.get(event.getVehicleId());
-		final boolean wasThere = passengers.remove(event.getPersonId());
-		if (this.debug && !wasThere) {
-			throw new RuntimeException(
-					"Vehicle " + event.getVehicleId() + " did not contain passenger " + event.getPersonId() + ".");
-		}
-		if (passengers.size() == 0) {
-			this.vehicleId2passengerIds.remove(event.getVehicleId());
-		}
-	}
-
-	@Override
-	public void handleEvent(final VehicleDepartsAtFacilityEvent event) {
-		for (Id<Person> passengerId : vehicleId2passengerIds.getOrDefault(event.getVehicleId(), emptyPassengerSet)) {
-			SpaceTimeIndicators<Tuple<Id<Vehicle>, Id<TransitStopFacility>>> indicators = this.passengerId2vehicleUsageIndicators
-					.get(passengerId);
-			if (indicators == null) {
-				indicators = new SpaceTimeIndicators<>(this.timeDiscretization.getBinCnt());
-				this.passengerId2vehicleUsageIndicators.put(passengerId, indicators);
-			}
-			indicators.visit(new Tuple<>(event.getVehicleId(), event.getFacilityId()),
-					this.timeDiscretization.getBin(event.getTime()));
+		final double time_s = event.getTime();
+		if ((time_s >= this.timeDiscretization.getStartTime_s()) && (time_s < this.timeDiscretization.getEndTime_s())
+				&& (this.population.getPersons().containsKey(event.getPersonId()))) {
+			final double entryTime_s = this.passengerId2lastEntryTime.remove(event.getPersonId());
+			final double newOnBoardTimeSum_s = this.vehicleId2sumOfOnboardTimes.getOrDefault(event.getVehicleId(), 0.0)
+					+ (event.getTime() - entryTime_s);
+			this.vehicleId2sumOfOnboardTimes.put(event.getVehicleId(), newOnBoardTimeSum_s);
 		}
 	}
 }
