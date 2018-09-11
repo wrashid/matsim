@@ -20,6 +20,7 @@
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,7 +40,6 @@ import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleCapacity;
 import org.matsim.vehicles.Vehicles;
 
-import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.TimeDiscretization;
 import floetteroed.utilities.Units;
 
@@ -318,16 +318,16 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 
 	// -------------------- STATIC UTILITIES --------------------
 
-	public static Map<Id<Link>, Double> newUniformLinkWeights(final Network network) {
-		final Map<Id<Link>, Double> weights = new LinkedHashMap<>();
+	public static Map<Id<?>, Double> newUniformLinkWeights(final Network network) {
+		final Map<Id<?>, Double> weights = new LinkedHashMap<>();
 		for (Link link : network.getLinks().values()) {
 			weights.put(link.getId(), 1.0);
 		}
 		return weights;
 	}
 
-	public static Map<Id<Link>, Double> newOneOverCapacityLinkWeights(final Network network) {
-		final Map<Id<Link>, Double> weights = new LinkedHashMap<>();
+	public static Map<Id<?>, Double> newOneOverCapacityLinkWeights(final Network network) {
+		final Map<Id<?>, Double> weights = new LinkedHashMap<>();
 		for (Link link : network.getLinks().values()) {
 			final double cap_veh_h = link.getFlowCapacityPerSec() * Units.VEH_H_PER_VEH_S;
 			if (cap_veh_h <= 1e-6) {
@@ -336,50 +336,6 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 			weights.put(link.getId(), 1.0 / cap_veh_h);
 		}
 		return weights;
-	}
-
-	public Map<Id<Vehicle>, Double> newTransitWeights(final DynamicData<Id<Vehicle>> vehicleEntryCounts,
-			final Map<Id<Vehicle>, Double> vehicleId2sumOfOnboardTimes_s) {
-
-		final Map<Id<Vehicle>, Double> result = new LinkedHashMap<>();
-
-		double usedVehiclesOriginalCapacitySum = 0.0;
-		double usedVehiclesAdjustedCapacitySum = 0.0;
-		final Set<Id<Vehicle>> unusedVehicleIds = new LinkedHashSet<>();
-
-		// if (vehicleEntryCounts == null) {
-		// unusedVehicleIds.addAll(this.transitVehicles.getVehicles().keySet());
-		// } else {
-		for (Id<Vehicle> vehicleId : this.transitVehicles.getVehicles().keySet()) {
-			final double totalEntryCnt = vehicleEntryCounts.getSum(vehicleId, 0, this.getBinCnt());
-			if (totalEntryCnt > 0) {
-				final double avgOnboardTime_s = vehicleId2sumOfOnboardTimes_s.get(vehicleId) / totalEntryCnt;
-				if (avgOnboardTime_s <= 0) {
-					throw new RuntimeException("Average onboard time of vehicle " + vehicleId + " is "
-							+ avgOnboardTime_s + " seconds, even though " + totalEntryCnt
-							+ " passengers have entered the vehicle.");
-				}
-				final VehicleCapacity capacity = this.transitVehicles.getVehicles().get(vehicleId).getType()
-						.getCapacity();
-				usedVehiclesOriginalCapacitySum += capacity.getSeats() + capacity.getStandingRoom();
-				final double adjustedCapacity = (capacity.getSeats() + capacity.getStandingRoom())
-						* (this.getBinSize_s() / avgOnboardTime_s);
-				usedVehiclesAdjustedCapacitySum += adjustedCapacity;
-				result.put(vehicleId, 1.0 / adjustedCapacity);
-			} else {
-				unusedVehicleIds.add(vehicleId);
-			}
-		}
-		// }
-
-		final double capacityFactor = ((result.size() == 0) ? 1.0
-				: (usedVehiclesAdjustedCapacitySum / usedVehiclesOriginalCapacitySum));
-		for (Id<Vehicle> vehicleId : unusedVehicleIds) {
-			final VehicleCapacity cap = this.transitVehicles.getVehicles().get(vehicleId).getType().getCapacity();
-			result.put(vehicleId, 1.0 / (capacityFactor * (cap.getSeats() + cap.getStandingRoom())));
-		}
-
-		return result;
 	}
 
 	// -------------------- MEMBERS --------------------
@@ -394,7 +350,7 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 
 	private TimeDiscretization myTimeDiscretization = null; // lazy initialization
 
-	private Map<Id<Link>, Double> linkWeights = null; // lazy initialization
+	private Map<Id<?>, Double> linkWeights = null; // lazy initialization
 
 	// keeping track of this to avoid a re-randomization
 	private List<Double> meanReplanningRates = new ArrayList<>();
@@ -448,21 +404,38 @@ public class AccelerationConfigGroup extends ReflectiveConfigGroup {
 	// return result;
 	// }
 
-	public double getWeight(Object linkId, int bin) {
+	public Map<Id<?>, Double> getLinkWeightView() {
 		if (this.linkWeights == null) {
 			if (this.weightingField == LinkWeighting.uniform) {
-				this.linkWeights = newUniformLinkWeights(network);
+				this.linkWeights = newUniformLinkWeights(this.network);
 			} else if (this.weightingField == LinkWeighting.oneOverCapacity) {
-				this.linkWeights = newOneOverCapacityLinkWeights(network);
+				this.linkWeights = newOneOverCapacityLinkWeights(this.network);
 			} else {
 				throw new RuntimeException("unhandled link weighting \"" + this.weightingField + "\"");
 			}
+			this.linkWeights = Collections.unmodifiableMap(this.linkWeights);
 		}
-		if (!(linkId instanceof Id<?>)) {
-			throw new RuntimeException("linkId is of type " + linkId.getClass().getSimpleName());
-		}
-
-		return this.linkWeights.get(linkId);
-
+		return this.linkWeights;
 	}
+
+	// public double getLinkWeight(Object linkId, int bin) {
+	// if (this.linkWeights == null) {
+	// if (this.weightingField == LinkWeighting.uniform) {
+	// this.linkWeights = newUniformLinkWeights(network);
+	// } else if (this.weightingField == LinkWeighting.oneOverCapacity) {
+	// this.linkWeights = newOneOverCapacityLinkWeights(network);
+	// } else {
+	// throw new RuntimeException("unhandled link weighting \"" +
+	// this.weightingField + "\"");
+	// }
+	// }
+	// if (!(linkId instanceof Id<?>)) {
+	// throw new RuntimeException("linkId is of type " +
+	// linkId.getClass().getSimpleName());
+	// }
+	//
+	// return this.linkWeights.get(linkId);
+	//
+	// }
+
 }

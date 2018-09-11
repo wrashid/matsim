@@ -22,7 +22,6 @@ package org.matsim.contrib.pseudosimulation.searchacceleration;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -44,10 +43,11 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.HasPlansAndId;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
+import org.matsim.contrib.eventsBasedPTRouter.stopStopTimes.StopStopTime;
+import org.matsim.contrib.eventsBasedPTRouter.waitTimes.WaitTime;
 import org.matsim.contrib.pseudosimulation.MobSimSwitcher;
 import org.matsim.contrib.pseudosimulation.PSimConfigGroup;
 import org.matsim.contrib.pseudosimulation.mobsim.PSim;
-import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.Utilities;
 import org.matsim.contrib.pseudosimulation.searchacceleration.logging.AverageDeltaForUniformReplanning;
@@ -89,11 +89,9 @@ import org.matsim.core.events.EventsUtils;
 import org.matsim.core.replanning.GenericPlanStrategy;
 import org.matsim.core.replanning.StrategyManager;
 import org.matsim.core.router.util.TravelTime;
-import org.matsim.vehicles.Vehicle;
 
 import com.google.inject.Inject;
 
-import floetteroed.utilities.DynamicData;
 import floetteroed.utilities.statisticslogging.StatisticsWriter;
 import floetteroed.utilities.statisticslogging.TimeStampStatistic;
 
@@ -128,6 +126,12 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 	@Inject
 	private TravelTime linkTravelTimes;
 
+	@Inject
+	private WaitTime waitTime;
+
+	@Inject
+	private StopStopTime stopStopTime;
+
 	// -------------------- NON-INJECTED MEMBERS --------------------
 
 	private Set<Id<Person>> replanners = null;
@@ -139,13 +143,18 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 	private double currentDelta = 0.0;
 
 	// >>> created upon startup >>>
-	private LinkUsageListener matsimIVMobsimUsageListener;
-	private TransitVehicleUsageListener matsimOVMobsimUsageListener;
+
+	private SlotUsageListener slotUsageListener;
+	// private LinkUsageListener matsimIVMobsimUsageListener;
+	// private TransitVehicleUsageListener matsimOVMobsimUsageListener;
+
+	// >>> created upon startup >>>
 	private StatisticsWriter<LogDataWrapper> statsWriter;
 	private Utilities utilities;
 	private RecursiveMovingAverage expectedUtilityChangeSumAccelerated;
 	private RecursiveMovingAverage expectedUtilityChangeSumUniform;
 	private RecursiveMovingAverage realizedUtilityChangeSum;
+
 	// <<< created upon startup <<<
 
 	private List<IndividualReplanningResult> individualReplanningResultsList = null;
@@ -181,8 +190,8 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 	}
 
 	public Integer getDriversInPhysicalSim() {
-		if (this.lastPhysicalLinkUsages != null) {
-			return this.lastPhysicalLinkUsages.size();
+		if (this.lastPhysicalSlotUsages != null) {
+			return this.lastPhysicalSlotUsages.size();
 		} else {
 			return null;
 		}
@@ -302,9 +311,13 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 		this.accelerationConfig = (AccelerationConfigGroup) this.services.getConfig()
 				.getModule(AccelerationConfigGroup.GROUP_NAME);
 
-		this.matsimIVMobsimUsageListener = new LinkUsageListener(this.replanningParameters().getTimeDiscretization());
-		this.matsimOVMobsimUsageListener = new TransitVehicleUsageListener(
-				this.replanningParameters().getTimeDiscretization(), this.services.getScenario().getPopulation());
+		this.slotUsageListener = new SlotUsageListener(this.services.getScenario().getPopulation(),
+				this.services.getScenario().getTransitVehicles(), this.accelerationConfig);
+		// this.matsimIVMobsimUsageListener = new
+		// LinkUsageListener(this.replanningParameters().getTimeDiscretization());
+		// this.matsimOVMobsimUsageListener = new TransitVehicleUsageListener(
+		// this.replanningParameters().getTimeDiscretization(),
+		// this.services.getScenario().getPopulation());
 
 		this.expectedUtilityChangeSumAccelerated = new RecursiveMovingAverage(
 				// this.replanningParameters().getAverageIterations()
@@ -358,42 +371,64 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 
 	@Override
 	public void reset(final int iteration) {
-		this.matsimIVMobsimUsageListener.reset(iteration);
-		this.matsimOVMobsimUsageListener.reset(iteration);
+		this.slotUsageListener.reset(iteration);
+		// this.matsimIVMobsimUsageListener.reset(iteration);
+		// this.matsimOVMobsimUsageListener.reset(iteration);
+		// this.stopInteractionListener.reset(iteration);
 	}
 
 	@Override
 	public void handleEvent(final VehicleEntersTrafficEvent event) {
 		if (this.mobsimSwitcher.isQSimIteration()) {
-			this.matsimIVMobsimUsageListener.handleEvent(event);
+			this.slotUsageListener.handleEvent(event);
+			// this.matsimIVMobsimUsageListener.handleEvent(event);
 		}
 	}
 
 	@Override
 	public void handleEvent(final LinkEnterEvent event) {
 		if (this.mobsimSwitcher.isQSimIteration()) {
-			this.matsimIVMobsimUsageListener.handleEvent(event);
+			this.slotUsageListener.handleEvent(event);
+			// this.matsimIVMobsimUsageListener.handleEvent(event);
 		}
 	}
+
+	// @Override
+	// public void handleEvent(final TransitDriverStartsEvent event) {
+	// if (this.mobsimSwitcher.isQSimIteration()) {
+	// this.stopInteractionListener.handleEvent(event);
+	// }
+	// }
+
+	// @Override
+	// public void handleEvent(final VehicleDepartsAtFacilityEvent event) {
+	// if (this.mobsimSwitcher.isQSimIteration()) {
+	// this.stopInteractionListener.handleEvent(event);
+	// }
+	// }
 
 	@Override
 	public void handleEvent(final PersonEntersVehicleEvent event) {
 		if (this.mobsimSwitcher.isQSimIteration()) {
-			this.matsimOVMobsimUsageListener.handleEvent(event);
+			this.slotUsageListener.handleEvent(event);
+			// this.matsimOVMobsimUsageListener.handleEvent(event);
+			// this.stopInteractionListener.handleEvent(event);
 		}
 	}
 
 	@Override
 	public void handleEvent(final PersonLeavesVehicleEvent event) {
 		if (this.mobsimSwitcher.isQSimIteration()) {
-			this.matsimOVMobsimUsageListener.handleEvent(event);
+			this.slotUsageListener.handleEvent(event);
+			// this.matsimOVMobsimUsageListener.handleEvent(event);
+			// this.stopInteractionListener.handleEvent(event);
 		}
 	}
 
 	// --------------- IMPLEMENTATION OF IterationEndsListener ---------------
 
 	private PopulationState lastPhysicalPopulationState = null;
-	private Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> lastPhysicalLinkUsages = null;
+	private Map<Id<Person>, SpaceTimeIndicators<Id<?>>> lastPhysicalSlotUsages = null;
 
 	private int pseudoSimIterationCnt = 0;
 
@@ -409,25 +444,10 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 				throw new RuntimeException("Did not expect a physical mobsim run!");
 			}
 			this.lastPhysicalPopulationState = new PopulationState(this.services.getScenario().getPopulation());
-			this.lastPhysicalLinkUsages = this.matsimIVMobsimUsageListener.getAndClearIndicators();
-
-			// >>>>> TODO >>>>>
-			
-			final Map<Id<Vehicle>, Double> transitVehicleId2sumOfOnboardTimes_s = new LinkedHashMap<>(
-					this.matsimOVMobsimUsageListener.getTransitVehicle2sumOfOnboardTimesView());
-			final Map<Id<Person>, SpaceTimeIndicators<Id<Vehicle>>> lastPhysicalTransitVehicleUsages = this.matsimOVMobsimUsageListener
-					.getAndClearIndicators();
-			final DynamicData<Id<Vehicle>> transitVehicleEntryCounts = CountIndicatorUtils.newUnweightedCounts(
-					this.accelerationConfig.getTimeDiscretization(), lastPhysicalTransitVehicleUsages.values());
-			final Map<Id<Vehicle>, Double> transitVehicleId2weight = this.accelerationConfig
-					.newTransitWeights(transitVehicleEntryCounts, transitVehicleId2sumOfOnboardTimes_s);
-			for (Map.Entry<?, ?> entry : transitVehicleId2weight.entrySet()) {
-				System.out.println(entry);
-			}
-			System.out.println("System.exit(0)");
-			System.exit(0);
-			
-			// <<<<< TODO <<<<<
+			this.lastPhysicalSlotUsages = this.slotUsageListener.getNewIndicatorView();
+			log.info("number of physical slot usage indicators " + this.lastPhysicalSlotUsages.size());
+			// this.lastPhysicalLinkUsages =
+			// this.matsimIVMobsimUsageListener.getAndClearIndicators();
 
 			this.pseudoSimIterationCnt = 0;
 
@@ -436,6 +456,9 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 				this.lastAverageUtility += person.getSelectedPlan().getScore();
 			}
 			this.lastAverageUtility /= this.services.getScenario().getPopulation().getPersons().size();
+
+			// this.stopInteractionListener.analyzeResult(this.services.getScenario().getTransitSchedule());
+			// this.stopInteractionListener.setEnabled(false);
 
 		} else {
 			log.info("pseudoSim run in iteration " + event.getIteration() + " ends");
@@ -447,6 +470,8 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 
 		if (this.pseudoSimIterationCnt == (ConfigUtils.addOrGetModule(this.services.getConfig(), PSimConfigGroup.class)
 				.getIterationsPerCycle() - 1)) {
+
+			// this.stopInteractionListener.setEnabled(true);
 
 			/*
 			 * Extract, for each agent, the expected (hypothetical) score change and do some
@@ -578,16 +603,23 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 			 * Execute one pSim with the full population.
 			 */
 
-			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> lastPseudoSimLinkUsages;
+			final Map<Id<Person>, SpaceTimeIndicators<Id<?>>> lastPseudoSimSlotUsages;
 			{
-				final LinkUsageListener pSimLinkUsageListener = new LinkUsageListener(
-						this.replanningParameters().getTimeDiscretization());
+				final SlotUsageListener pSimSlotUsageListener = new SlotUsageListener(
+						this.services.getScenario().getPopulation(), this.services.getScenario().getTransitVehicles(),
+						this.accelerationConfig);
+				// final LinkUsageListener pSimLinkUsageListener = new LinkUsageListener(
+				// this.replanningParameters().getTimeDiscretization());
 				final EventsManager eventsManager = EventsUtils.createEventsManager();
-				eventsManager.addHandler(pSimLinkUsageListener);
+				eventsManager.addHandler(pSimSlotUsageListener);
 				final PSim pSim = new PSim(this.services.getScenario(), eventsManager, selectedHypotheticalPlans,
-						this.linkTravelTimes);
+						this.linkTravelTimes, waitTime, stopStopTime, null);
+				// final PSim pSim = new PSim(this.services.getScenario(), eventsManager,
+				// selectedHypotheticalPlans,
+				// this.linkTravelTimes);
 				pSim.run();
-				lastPseudoSimLinkUsages = pSimLinkUsageListener.getAndClearIndicators();
+				lastPseudoSimSlotUsages = pSimSlotUsageListener.getNewIndicatorView();
+				log.info("number of pSim slot usage indicators " + lastPseudoSimSlotUsages.size());
 			}
 
 			/*
@@ -614,15 +646,15 @@ public class SearchAccelerator implements StartupListener, IterationEndsListener
 			 */
 
 			final ReplannerIdentifier replannerIdentifier = new ReplannerIdentifier(this.replanningParameters(),
-					event.getIteration(), this.lastPhysicalLinkUsages, lastPseudoSimLinkUsages,
-					this.services.getScenario().getPopulation(),
+					event.getIteration(), this.lastPhysicalSlotUsages, lastPseudoSimSlotUsages,
+					this.slotUsageListener.getWeightView(), this.services.getScenario().getPopulation(),
 					utilityStatsBeforeReplanning.personId2currentDeltaUtility,
 					utilityStatsBeforeReplanning.currentDeltaUtilitySum, this.currentDelta);
 			this.replanners = replannerIdentifier.drawReplanners();
 			this.everReplanners.addAll(this.replanners);
 			this.individualReplanningResultsList = replannerIdentifier.getIndividualReplanningResultListView();
 
-			final LogDataWrapper data = new LogDataWrapper(this, replannerIdentifier, lastPseudoSimLinkUsages.size());
+			final LogDataWrapper data = new LogDataWrapper(this, replannerIdentifier, lastPseudoSimSlotUsages.size());
 			this.statsWriter.writeToFile(data);
 
 			// this.lastActualReplanIndicatorList =

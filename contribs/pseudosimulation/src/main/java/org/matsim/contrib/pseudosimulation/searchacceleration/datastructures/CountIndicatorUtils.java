@@ -20,8 +20,9 @@
 package org.matsim.contrib.pseudosimulation.searchacceleration.datastructures;
 
 import java.util.Collection;
+import java.util.Map;
 
-import org.matsim.contrib.pseudosimulation.searchacceleration.AccelerationConfigGroup;
+import org.apache.log4j.Logger;
 import org.matsim.contrib.pseudosimulation.searchacceleration.utils.SetUtils;
 
 import floetteroed.utilities.DynamicData;
@@ -50,16 +51,38 @@ public class CountIndicatorUtils {
 		return result;
 	}
 
+	// public static <L> DynamicData<L> newWeightedLinkCounts(final
+	// Collection<SpaceTimeIndicators<L>> allIndicators,
+	// final AccelerationConfigGroup replParams) {
+	// final DynamicData<L> result = new
+	// DynamicData<L>(replParams.getTimeDiscretization());
+	// for (SpaceTimeIndicators<L> indicators : allIndicators) {
+	// for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
+	// for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
+	// result.add(locObj, bin, replParams.getLinkWeight(locObj, bin));
+	// }
+	// }
+	// }
+	// return result;
+	// }
+	
 	public static <L> DynamicData<L> newWeightedCounts(final Collection<SpaceTimeIndicators<L>> allIndicators,
-			final AccelerationConfigGroup replParams) {
-		final DynamicData<L> result = new DynamicData<L>(replParams.getTimeDiscretization());
+			final Map<L, Double> weights, final TimeDiscretization timeDiscr) {
+		final DynamicData<L> result = new DynamicData<L>(timeDiscr);
 		for (SpaceTimeIndicators<L> indicators : allIndicators) {
 			for (int bin = 0; bin < indicators.getTimeBinCnt(); bin++) {
 				for (L locObj : indicators.getVisitedSpaceObjects(bin)) {
-					result.add(locObj, bin, replParams.getWeight(locObj, bin));
+					final Double weight = weights.get(locObj);
+					// Logger.getLogger(CountIndicatorUtils.class).info("Weight of " + locObj + " is " + weight);
+					if (weight != null) {
+						result.add(locObj, bin, weight); // TODO Vectorize in DynamicData!
+					} else {
+						result.add(locObj, bin, 0.0); // TODO Vectorize in DynamicData!
+					}
 				}
 			}
 		}
+		// System.exit(0);
 		return result;
 	}
 

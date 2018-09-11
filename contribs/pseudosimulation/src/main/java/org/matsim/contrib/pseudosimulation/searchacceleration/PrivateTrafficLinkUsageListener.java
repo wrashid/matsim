@@ -19,6 +19,7 @@
  */
 package org.matsim.contrib.pseudosimulation.searchacceleration;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
 import org.matsim.api.core.v01.events.handler.VehicleEntersTrafficEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.SpaceTimeIndicators;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -41,76 +43,51 @@ import org.matsim.vehicles.Vehicle;
 import floetteroed.utilities.TimeDiscretization;
 
 /**
- * Keeps track of when every single vehicle enters which link.
+ * Keeps track of when every single private vehicle enters which link.
  * 
  * @author Gunnar Flötteröd
  *
  */
-public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTrafficEventHandler {
+class PrivateTrafficLinkUsageListener implements LinkEnterEventHandler, VehicleEntersTrafficEventHandler {
 
 	// -------------------- MEMBERS --------------------
 
 	private final TimeDiscretization timeDiscretization;
 
-	private final Map<Id<Vehicle>, Id<Person>> vehicleId2driverId = new LinkedHashMap<>();
+	private final Population population;
 
-	private final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2indicators = new LinkedHashMap<>();
+	private final Map<Id<Person>, SpaceTimeIndicators<Id<?>>> driverId2indicators;
+
+	private final Map<Id<Vehicle>, Id<Person>> privateVehicleId2DriverId = new LinkedHashMap<>();
 
 	// -------------------- CONSTRUCTION --------------------
 
-	// TESTING
-//	private static int instanceCnt = 0;
-
-	// TESTING
-//	@Override
-//	public void finalize() {
-//		instanceCnt--;
-//	}
-
-	public LinkUsageListener(final TimeDiscretization timeDiscretization) {
+	PrivateTrafficLinkUsageListener(final TimeDiscretization timeDiscretization, final Population population,
+			final Map<Id<Person>, SpaceTimeIndicators<Id<?>>> driverId2indicators) {
 		this.timeDiscretization = timeDiscretization;
-//		instanceCnt++;
-//		if (instanceCnt > 2) {
-//			throw new RuntimeException("Just created a " + instanceCnt + "rd instance of " + LinkUsageListener.class.getSimpleName());
-//		}
+		this.population = population;
+		this.driverId2indicators = driverId2indicators;
 	}
 
-	
+	// -------------------- RESULT ACCESS --------------------
+
+	Map<Id<Person>, SpaceTimeIndicators<Id<?>>> getIndicatorView() {
+		return Collections.unmodifiableMap(this.driverId2indicators);
+	}
+
 	// -------------------- INTERNALS --------------------
 
-	private void registerLinkEntry(final Id<Link> linkId, final Id<Vehicle> vehicleId, final double time_s,
-			Id<Person> driverId) {
-		if (driverId != null) {
-			// Added even if currently outside of the time window because later
-			// link entries may be within the time window.
-			this.vehicleId2driverId.put(vehicleId, driverId);
-		} else {
-			driverId = this.vehicleId2driverId.get(vehicleId);
-			if (driverId == null) {
-				throw new RuntimeException("Driver of vehicle " + vehicleId + " is unknown.");
-			}
-		}
-		if ((time_s >= this.timeDiscretization.getStartTime_s()) && (time_s < this.timeDiscretization.getEndTime_s())) {
-			SpaceTimeIndicators<Id<Link>> indicators = this.driverId2indicators.get(driverId);
+	private void registerLinkEntry(final Id<Link> linkId, final Id<Vehicle> vehicleId, final double time_s) {
+		final Id<Person> driverId = this.privateVehicleId2DriverId.get(vehicleId);
+		if ((driverId != null) && (time_s >= this.timeDiscretization.getStartTime_s())
+				&& (time_s < this.timeDiscretization.getEndTime_s())) {
+			SpaceTimeIndicators<Id<?>> indicators = this.driverId2indicators.get(driverId);
 			if (indicators == null) {
-				indicators = new SpaceTimeIndicators<Id<Link>>(this.timeDiscretization.getBinCnt());
+				indicators = new SpaceTimeIndicators<Id<?>>(this.timeDiscretization.getBinCnt());
 				this.driverId2indicators.put(driverId, indicators);
 			}
 			indicators.visit(linkId, this.timeDiscretization.getBin(time_s));
 		}
-	}
-
-	// -------------------- IMPLEMENTATION --------------------
-
-	public TimeDiscretization getTimeDiscretization() {
-		return this.timeDiscretization;
-	}
-
-	Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> getAndClearIndicators() {
-		final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> result = new LinkedHashMap<>(this.driverId2indicators);
-		this.vehicleId2driverId.clear();
-		this.driverId2indicators.clear();
-		return result;
 	}
 
 	// --------------- IMPLEMENTATION OF EventHandler INTERFACES ---------------
@@ -118,17 +95,21 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 	@Override
 	public void reset(int iteration) {
 		this.driverId2indicators.clear();
-		this.vehicleId2driverId.clear();
+		this.privateVehicleId2DriverId.clear();
 	}
 
 	@Override
 	public void handleEvent(final VehicleEntersTrafficEvent event) {
-		this.registerLinkEntry(event.getLinkId(), event.getVehicleId(), event.getTime(), event.getPersonId());
+		final Id<Person> driverId = event.getPersonId();
+		if ((driverId != null) && this.population.getPersons().containsKey(driverId)) {
+			this.privateVehicleId2DriverId.put(event.getVehicleId(), driverId);
+			this.registerLinkEntry(event.getLinkId(), event.getVehicleId(), event.getTime());
+		}
 	}
 
 	@Override
 	public void handleEvent(final LinkEnterEvent event) {
-		this.registerLinkEntry(event.getLinkId(), event.getVehicleId(), event.getTime(), null);
+		this.registerLinkEntry(event.getLinkId(), event.getVehicleId(), event.getTime());
 	}
 
 	// -------------------- MAIN-FUNCTION, ONLY FOR TESTING --------------------
@@ -144,7 +125,8 @@ public class LinkUsageListener implements LinkEnterEventHandler, VehicleEntersTr
 
 		final Controler controler = new Controler(scenario);
 		final TimeDiscretization timeDiscr = new TimeDiscretization(0, 3600, 24);
-		final LinkUsageListener loa = new LinkUsageListener(timeDiscr);
+		final PrivateTrafficLinkUsageListener loa = new PrivateTrafficLinkUsageListener(timeDiscr,
+				scenario.getPopulation(), new LinkedHashMap<Id<Person>, SpaceTimeIndicators<Id<?>>>());
 		controler.getEvents().addHandler(loa);
 
 		controler.run();

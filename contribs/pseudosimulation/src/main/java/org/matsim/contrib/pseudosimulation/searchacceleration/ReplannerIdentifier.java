@@ -29,7 +29,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.contrib.pseudosimulation.searchacceleration.datastructures.CountIndicatorUtils;
@@ -58,14 +57,32 @@ public class ReplannerIdentifier {
 	private final double lambda;
 	private final double delta;
 
-	private final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalLinkUsage;
-	private final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pseudoSimLinkUsage;
 	private final Population population;
 
-	private final DynamicData<Id<Link>> currentWeightedCounts;
-	private final DynamicData<Id<Link>> upcomingWeightedCounts;
-
+	private final Map<Id<Person>, SpaceTimeIndicators<Id<?>>> personId2physicalSlotUsage;
+	private final Map<Id<Person>, SpaceTimeIndicators<Id<?>>> personId2pseudoSimSlotUsage;
+	private final Map<Id<?>, Double> slotWeights;
+	private final DynamicData<Id<?>> currentWeightedCounts;
+	private final DynamicData<Id<?>> upcomingWeightedCounts;
 	private final double sumOfWeightedCountDifferences2;
+
+	// private final Map<Id<Person>, SpaceTimeIndicators<Id<?>>>
+	// driverId2physicalLinkUsage;
+	// private final Map<Id<Person>, SpaceTimeIndicators<Id<?>>>
+	// driverId2pseudoSimLinkUsage;
+	// private final Map<Id<Person>, SpaceTimeIndicators<Id<?>>>
+	// passengerId2physicalTransitVehicleUsage;
+	// private final Map<Id<Person>, SpaceTimeIndicators<Id<?>>>
+	// passengerId2pseudoSimTransitVehicleUsage;
+	//
+	// private final DynamicData<Id<?>> currentWeightedLinkCounts;
+	// private final DynamicData<Id<?>> upcomingWeightedLinkCounts;
+	// private final DynamicData<Id<?>> currentWeightedTransitCounts;
+	// private final DynamicData<Id<?>> upcomingWeightedTransitCounts;
+	//
+	// private final double sumOfWeightedLinkCountDifferences2;
+	// private final double sumOfWeightedTransitCountDifferences2;
+
 	private final double beta;
 
 	private final Map<Id<Person>, Double> personId2utilityChange;
@@ -165,25 +182,64 @@ public class ReplannerIdentifier {
 	// -------------------- CONSTRUCTION --------------------
 
 	ReplannerIdentifier(final AccelerationConfigGroup replanningParameters, final int iteration,
-			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2physicalLinkUsage,
-			final Map<Id<Person>, SpaceTimeIndicators<Id<Link>>> driverId2pseudoSimLinkUsage,
-			final Population population, final Map<Id<Person>, Double> personId2UtilityChange,
-			final double totalUtilityChange, final double delta) {
+			final Map<Id<Person>, SpaceTimeIndicators<Id<?>>> personId2physicalSlotUsage,
+			final Map<Id<Person>, SpaceTimeIndicators<Id<?>>> personId2pseudoSimSlotUsage,
+			// final Map<Id<Person>, SpaceTimeIndicators<Id<?>>> driverId2physicalLinkUsage,
+			// final Map<Id<Person>, SpaceTimeIndicators<Id<?>>>
+			// driverId2pseudoSimLinkUsage,
+			// final Map<Id<Person>, SpaceTimeIndicators<Id<?>>>
+			// passengerId2physicalTransitVehicleUsage,
+			// final Map<Id<Person>, SpaceTimeIndicators<Id<?>>>
+			// passengerId2pseudoSimTransitVehicleUsage,
+			final Map<Id<?>, Double> slotWeights, final Population population,
+			final Map<Id<Person>, Double> personId2UtilityChange, final double totalUtilityChange, final double delta) {
+
+//		System.out.println(slotWeights);
+//		System.out.println(slotWeights.size());
+//		System.exit(0);
 
 		this.replanningParameters = replanningParameters;
-		this.driverId2physicalLinkUsage = driverId2physicalLinkUsage;
-		this.driverId2pseudoSimLinkUsage = driverId2pseudoSimLinkUsage;
 		this.population = population;
 		this.personId2utilityChange = personId2UtilityChange;
 		this.totalUtilityChange = totalUtilityChange;
 
-		this.currentWeightedCounts = CountIndicatorUtils.newWeightedCounts(this.driverId2physicalLinkUsage.values(),
-				this.replanningParameters);
-		this.upcomingWeightedCounts = CountIndicatorUtils.newWeightedCounts(this.driverId2pseudoSimLinkUsage.values(),
-				this.replanningParameters);
-
+		this.personId2physicalSlotUsage = personId2physicalSlotUsage;
+		this.personId2pseudoSimSlotUsage = personId2pseudoSimSlotUsage;
+		this.slotWeights = slotWeights;
+		this.currentWeightedCounts = CountIndicatorUtils.newWeightedCounts(this.personId2physicalSlotUsage.values(),
+				slotWeights, this.replanningParameters.getTimeDiscretization());
+		this.upcomingWeightedCounts = CountIndicatorUtils.newWeightedCounts(this.personId2pseudoSimSlotUsage.values(),
+				slotWeights, this.replanningParameters.getTimeDiscretization());
 		this.sumOfWeightedCountDifferences2 = CountIndicatorUtils.sumOfDifferences2(this.currentWeightedCounts,
 				this.upcomingWeightedCounts);
+
+		// this.driverId2physicalLinkUsage = driverId2physicalLinkUsage;
+		// this.driverId2pseudoSimLinkUsage = driverId2pseudoSimLinkUsage;
+		// this.currentWeightedLinkCounts =
+		// CountIndicatorUtils.newWeightedCounts(this.driverId2physicalLinkUsage.values(),
+		// this.replanningParameters.getLinkWeightView(),
+		// this.replanningParameters.getTimeDiscretization());
+		// this.upcomingWeightedLinkCounts = CountIndicatorUtils.newWeightedCounts(
+		// this.driverId2pseudoSimLinkUsage.values(),
+		// this.replanningParameters.getLinkWeightView(),
+		// this.replanningParameters.getTimeDiscretization());
+		// this.sumOfWeightedLinkCountDifferences2 =
+		// CountIndicatorUtils.sumOfDifferences2(this.currentWeightedLinkCounts,
+		// this.upcomingWeightedLinkCounts);
+		//
+		// this.passengerId2physicalTransitVehicleUsage =
+		// passengerId2physicalTransitVehicleUsage;
+		// this.passengerId2pseudoSimTransitVehicleUsage =
+		// passengerId2pseudoSimTransitVehicleUsage;
+		// this.currentWeightedTransitCounts = CountIndicatorUtils.newWeightedCounts(
+		// this.passengerId2physicalTransitVehicleUsage.values(), transitWeights,
+		// this.replanningParameters.getTimeDiscretization());
+		// this.upcomingWeightedTransitCounts = CountIndicatorUtils.newWeightedCounts(
+		// this.passengerId2pseudoSimTransitVehicleUsage.values(), transitWeights,
+		// this.replanningParameters.getTimeDiscretization());
+		// this.sumOfWeightedTransitCountDifferences2 = CountIndicatorUtils
+		// .sumOfDifferences2(this.currentWeightedTransitCounts,
+		// this.upcomingWeightedTransitCounts);
 
 		this.lambda = this.replanningParameters.getMeanReplanningRate(iteration);
 		this.beta = 2.0 * this.lambda * this.sumOfWeightedCountDifferences2 / this.totalUtilityChange;
@@ -196,13 +252,13 @@ public class ReplannerIdentifier {
 
 		// Initialize score residuals.
 
-		final DynamicData<Id<Link>> interactionResiduals = CountIndicatorUtils
+		final DynamicData<Id<?>> interactionResiduals = CountIndicatorUtils
 				.newWeightedDifference(this.upcomingWeightedCounts, this.currentWeightedCounts, this.lambda);
 		double inertiaResidual = (1.0 - this.lambda) * this.totalUtilityChange;
 		double regularizationResidual = 0;
 		double sumOfInteractionResiduals2 = interactionResiduals.sumOfEntries2();
 
-		final DynamicData<Id<Link>> uniformInteractionResiduals = CountIndicatorUtils
+		final DynamicData<Id<?>> uniformInteractionResiduals = CountIndicatorUtils
 				.newWeightedDifference(this.upcomingWeightedCounts, this.currentWeightedCounts, this.lambda);
 		double uniformInertiaResidual = inertiaResidual;
 		double uniformRegularizationResidual = regularizationResidual;
@@ -240,17 +296,18 @@ public class ReplannerIdentifier {
 
 		for (Id<Person> driverId : allPersonIdsShuffled) {
 
-			final ScoreUpdater<Id<Link>> scoreUpdater = new ScoreUpdater<>(
-					this.driverId2physicalLinkUsage.get(driverId), this.driverId2pseudoSimLinkUsage.get(driverId),
-					this.lambda, this.beta, this.delta, interactionResiduals, inertiaResidual, regularizationResidual,
+			final ScoreUpdater<Id<?>> scoreUpdater = new ScoreUpdater<>(this.personId2physicalSlotUsage.get(driverId),
+					this.personId2pseudoSimSlotUsage.get(driverId), this.slotWeights, this.lambda, this.beta,
+					this.delta, interactionResiduals, inertiaResidual, regularizationResidual,
 					this.replanningParameters, this.personId2utilityChange.get(driverId), this.totalUtilityChange,
 					sumOfInteractionResiduals2);
 
-			final ScoreUpdater<Id<Link>> uniformScoreUpdater = new ScoreUpdater<>(
-					this.driverId2physicalLinkUsage.get(driverId), this.driverId2pseudoSimLinkUsage.get(driverId),
-					this.lambda, this.beta, this.delta, uniformInteractionResiduals, uniformInertiaResidual,
-					uniformRegularizationResidual, this.replanningParameters, this.personId2utilityChange.get(driverId),
-					this.totalUtilityChange, sumOfUniformInteractionResiduals2);
+			final ScoreUpdater<Id<?>> uniformScoreUpdater = new ScoreUpdater<>(
+					this.personId2physicalSlotUsage.get(driverId), this.personId2pseudoSimSlotUsage.get(driverId),
+					this.slotWeights, this.lambda, this.beta, this.delta, uniformInteractionResiduals,
+					uniformInertiaResidual, uniformRegularizationResidual, this.replanningParameters,
+					this.personId2utilityChange.get(driverId), this.totalUtilityChange,
+					sumOfUniformInteractionResiduals2);
 
 			final boolean replanner = recipe.isReplanner(driverId, scoreUpdater.getScoreChangeIfOne(),
 					scoreUpdater.getScoreChangeIfZero());

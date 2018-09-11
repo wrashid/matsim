@@ -26,7 +26,7 @@ import java.util.Set;
  *
  * @author Gunnar Flötteröd
  *
- * TODO Move this to the utilities-project.
+ *         TODO Move this to the utilities-project.
  * 
  */
 public class SetUtils {
@@ -36,6 +36,9 @@ public class SetUtils {
 		result.addAll(arg1);
 		return result;
 	}
-	
-}
 
+	public static boolean disjoint(final Set<?> set1, final Set<?> set2) {
+		return (union(set1, set2).size() == (set1.size() + set2.size()));
+	}
+
+}
