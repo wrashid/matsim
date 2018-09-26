@@ -43,8 +43,8 @@ public class TransitPassengerRouteConverter {
         for (int i = 0; i <= connections.size(); i++) {
 
             //join same Journey connection
-            //first foot journey belongs to accessWalk
-            //last foot journey belongs to egressWalk
+            //if first element is foot journey it belongs to accessWalk
+            //if last element is foot journey it belongs to egressWalk
 
             if (isFootLeg) while (i < connections.size() && connections.get(i).id() == -1) i++;
             else while (i < connections.size() && connections.get(i).id() != -1) i++;
@@ -57,9 +57,11 @@ public class TransitPassengerRouteConverter {
             isFootLeg = !isFootLeg;
         }
 
-        //TODO experimental: delete first and last footJourney
+        //delete first and last footJourney
         if (legs.get(0).get(0).id() == -1) {
-            lastArrivalTime = TransitNetworkUtils.convertTime(legs.get(0).get(legs.get(0).size()-1).arrival());
+            for (Connection connection : legs.get(0)) {
+                lastArrivalTime += TransitNetworkUtils.convertTime(connection.duration());
+            }
             legs.remove(0);
         }
         if (legs.get(legs.size()-1).get(0).id() == -1) {
@@ -77,13 +79,16 @@ public class TransitPassengerRouteConverter {
                     endConnection.end().id());
             Time departure = startConnection.departure();
             Time arrival = endConnection.arrival();
-            double travelTime = TransitNetworkUtils.convertTime(arrival.differenceTo(departure));
+            RelativeTime time = arrival.differenceTo(departure);
+            double travelTime = TransitNetworkUtils.convertTime(time);
 
             double departureOffset = TransitNetworkUtils.convertTime(departure);
             //TODO make prettier
             if (lastArrivalTime != -1)
                 departureOffset -= lastArrivalTime;
             travelTime += departureOffset;
+            //round down every pt leg
+//            travelTime = Math.floor(travelTime);
             lastArrivalTime = TransitNetworkUtils.convertTime(arrival);
 
             Id[] lineAndRouteId = new Id[] {null, null};
@@ -93,6 +98,11 @@ public class TransitPassengerRouteConverter {
                     lineAndRouteId = mappingHandler.getConnectionId2LineAndRouteId().get(connection.id());
             }
 
+            //matsim does need a second to change the line. connectionScan does not. so we ceiled all the walk legs and have to remove a second now
+            if (lineAndRouteId[0] == null) {
+                if (travelTime != 0)
+                travelTime--;
+            }
             routeSegments.add(new RouteSegment(fromFacility, toFacility,
                     travelTime, lineAndRouteId[0], lineAndRouteId[1]));
             cost += travelTime;
