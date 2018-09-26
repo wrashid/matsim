@@ -51,7 +51,6 @@ class ConnectionConverter {
         List<StopWithMatsimOffsets> stops = new ArrayList<>();
         for (TransitRouteStop transitRouteStop : transitRoute.getStops()) {
 
-
 //            Stop currentStop = idAndMappingHandler.getMatsimId2Stop().get(transitRouteStop.getStopFacility().getId());
             Stop currentStop = stopConverter.convertAndAddStop(transitRouteStop.getStopFacility());
 
@@ -67,6 +66,7 @@ class ConnectionConverter {
                     idAndMappingHandler.createNewJourneyId(), this.day, new TransportSystem(transportMode), this.CAPACITY);
 
             for (int i = 1; i < transitRoute.getStops().size(); i++) {
+
                 Connection connection = convertConnection(
                         stops.get(i-1),
                         stops.get(i),
@@ -88,6 +88,10 @@ class ConnectionConverter {
         Time connectionDeparture = departure.plus(TransitNetworkUtils.convertTime(start.getDepartureOffset()));
         Time connectionArrival = departure.plus(TransitNetworkUtils.convertTime(end.getArrivalOffset()));
         RoutePoints route = RoutePoints.from(startStop, endStop);
+        if (connectionArrival.isBefore(connectionDeparture)) {
+            connectionDeparture = departure.plus(TransitNetworkUtils.convertTime(start.getArrivalOffset()));
+            connectionArrival = departure.plus(TransitNetworkUtils.convertTime(start.getArrivalOffset()));
+        }
         return Connection.from(id, startStop, endStop, connectionDeparture, connectionArrival, journey, route);
     }
 
