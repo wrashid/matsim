@@ -112,6 +112,7 @@ class StopConverter {
                 CoordinateUtils.convert2Coord(stop1.coordinate()),
                 CoordinateUtils.convert2Coord(stop2.coordinate()));
         walkTime += trConfig.getAdditionalTransferTime();
+        walkTime = Math.ceil(walkTime);
         RelativeTime of = TransitNetworkUtils.convertTime(walkTime);
         return of;
     }
