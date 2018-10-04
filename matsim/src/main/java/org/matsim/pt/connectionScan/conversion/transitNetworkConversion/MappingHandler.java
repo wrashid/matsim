@@ -16,6 +16,19 @@ public class MappingHandler {
     private int conectionIdCounter = 0;
     private int journeyIdCounter = 0;
 
+    public MappingHandler() {
+
+    }
+
+    public MappingHandler(MappingHandler toClone) {
+
+        this.stopId2TransitStopFacility.putAll(toClone.stopId2TransitStopFacility);
+        this.matsimId2Stop.putAll(toClone.matsimId2Stop);
+        this.connectionId2LineAndRouteId.putAll(toClone.connectionId2LineAndRouteId);
+        this.conectionIdCounter = toClone.conectionIdCounter;
+        this.journeyIdCounter = toClone.journeyIdCounter;
+    }
+
     /**
      * TODO
      * @param matsimStop

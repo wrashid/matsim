@@ -1,6 +1,7 @@
 package org.matsim.pt.connectionScan.conversion.transitNetworkConversion;
 
 import edu.kit.ifv.mobitopp.publictransport.connectionscan.TransitNetwork;
+import edu.kit.ifv.mobitopp.publictransport.model.Connection;
 import edu.kit.ifv.mobitopp.publictransport.model.Connections;
 import edu.kit.ifv.mobitopp.publictransport.model.Stop;
 import edu.kit.ifv.mobitopp.time.Time;
@@ -58,6 +59,37 @@ public class NetworkConverter {
         TransitNetwork transitNetwork = TransitNetwork.createOf(stops, connections);
         log.info("Finished converting TransitNetwork");
         return transitNetwork;
+    }
+
+    public TransitNetwork createCopy() {
+
+        log.info("Start creating TransitNetwork copy");
+        List<Stop> copiedStops = new ArrayList<>();
+        Connections copiedConnections = new Connections();
+
+        for (Stop stopToCopy : stops) {
+            copiedStops.add(copyStop(stopToCopy));
+        }
+        for (Connection connectionToCopy : connections.asCollection()) {
+            copiedConnections.add(copyConnection(connectionToCopy));
+        }
+
+        log.info("Finished creating TransitNetwork copy");
+        return TransitNetwork.createOf(stops, connections);
+    }
+
+    private Stop copyStop(Stop stop) {
+
+        Stop newStop = new Stop(stop.id(), stop.name(), stop.coordinate(), stop.changeTime(), stop.station(), stop.externalId());
+        for (Stop neighbour : stop.neighbours()) {
+            newStop.addNeighbour(neighbour, stop.neighbours().walkTimeTo(neighbour).get());
+        }
+        return newStop;
+    }
+
+    private Connection copyConnection(Connection connection) {
+
+        return Connection.from(connection.id(), connection.start(), connection.end(), connection.departure(), connection.arrival(), connection.journey(), connection.points());
     }
 
     private void createDay() { this.day = Day.getDay();}

@@ -16,7 +16,9 @@ public class ConnectionScanTransitRouterProvider implements Provider<TransitRout
 
     private final TransitRouterNetworkTravelTimeAndDisutility travelDisutility;
     private final TransitRouterConfig transitRouterConfig;
-    private final TransitNetwork preparedTransitNetwork;
+    private NetworkConverter networkConverter;
+    boolean transitNetworkUsed = false;
+    private final TransitNetwork transitNetwork;
     private final MappingHandler mappingHandler;
 
     @Inject
@@ -30,8 +32,8 @@ public class ConnectionScanTransitRouterProvider implements Provider<TransitRout
         PreparedTransitSchedule preparedTransitSchedule = new PreparedTransitSchedule(schedule);
         travelDisutility = new TransitRouterNetworkTravelTimeAndDisutility(transitRouterConfig, preparedTransitSchedule);
 
-        NetworkConverter networkConverter = new NetworkConverter(schedule, transitRouterConfig, travelDisutility);
-        preparedTransitNetwork = networkConverter.convert();
+        networkConverter = new NetworkConverter(schedule, transitRouterConfig, travelDisutility);
+        transitNetwork = networkConverter.convert();
         mappingHandler = networkConverter.getMappingHandler();
     }
 
@@ -42,14 +44,22 @@ public class ConnectionScanTransitRouterProvider implements Provider<TransitRout
         PreparedTransitSchedule preparedTransitSchedule = new PreparedTransitSchedule(schedule);
         travelDisutility = new TransitRouterNetworkTravelTimeAndDisutility(transitRouterConfig, preparedTransitSchedule);
 
-        NetworkConverter networkConverter = new NetworkConverter(schedule, transitRouterConfig, travelDisutility);
-        preparedTransitNetwork = networkConverter.convert();
+        networkConverter = new NetworkConverter(schedule, transitRouterConfig, travelDisutility);
+        transitNetwork = networkConverter.convert();
         mappingHandler = networkConverter.getMappingHandler();
     }
 
     @Override
     public TransitRouter get() {
-        return new ConnectionScanRouter(transitRouterConfig, this.travelDisutility, preparedTransitNetwork, mappingHandler);
+
+        final TransitNetwork preparedTransitNetwork;
+        if (transitNetworkUsed) {
+            preparedTransitNetwork = networkConverter.createCopy();
+        } else {
+            preparedTransitNetwork = transitNetwork;
+            transitNetworkUsed = true;
+        }
+        return new ConnectionScanRouter(transitRouterConfig, travelDisutility, preparedTransitNetwork, new MappingHandler(mappingHandler));
     }
 }
 
