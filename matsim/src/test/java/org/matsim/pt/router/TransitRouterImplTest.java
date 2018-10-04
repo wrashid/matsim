@@ -298,6 +298,37 @@ public class TransitRouterImplTest {
 	}
 
 	@Test
+	public void testDriveLongerWalkBackFaster() {
+		Fixture f = new Fixture();
+		f.init();
+		TransitRouterConfig trConfig = new TransitRouterConfig(f.scenario.getConfig().planCalcScore(),
+				f.scenario.getConfig().plansCalcRoute(), f.scenario.getConfig().transitRouter(),
+				f.scenario.getConfig().vspExperimental());
+		TransitRouter router = createTransitRouter(f.schedule, trConfig, routerType);
+		Coord fromCoord = new Coord((double) 3800, (double) 5100);
+		Coord toCoord = new Coord((double) 10500, (double) 6000);
+		double departureTime = 5.0 * 3600 + 40.0 * 60;
+		List<Leg> legs = router.calcRoute(new FakeFacility(fromCoord), new FakeFacility(toCoord), departureTime, null);
+		assertEquals(3, legs.size());
+		assertEquals(TransportMode.transit_walk, legs.get(0).getMode());
+		assertEquals(TransportMode.pt, legs.get(1).getMode());
+		assertEquals(TransportMode.transit_walk, legs.get(2).getMode());
+		assertTrue("expected TransitRoute in leg.", legs.get(1).getRoute() instanceof ExperimentalTransitRoute);
+		ExperimentalTransitRoute ptRoute = (ExperimentalTransitRoute) legs.get(1).getRoute();
+		assertEquals(Id.create("0", TransitStopFacility.class), ptRoute.getAccessStopId());
+		assertEquals(Id.create("4", TransitStopFacility.class), ptRoute.getEgressStopId());
+		assertEquals(f.blueLine.getId(), ptRoute.getLineId());
+		assertEquals(Id.create("blue A > I", TransitRoute.class), ptRoute.getRouteId());
+		double actualTravelTime = 0.0;
+		for (Leg leg : legs) {
+			actualTravelTime += leg.getTravelTime();
+		}
+		double expectedTravelTime = 18 * 60 + // agent takes the *:46 course, arriving in C at *:58
+				CoordUtils.calcEuclideanDistance(f.schedule.getFacilities().get(Id.create("4", TransitStopFacility.class)).getCoord(), toCoord) / trConfig.getBeelineWalkSpeed();
+		assertEquals(expectedTravelTime, actualTravelTime, MatsimTestCase.EPSILON);
+	}
+
+	@Test
 	public void testTransferWeights() {
 		/* idea: travel from C to F
 		 * If starting at the right time, one could take the red line to G and travel back with blue to F.
