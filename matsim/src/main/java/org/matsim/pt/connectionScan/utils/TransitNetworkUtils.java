@@ -1,10 +1,10 @@
 package org.matsim.pt.connectionScan.utils;
 
 
-import edu.kit.ifv.mobitopp.publictransport.model.RelativeTime;
+import edu.kit.ifv.mobitopp.publictransport.connectionscan.TransitNetwork;
 import edu.kit.ifv.mobitopp.publictransport.model.Stop;
-import edu.kit.ifv.mobitopp.publictransport.model.StopPath;
-import edu.kit.ifv.mobitopp.publictransport.model.Time;
+import edu.kit.ifv.mobitopp.time.RelativeTime;
+import edu.kit.ifv.mobitopp.time.Time;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.facilities.Facility;
@@ -13,9 +13,6 @@ import org.matsim.pt.connectionScan.model.StopAndInitialData;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-
-import static java.time.temporal.ChronoUnit.MINUTES;
-import static java.time.temporal.ChronoUnit.NANOS;
 
 public class TransitNetworkUtils {
 
@@ -53,14 +50,18 @@ public class TransitNetworkUtils {
     }
 
     public static RelativeTime convertTime(double time) {
+        time = Math.ceil(time);
         return RelativeTime.of((long) (time * Math.pow(10, 9)), ChronoUnit.NANOS);
     }
 
     public static double convertTime(RelativeTime relativeTime) {
-        return relativeTime.toDuration().toNanos()* Math.pow(10, -9);
+//        return relativeTime.toDuration().toNanos() * Math.pow(10, -9);
+        return relativeTime.seconds();
     }
 
     public static double convertTime(Time time) {
-        return time.time().toLocalTime().toNanoOfDay() * Math.pow(10, -9);
+
+//        return time.time().toLocalTime().toNanoOfDay() * Math.pow(10, -9);
+        return time.toSeconds();
     }
 }
