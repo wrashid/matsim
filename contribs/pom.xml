@@ -178,7 +178,8 @@
 		<module>signals</module>
 		<module>socnetsim</module>
 		<module>taxi</module>
-	</modules>
+        <module>spatialDrt</module>
+    </modules>
 	<repositories>
 		<repository>
             <!-- Geotools is not on Maven central -->
