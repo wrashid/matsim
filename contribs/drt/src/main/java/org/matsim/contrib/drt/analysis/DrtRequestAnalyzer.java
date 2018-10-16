@@ -116,7 +116,7 @@ public class DrtRequestAnalyzer implements DrtRequestRejectedEventHandler, DrtRe
 		if (submission!=null){
 			this.scheduledRequests.put(submission.getPersonId(),event);
 		}
-		else throw new RuntimeException("Vehicle allocation without submission?");
+		else throw new RuntimeException("vehicle allocation without submission?");
 	}
 
 	/* (non-Javadoc)

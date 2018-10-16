@@ -49,18 +49,18 @@ public class ParallelMultiVehicleInsertionProblem implements MultiVehicleInserti
 	private final DetourLinksStats detourLinksStats = new DetourLinksStats();
 
 	public ParallelMultiVehicleInsertionProblem(PrecalculablePathDataProvider pathDataProvider, DrtConfigGroup drtCfg,
-			MobsimTimer timer, ForkJoinPool forkJoinPool, InsertionCostCalculator.PenaltyCalculator penaltyCalculator) {
+			MobsimTimer timer, ForkJoinPool forkJoinPool, InsertionCostCalculator.PenaltyCalculator penaltyCalculator, InsertionCostCalculator insertionCostCalculator) {
 		this.pathDataProvider = pathDataProvider;
 		this.drtCfg = drtCfg;
 		this.timer = timer;
 		this.forkJoinPool = forkJoinPool;
-		insertionCostCalculator = new InsertionCostCalculator(drtCfg, timer, penaltyCalculator);
+		this.insertionCostCalculator = insertionCostCalculator;
 		this.penaltyCalculator = penaltyCalculator;
 	}
 
 	@Override
 	public Optional<BestInsertion> findBestInsertion(DrtRequest drtRequest, Collection<Entry> vEntries) {
-		DetourLinksProvider detourLinksProvider = new DetourLinksProvider(drtCfg, timer, drtRequest, penaltyCalculator);
+		DetourLinksProvider detourLinksProvider = new DetourLinksProvider(drtCfg, timer, drtRequest, penaltyCalculator,insertionCostCalculator);
 		detourLinksProvider.findInsertionsAndLinks(forkJoinPool, vEntries);
 
 		detourLinksStats.updateStats(vEntries, detourLinksProvider);

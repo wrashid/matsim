@@ -28,7 +28,7 @@ import java.util.concurrent.ForkJoinPool;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.drt.data.DrtRequest;
-import org.matsim.contrib.drt.optimizer.VehicleData.Entry;
+import org.matsim.contrib.drt.optimizer.VehicleData;
 import org.matsim.contrib.drt.optimizer.insertion.InsertionGenerator.Insertion;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.util.PartialSort;
@@ -68,7 +68,7 @@ class DetourLinksProvider {
 	private final SingleVehicleInsertionFilter insertionFilter;
 
 	private DetourLinksSet detourLinksSet;
-	private final Map<Entry, List<Insertion>> filteredInsertionsPerVehicle;
+	private final Map<VehicleData.Entry, List<Insertion>> filteredInsertionsPerVehicle;
 
 	private final Map<Id<Link>, Link> linksToPickup;
 	private final Map<Id<Link>, Link> linksFromPickup;
@@ -80,17 +80,17 @@ class DetourLinksProvider {
 			NEAREST_INSERTIONS_AT_END_LIMIT);
 
 	private static class InsertionAtEnd {
-		private final Entry vEntry;
+		private final VehicleData.Entry vEntry;
 		private final InsertionWithDetourTimes insertion;
 
-		private InsertionAtEnd(Entry vEntry, InsertionWithDetourTimes insertion) {
+		private InsertionAtEnd(VehicleData.Entry vEntry, InsertionWithDetourTimes insertion) {
 			this.vEntry = vEntry;
 			this.insertion = insertion;
 		}
 	}
 
 	public DetourLinksProvider(DrtConfigGroup drtCfg, MobsimTimer timer, DrtRequest drtRequest,
-			InsertionCostCalculator.PenaltyCalculator penaltyCalculator) {
+			InsertionCostCalculator.PenaltyCalculator penaltyCalculator, InsertionCostCalculator insertionCostCalculator) {
 		this.drtRequest = drtRequest;
 
 		// initial capacities of concurrent maps according to insertion stats for AT Berlin 10pct
@@ -108,11 +108,10 @@ class DetourLinksProvider {
 		insertionFilter = new SingleVehicleInsertionFilter(//
 				new DetourTimesProvider(
 						(from, to) -> DistanceUtils.calculateDistance(from, to) / optimisticBeelineSpeed,
-						drtCfg.getStopDuration()), //
-				new InsertionCostCalculator(drtCfg, timer, penaltyCalculator));
+						drtCfg.getStopDuration()), insertionCostCalculator);
 	}
 
-	void findInsertionsAndLinks(ForkJoinPool forkJoinPool, Collection<Entry> vEntries) {
+	void findInsertionsAndLinks(ForkJoinPool forkJoinPool, Collection<VehicleData.Entry> vEntries) {
 		forkJoinPool.submit(() -> vEntries.parallelStream()//
 				.forEach(this::addDetourLinks))//
 				.join();
@@ -125,7 +124,7 @@ class DetourLinksProvider {
 	 * 
 	 * @param vEntry
 	 */
-	private void addDetourLinks(Entry vEntry) {
+	private void addDetourLinks(VehicleData.Entry vEntry) {
 		List<Insertion> insertions = insertionGenerator.generateInsertions(drtRequest, vEntry);
 		List<InsertionWithDetourTimes> insertionsWithDetourTimes = insertionFilter.findFeasibleInsertions(drtRequest,
 				vEntry, insertions);
@@ -170,12 +169,12 @@ class DetourLinksProvider {
 		nearestInsertionsAtEnd.add(insertionAtEnd, timeDistance);
 	}
 
-	private void addLinks(int i, int j, Entry vEntry) {
+	private void addLinks(int i, int j, VehicleData.Entry vEntry) {
 		// i -> pickup
 		putLinkToMap(linksToPickup, (i == 0) ? vEntry.start.link : vEntry.stops.get(i - 1).task.getLink());
 
 		// XXX optimise: if pickup/dropoff is inserted at existing stop,
-		// no need to calc a path from pickup/dropoff to the next stop (the path is already in Schedule)
+		// no need to calc a path from pickup/dropoff to the next stop (the path is already in schedule)
 
 		if (i == j) {
 			// pickup -> dropoff
@@ -198,7 +197,7 @@ class DetourLinksProvider {
 		map.putIfAbsent(link.getId(), link);
 	}
 
-	Map<Entry, List<Insertion>> getFilteredInsertions() {
+	Map<VehicleData.Entry, List<Insertion>> getFilteredInsertions() {
 		return filteredInsertionsPerVehicle;
 	}
 
