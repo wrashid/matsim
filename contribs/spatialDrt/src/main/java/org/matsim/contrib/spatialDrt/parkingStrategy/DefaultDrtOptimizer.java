@@ -120,7 +120,13 @@ public class DefaultDrtOptimizer implements DrtOptimizer, MobsimBeforeCleanupLis
 		}
 
 		if (mobsimTimer.getTimeOfDay() == 30 * 3600 - 300){
-			System.out.println();
+			for (Vehicle veh: this.fleet.getVehicles().values()){
+				for (Task task:veh.getSchedule().getTasks()){
+					if (task instanceof DrtStayTask && task.getBeginTime() != task.getEndTime()){
+						System.out.println();
+					}
+				}
+			}
 		}
 //		if (parkingStrategy != null && e.getSimulationTime() % drtCfg.getRebalancingInterval() == 0) {
 //			rebalanceMultiOperatorFleet();

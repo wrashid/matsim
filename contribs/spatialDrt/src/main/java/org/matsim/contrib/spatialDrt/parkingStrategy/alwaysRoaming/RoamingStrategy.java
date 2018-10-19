@@ -26,7 +26,6 @@ import java.util.Random;
 
 public class RoamingStrategy implements ParkingStrategy, MobsimBeforeSimStepListener {
     private DrtZonalSystem zonalSystem;
-    private Network cleanNetwork;
     private Network network;
     private ArrayList<Link> selectableLinks = new ArrayList();
     private ZonalDemandAggregator demandAggregator;
@@ -37,21 +36,11 @@ public class RoamingStrategy implements ParkingStrategy, MobsimBeforeSimStepList
     public RoamingStrategy( ZonalDemandAggregator demandAggregator, DrtZonalSystem zonalSystem,
                            @Named(DvrpRoutingNetworkProvider.DVRP_ROUTING) Network network) {
         this.network = network;
-        cleanNetwork = NetworkUtils.createNetwork();
-        for (Node node : network.getNodes().values()) {
-            NetworkUtils.createAndAddNode(cleanNetwork,node.getId(),node.getCoord());
-        }
-        for (Link link : network.getLinks().values()){
-            NetworkUtils.createAndAddLink(cleanNetwork, link.getId(), cleanNetwork.getNodes().get(link.getFromNode().getId()), cleanNetwork.getNodes().get(link.getToNode().getId()),
-                    link.getLength(),link.getFreespeed(),link.getCapacity(), link.getNumberOfLanes());
-        }
-        new NetworkCleaner().run(cleanNetwork);
+        new NetworkCleaner().run(network);
         this.demandAggregator = demandAggregator;
         this.zonalSystem = zonalSystem;
-        for (Link link : cleanNetwork.getLinks().values()){
-            if (link.getAllowedModes().contains(TransportMode.car)){
-                selectableLinks.add(link);
-            }
+        for (Link link : network.getLinks().values()){
+            selectableLinks.add(link);
         }
     }
 
@@ -62,8 +51,11 @@ public class RoamingStrategy implements ParkingStrategy, MobsimBeforeSimStepList
         }
         if (zoneidlist == null || zoneidlist.size() == 0) {
             Random random = new Random();
-            Link randomLink = selectableLinks.get(random.nextInt(selectableLinks.size()));
-                return new ParkingLocation(vehicle.getId(), randomLink);
+            Link randomLink;
+            do {
+                 randomLink = selectableLinks.get(random.nextInt(selectableLinks.size()));
+            }while(randomLink.getId().equals(((DrtStayTask)vehicle.getSchedule().getCurrentTask()).getLink().getId()));
+            return new ParkingLocation(vehicle.getId(), randomLink);
         }
             // Now choose a random item
         double random = Math.random();
@@ -81,8 +73,8 @@ public class RoamingStrategy implements ParkingStrategy, MobsimBeforeSimStepList
         }
         Link relocateL;
         do{
-            relocateL = network.getLinks().get(Id.createLinkId(NetworkUtils.getNearestLink(cleanNetwork, zonalSystem.getRandomZoneCoord(zoneidlist.get(low))).getId().toString()));
-        }while(relocateL == ((DrtStayTask)vehicle.getSchedule().getCurrentTask()).getLink());
+            relocateL = network.getLinks().get(Id.createLinkId(NetworkUtils.getNearestLink(network, zonalSystem.getRandomZoneCoord(zoneidlist.get(low))).getId().toString()));
+        }while(relocateL.getId().equals(((DrtStayTask)vehicle.getSchedule().getCurrentTask()).getLink().getId()));
         return new ParkingLocation(vehicle.getId(), relocateL);
     }
 

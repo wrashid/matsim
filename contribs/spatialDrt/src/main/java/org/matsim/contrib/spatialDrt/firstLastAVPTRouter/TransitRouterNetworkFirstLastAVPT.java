@@ -375,7 +375,7 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 		this.qtNodesAV = quadTree;
 	}
 	public enum NetworkModes {
-		PT,PT_AV,AV;
+		PT,PT_TAXI,PT_AV,AV;
 	}
 	public static TransitRouterNetworkFirstLastAVPT createFromSchedule(final Network network, final TransitSchedule schedule, final double maxBeelineWalkConnectionDistance, NetworkModes networkModes) {
 		log.info("start creating transit network");

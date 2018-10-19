@@ -25,8 +25,6 @@ import org.matsim.contrib.drt.optimizer.DrtOptimizer;
 import org.matsim.contrib.drt.run.Drt;
 import org.matsim.contrib.drt.schedule.DrtTask;
 import org.matsim.contrib.dvrp.data.Vehicle;
-import org.matsim.contrib.dvrp.optimizer.VrpOptimizer;
-import org.matsim.contrib.dvrp.optimizer.VrpOptimizerWithOnlineTracking;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.schedule.StayTask;
 import org.matsim.contrib.dvrp.vrpagent.VrpActivity;
@@ -34,12 +32,11 @@ import org.matsim.contrib.dvrp.vrpagent.VrpActivity;
 import org.matsim.contrib.dvrp.vrpagent.VrpLegFactory;
 import org.matsim.contrib.dynagent.DynAction;
 import org.matsim.contrib.spatialDrt.dwelling.BusStopActivity;
-import org.matsim.contrib.spatialDrt.dynAgent.DynAgent;
+import org.matsim.contrib.spatialDrt.dynAgent.SpatialDrtAgent;
 import org.matsim.contrib.spatialDrt.dynAgent.VrpAgentLogic;
 import org.matsim.contrib.spatialDrt.passenger.PassengerEngine;
 import org.matsim.contrib.spatialDrt.scheduler.DrtScheduleTimingUpdater;
 import org.matsim.core.mobsim.framework.MobsimTimer;
-import org.matsim.core.mobsim.qsim.QSim;
 
 /**
  * @author michalm
@@ -64,7 +61,7 @@ public class DrtActionCreator implements VrpAgentLogic.DynActionCreator {
 	}
 
 	@Override
-	public DynAction createAction(DynAgent dynAgent, Vehicle vehicle, double now) {
+	public DynAction createAction(SpatialDrtAgent dynAgent, Vehicle vehicle, double now) {
 		DrtTask task = (DrtTask)vehicle.getSchedule().getCurrentTask();
 		switch (task.getDrtTaskType()) {
 			case DRIVE:

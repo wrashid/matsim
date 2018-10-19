@@ -41,7 +41,7 @@ import org.matsim.vehicles.Vehicle;
 
 import java.util.List;
 
-public final class DynAgent implements MobsimDriverPassengerAgent {
+public final class SpatialDrtAgent implements MobsimDriverPassengerAgent {
 	private DynAgentLogic agentLogic;
 
 	private Id<Person> id;
@@ -64,7 +64,7 @@ public final class DynAgent implements MobsimDriverPassengerAgent {
 
 	// =====
 
-	public DynAgent(Id<Person> id, Id<Link> startLinkId, EventsManager events, DynAgentLogic agentLogic) {
+	public SpatialDrtAgent(Id<Person> id, Id<Link> startLinkId, EventsManager events, DynAgentLogic agentLogic) {
 		this.id = id;
 		this.currentLinkId = startLinkId;
 		this.agentLogic = agentLogic;

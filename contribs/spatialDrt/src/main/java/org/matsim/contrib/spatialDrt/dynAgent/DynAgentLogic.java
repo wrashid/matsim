@@ -23,9 +23,9 @@ import org.matsim.contrib.dynagent.DynAction;
 import org.matsim.contrib.dynagent.DynActivity;
 
 public interface DynAgentLogic {
-	DynAgent getDynAgent();
+	SpatialDrtAgent getDynAgent();
 
-	DynActivity computeInitialActivity(DynAgent dynAgent);
+	DynActivity computeInitialActivity(SpatialDrtAgent dynAgent);
 
 	DynAction computeNextAction(DynAction oldAction, double now);
 }

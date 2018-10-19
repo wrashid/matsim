@@ -44,7 +44,7 @@ public class FleetImpl implements Fleet {
 
 
 	public Map<Id<Vehicle>, ? extends Vehicle> getVehicles(String mode) {
-		return vehicles.entrySet().stream().filter(vehicle -> ((VehicleImpl)vehicle.getValue()).getMode().equals(mode)).collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
+		return vehicles.entrySet().stream().filter(vehicle -> ((VehicleImpl)vehicle.getValue()).getAttributes().getAttribute("mode").equals(mode)).collect(Collectors.toMap(map -> map.getKey(), map -> map.getValue()));
 	}
 
 	public void addVehicle(VehicleImpl vehicle) {

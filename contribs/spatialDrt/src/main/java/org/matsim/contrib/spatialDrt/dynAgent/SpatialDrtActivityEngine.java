@@ -36,22 +36,22 @@ import java.util.List;
 
 /**
  * It might be nicer to have ActivityEngine as a delegate, not as the superclass. But there is a hardcoded
- * "instanceof ActivityEngine" check in QSim :-( TODO introduce an ActivityEngine interface?  
+ * "instanceof ActivityEngine" check in QSim :-( TODO introduce an ActivityEngine interface?
  * <ul>
  * <li> yyyy You can now implement it underneath the MobsimEngine and ActivityHandler interfaces.  kai, nov'17
  * </ul>
- * 
+ *
  * DynActivityEngine and ActivityEngine could be decoupled (if we can ensure DynActivityEngine's handleActivity() is
  * called before that of ActivityEngine)
  */
-public class DynActivityEngine extends ActivityEngine {
+public class SpatialDrtActivityEngine extends ActivityEngine {
 	private InternalInterface internalInterface;
 
-	private final List<DynAgent> dynAgents = new LinkedList<>();
-	private final List<DynAgent> newDynAgents = new ArrayList<>();// will to be handled in the next timeStep
+	private final List<SpatialDrtAgent> dynAgents = new LinkedList<>();
+	private final List<SpatialDrtAgent> newDynAgents = new ArrayList<>();// will to be handled in the next timeStep
 
 	@Inject
-	public DynActivityEngine(EventsManager eventsManager) {
+	public SpatialDrtActivityEngine(EventsManager eventsManager) {
 		super(eventsManager);
 	}
 
@@ -64,9 +64,9 @@ public class DynActivityEngine extends ActivityEngine {
 		dynAgents.addAll(newDynAgents);
 		newDynAgents.clear();
 
-		Iterator<DynAgent> dynAgentIter = dynAgents.iterator();
+		Iterator<SpatialDrtAgent> dynAgentIter = dynAgents.iterator();
 		while (dynAgentIter.hasNext()) {
-			DynAgent agent = dynAgentIter.next();
+			SpatialDrtAgent agent = dynAgentIter.next();
 			if (agent.getState() == State.ACTIVITY) {
 				agent.doSimStep(time);
 				// ask agents about the current activity end time;
@@ -91,7 +91,7 @@ public class DynActivityEngine extends ActivityEngine {
 
 	@Override
 	public boolean handleActivity(MobsimAgent agent) {
-		if (!(agent instanceof DynAgent)) {
+		if (!(agent instanceof SpatialDrtAgent)) {
 			return super.handleActivity(agent);
 		}
 
@@ -110,9 +110,9 @@ public class DynActivityEngine extends ActivityEngine {
 		} else {
 			// The agent commences an activity on this link.
 			if (beforeFirstSimStep) {
-				dynAgents.add((DynAgent)agent);
+				dynAgents.add((SpatialDrtAgent)agent);
 			} else {
-				newDynAgents.add((DynAgent)agent);
+				newDynAgents.add((SpatialDrtAgent)agent);
 			}
 
 			internalInterface.registerAdditionalAgentOnLink(agent);

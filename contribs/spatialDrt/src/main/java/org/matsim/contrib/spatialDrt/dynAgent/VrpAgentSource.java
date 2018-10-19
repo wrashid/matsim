@@ -20,7 +20,6 @@
 package org.matsim.contrib.spatialDrt.dynAgent;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 
@@ -31,7 +30,6 @@ import org.matsim.contrib.spatialDrt.schedule.VehicleImpl;
 import org.matsim.core.mobsim.framework.AgentSource;
 import org.matsim.core.mobsim.qsim.QSim;
 import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicle;
-import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 import org.matsim.vehicles.VehiclesFactory;
 
@@ -62,7 +60,7 @@ public class VrpAgentSource implements AgentSource {
 			Id<Link> startLinkId = vrpVeh.getStartLink().getId();
 
 			VrpAgentLogic vrpAgentLogic = new VrpAgentLogic(optimizer, nextActionCreator, vrpVeh);
-			DynAgent vrpAgent = new DynAgent(Id.createPersonId(id), startLinkId, qSim.getEventsManager(),
+			SpatialDrtAgent vrpAgent = new SpatialDrtAgent(Id.createPersonId(id), startLinkId, qSim.getEventsManager(),
 					vrpAgentLogic);
 			QVehicle mobsimVehicle = new QVehicle(
 					vehicleFactory.createVehicle(Id.create(id, org.matsim.vehicles.Vehicle.class), ((VehicleImpl)vrpVeh).getVehicleType()));

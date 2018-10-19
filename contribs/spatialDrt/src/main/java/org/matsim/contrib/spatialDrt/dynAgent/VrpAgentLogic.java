@@ -36,13 +36,13 @@ public class VrpAgentLogic implements DynAgentLogic {
 	public static final String AFTER_SCHEDULE_ACTIVITY_TYPE = "AfterVrpSchedule";
 
 	public interface DynActionCreator {
-		DynAction createAction(DynAgent dynAgent, Vehicle vehicle, double now);
+		DynAction createAction(SpatialDrtAgent dynAgent, Vehicle vehicle, double now);
 	}
 
 	private final VrpOptimizer optimizer;
 	private final DynActionCreator dynActionCreator;
 	private final Vehicle vehicle;
-	private DynAgent agent;
+	private SpatialDrtAgent agent;
 
 	public VrpAgentLogic(VrpOptimizer optimizer, DynActionCreator dynActionCreator, Vehicle vehicle) {
 		this.optimizer = optimizer;
@@ -51,13 +51,13 @@ public class VrpAgentLogic implements DynAgentLogic {
 	}
 
 	@Override
-	public DynActivity computeInitialActivity(DynAgent dynAgent) {
+	public DynActivity computeInitialActivity(SpatialDrtAgent dynAgent) {
 		this.agent = dynAgent;
 		return createBeforeScheduleActivity();// INITIAL ACTIVITY (activate the agent in QSim)
 	}
 
 	@Override
-	public DynAgent getDynAgent() {
+	public SpatialDrtAgent getDynAgent() {
 		return agent;
 	}
 

@@ -196,7 +196,7 @@ public final class DrtControlerCreator {
 			addDrtWalkModeParams(config);
 		}
 
-		config.addConfigConsistencyChecker(new DrtConfigConsistencyChecker());
+		config.addConfigConsistencyChecker(new SpatialDrtConfigConsistencyChecker());
 		config.checkConsistency();
 	}
 

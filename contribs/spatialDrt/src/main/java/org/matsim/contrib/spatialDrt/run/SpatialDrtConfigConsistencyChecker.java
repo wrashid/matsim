@@ -19,39 +19,30 @@
 
 package org.matsim.contrib.spatialDrt.run;
 
-
-import com.google.inject.Provides;
-
-
-import org.matsim.contrib.dynagent.run.DynActivityEngineModule;
+import org.apache.log4j.Logger;
+import org.matsim.contrib.drt.optimizer.rebalancing.mincostflow.MinCostFlowRebalancingParams;
+import org.matsim.contrib.drt.optimizer.rebalancing.mincostflow.MinCostFlowRebalancingParamsConsistencyChecker;
+import org.matsim.contrib.drt.run.DrtConfigConsistencyChecker;
+import org.matsim.contrib.drt.run.DrtConfigGroup;
+import org.matsim.contrib.drt.run.DrtConfigGroup.OperationalScheme;
+import org.matsim.contrib.dvrp.run.DvrpConfigConsistencyChecker;
+import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
-import org.matsim.core.controler.AbstractModule;
-import org.matsim.core.mobsim.framework.AgentSource;
-import org.matsim.core.mobsim.framework.Mobsim;
-import org.matsim.core.mobsim.qsim.AbstractQSimModule;
+import org.matsim.core.config.consistency.ConfigConsistencyChecker;
+import org.matsim.core.config.groups.QSimConfigGroup.EndtimeInterpretation;
+import org.matsim.core.utils.misc.Time;
 
-import org.matsim.core.mobsim.qsim.components.QSimComponents;
-
-
-import java.util.ArrayList;
-import java.util.Collection;
-
-public class DynQSimModule extends AbstractQSimModule {
-	public final static String DYN_AGENT_SOURCE_NAME = "DynAgentSource";
-	private final Class<? extends AgentSource> agentSourceClass;
-
-	public DynQSimModule(Class<? extends AgentSource> agentSourceClass) {
-		this.agentSourceClass = agentSourceClass;
-	}
+public class SpatialDrtConfigConsistencyChecker implements ConfigConsistencyChecker {
+	private static final Logger log = Logger.getLogger(SpatialDrtConfigConsistencyChecker.class);
 
 	@Override
-	public void configureQSim() {
-		install(new DynActivityEngineModule());
-		bindAgentSource(DYN_AGENT_SOURCE_NAME).to(agentSourceClass);
-	}
+	public void checkConsistency(Config config) {
+		new DrtConfigConsistencyChecker().checkConsistency(config);
 
-	public static void configureComponents(QSimComponents components) {
-		DynActivityEngineModule.configureComponents(components);
-		components.activeAgentSources.add(DYN_AGENT_SOURCE_NAME);
+		DvrpConfigGroup cfg = DvrpConfigGroup.get(config);
+
+		if (cfg.getNetworkMode() == null){
+			throw new RuntimeException("Please specify a mode for drt. It is used to restrict drt in some area, the default value is car. If it is null, some parking strategies cannot work");
+		}
 	}
 }

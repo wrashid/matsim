@@ -24,12 +24,16 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.dvrp.data.file.ReaderUtils;
 import org.matsim.contrib.spatialDrt.schedule.VehicleImpl;
+import org.matsim.core.scenario.ProjectionUtils;
+import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.core.utils.io.MatsimXmlParser;
+import org.matsim.utils.objectattributes.attributable.AttributesXmlReaderDelegate;
 import org.matsim.vehicles.VehicleCapacity;
 import org.matsim.vehicles.VehicleCapacityImpl;
 import org.matsim.vehicles.VehicleType;
 import org.xml.sax.Attributes;
 import org.matsim.contrib.dvrp.data.Vehicle;
+
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +44,10 @@ import java.util.Stack;
  */
 public class VehicleReader extends MatsimXmlParser {
 	private static final String VEHICLE = "vehicle";
+	private final static String ATTRIBUTES = "attributes";
+    private final static String ATTRIBUTE = "attribute";
+	private final AttributesXmlReaderDelegate attributesDelegate = new AttributesXmlReaderDelegate();
+	private org.matsim.utils.objectattributes.attributable.Attributes currentAttributes = null;
 
 	private static final int DEFAULT_CAPACITY = 1;
 	private static final double DEFAULT_T_0 = 0;
@@ -59,13 +67,23 @@ public class VehicleReader extends MatsimXmlParser {
 
 	@Override
 	public void startTag(String name, Attributes atts, Stack<String> context) {
-		if (VEHICLE.equals(name)) {
-			fleet.addVehicle(createVehicle(atts));
+		switch (name) {
+			case VEHICLE:
+				fleet.addVehicle(createVehicle(atts));
+				break;
+            case ATTRIBUTES:
+			case ATTRIBUTE:
+                attributesDelegate.startTag( name , atts , context , currentAttributes );
 		}
 	}
 
 	@Override
 	public void endTag(String name, String content, Stack<String> context) {
+        switch( name ) {
+            case ATTRIBUTE:
+                attributesDelegate.endTag(name, content, context);
+                break;
+        }
 	}
 
 	private VehicleImpl createVehicle(Attributes atts) {
@@ -74,7 +92,6 @@ public class VehicleReader extends MatsimXmlParser {
 		int capacity = ReaderUtils.getInt(atts, "capacity", DEFAULT_CAPACITY);
 		double t0 = ReaderUtils.getDouble(atts, "t_0", DEFAULT_T_0);
 		double t1 = ReaderUtils.getDouble(atts, "t_1", DEFAULT_T_1);
-		String mode = ReaderUtils.getString(atts, "mode",null);
 		String type = capacity + "V";
 		if (!vehicleTypes.containsKey(type)){
 			VehicleType vehicleType = new DynVehicleType();
@@ -102,11 +119,12 @@ public class VehicleReader extends MatsimXmlParser {
 			vehicleTypes.put(type, vehicleType);
 		}
 		VehicleType vehicleType = vehicleTypes.get(type);
-		return createVehicle(id, startLink, capacity, t0, t1, mode, vehicleType);
+		return createVehicle(id, startLink, capacity, t0, t1,  vehicleType);
 	}
 
-	protected VehicleImpl createVehicle(Id<Vehicle> id, Link startLink, int capacity, double t0, double t1,
-			String mode, VehicleType vehicleType) {
-		return new VehicleImpl(id, startLink, capacity, t0, t1, mode, vehicleType);
+	protected VehicleImpl createVehicle(Id<Vehicle> id, Link startLink, int capacity, double t0, double t1, VehicleType vehicleType) {
+		VehicleImpl vehicle = new VehicleImpl(id, startLink, capacity, t0, t1,  vehicleType);
+		currentAttributes = vehicle.getAttributes();
+		return vehicle;
 	}
 }

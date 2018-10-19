@@ -26,7 +26,8 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.dvrp.router.DvrpRoutingNetworkProvider;
 import org.matsim.contrib.dvrp.trafficmonitoring.DvrpTravelTimeModule;
 import org.matsim.contrib.dvrp.vrpagent.VrpAgentQueryHelper;
-import org.matsim.contrib.spatialDrt.dynAgent.DynActivityEngineModule;
+import org.matsim.contrib.spatialDrt.dynAgent.SpatialDrtActivityEngine;
+import org.matsim.contrib.spatialDrt.dynAgent.SpatialDrtActivityEngineModule;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.mobsim.framework.listeners.MobsimListener;
@@ -55,7 +56,7 @@ public final class DvrpModule extends AbstractModule {
 	public QSimComponents provideQSimComponents(Config config) {
 		QSimComponents components = new QSimComponents();
 		new StandardQSimComponentsConfigurator(config).configure(components);
-		DynActivityEngineModule.configureComponents(components);
+		SpatialDrtActivityEngineModule.configureComponents(components);
 		qsimModules.forEach(m -> m.configureComponents(components));
 		return components;
 	}
@@ -72,7 +73,7 @@ public final class DvrpModule extends AbstractModule {
 				.toProvider(DvrpRoutingNetworkProvider.class)
 				.asEagerSingleton();
 
-		installQSimModule(new DynActivityEngineModule());
+		installQSimModule(new SpatialDrtActivityEngineModule());
 		qsimModules.forEach(this::installQSimModule);
 	}
 }

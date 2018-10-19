@@ -26,14 +26,12 @@ import org.matsim.contrib.dvrp.passenger.PassengerPickupActivity;
 import org.matsim.contrib.dvrp.passenger.PassengerRequest;
 import org.matsim.contrib.dvrp.schedule.StayTask;
 import org.matsim.contrib.dynagent.AbstractDynActivity;
-import org.matsim.contrib.spatialDrt.dynAgent.DynAgent;
+import org.matsim.contrib.spatialDrt.dynAgent.SpatialDrtAgent;
 import org.matsim.contrib.spatialDrt.passenger.PassengerEngine;
 import org.matsim.contrib.spatialDrt.scheduler.DrtScheduleTimingUpdater;
 import org.matsim.core.mobsim.framework.MobsimPassengerAgent;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -43,7 +41,7 @@ import java.util.Set;
  */
 public class BusStopActivity extends AbstractDynActivity implements PassengerPickupActivity, DrtPassengerAccessEgress{
 	private final PassengerEngine passengerEngine;
-	private final DynAgent driver;
+	private final SpatialDrtAgent driver;
 	private final List<DrtRequest> dropoffRequests;
 	private final List<DrtRequest> pickupRequests;
 
@@ -53,7 +51,7 @@ public class BusStopActivity extends AbstractDynActivity implements PassengerPic
 	private DrtScheduleTimingUpdater drtScheduler;
 	private Vehicle vehicle;
 
-	public BusStopActivity(PassengerEngine passengerEngine, DynAgent driver, StayTask task, List<DrtRequest> dropoffRequests,
+	public BusStopActivity(PassengerEngine passengerEngine, SpatialDrtAgent driver, StayTask task, List<DrtRequest> dropoffRequests,
 						   List<DrtRequest> pickupRequests, String activityType, DrtScheduleTimingUpdater drtScheduler, Vehicle vehicle, double accessTime, double egressTime, double now) {
 		super(activityType);
 
