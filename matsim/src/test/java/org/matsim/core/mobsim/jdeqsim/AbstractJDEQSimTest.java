@@ -158,15 +158,15 @@ public abstract class AbstractJDEQSimTest {
 					// each CAR leg must enter/leave act link
 					if (leg.getMode().equals(TransportMode.car)) {
 
+						// the first LinkEnterEvent is a AgentWait2LinkEvent
+						assertTrue(list.get(index) instanceof VehicleEntersTrafficEvent);
+						assertTrue(act.getLinkId().toString().equalsIgnoreCase(
+								((VehicleEntersTrafficEvent) list.get(index)).getLinkId().toString()));
+						index++;
+
 						// if car leg contains empty route, then this check is
 						// not applicable
 						if (((NetworkRoute) leg.getRoute()).getLinkIds().size() > 0) {
-							// the first LinkEnterEvent is a AgentWait2LinkEvent
-							assertTrue(list.get(index) instanceof VehicleEntersTrafficEvent);
-							assertTrue(act.getLinkId().toString().equalsIgnoreCase(
-									((VehicleEntersTrafficEvent) list.get(index)).getLinkId().toString()));
-							index++;
-
 							assertTrue(list.get(index) instanceof LinkLeaveEvent);
 							assertTrue(act.getLinkId().toString().equalsIgnoreCase(
 									((LinkLeaveEvent) list.get(index)).getLinkId().toString()));
