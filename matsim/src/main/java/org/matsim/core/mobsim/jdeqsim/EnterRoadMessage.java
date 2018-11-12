@@ -20,9 +20,7 @@
 package org.matsim.core.mobsim.jdeqsim;
 
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.events.Event;
-import org.matsim.api.core.v01.events.LinkEnterEvent;
-import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
+import org.matsim.api.core.v01.events.*;
 
 /**
  * The micro-simulation internal handler for entering a road.
@@ -45,16 +43,19 @@ public class EnterRoadMessage extends EventMessage {
 
 	@Override
 	public void processEvent() {
-		Event event = null;
-
 		// the first EnterLink in a leg is a Wait2LinkEvent
 		if (vehicle.getLinkIndex() == -1) {
-			event = new VehicleEntersTrafficEvent(this.getMessageArrivalTime(), vehicle.getOwnerPerson().getId(), vehicle.getCurrentLinkId(), 
-					Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class), null, 1.0);
+			eventsManager.processEvent(
+					new PersonEntersVehicleEvent(
+							this.getMessageArrivalTime(),
+							vehicle.getOwnerPerson().getId(),
+							Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class)));
+
+			eventsManager.processEvent( new VehicleEntersTrafficEvent(this.getMessageArrivalTime(), vehicle.getOwnerPerson().getId(), vehicle.getCurrentLinkId(),
+					Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class), null, 1.0));
 		} else {
-			event = new LinkEnterEvent(this.getMessageArrivalTime(), Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class), vehicle.getCurrentLinkId());
+			eventsManager.processEvent( new LinkEnterEvent(this.getMessageArrivalTime(), Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class), vehicle.getCurrentLinkId()));
 		}
-		eventsManager.processEvent(event);
 	}
 
 }

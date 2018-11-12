@@ -23,11 +23,7 @@ import java.util.List;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.events.ActivityStartEvent;
-import org.matsim.api.core.v01.events.Event;
-import org.matsim.api.core.v01.events.LinkEnterEvent;
-import org.matsim.api.core.v01.events.PersonArrivalEvent;
-import org.matsim.api.core.v01.events.VehicleLeavesTrafficEvent;
+import org.matsim.api.core.v01.events.*;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
@@ -113,6 +109,12 @@ public class EndLegMessage extends EventMessage {
 		Id<org.matsim.vehicles.Vehicle> vehicleId = Id.create( this.vehicle.getOwnerPerson().getId() , org.matsim.vehicles.Vehicle.class ) ;
 		event = new VehicleLeavesTrafficEvent(this.getMessageArrivalTime(), this.vehicle.getOwnerPerson().getId(), this.vehicle.getCurrentLinkId(), 
 				vehicleId, this.vehicle.getCurrentLeg().getMode(), 1.0 );
+		eventsManager.processEvent(event);
+
+		event = new PersonLeavesVehicleEvent(
+				this.getMessageArrivalTime(),
+				this.vehicle.getOwnerPerson().getId(),
+				Id.create(this.vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class));
 		eventsManager.processEvent(event);
 
 		// schedule AgentArrivalEvent
