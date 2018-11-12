@@ -45,12 +45,6 @@ public class EnterRoadMessage extends EventMessage {
 	public void processEvent() {
 		// the first EnterLink in a leg is a Wait2LinkEvent
 		if (vehicle.getLinkIndex() == -1) {
-			eventsManager.processEvent(
-					new PersonEntersVehicleEvent(
-							this.getMessageArrivalTime(),
-							vehicle.getOwnerPerson().getId(),
-							Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class)));
-
 			eventsManager.processEvent( new VehicleEntersTrafficEvent(this.getMessageArrivalTime(), vehicle.getOwnerPerson().getId(), vehicle.getCurrentLinkId(),
 					Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class), null, 1.0));
 		} else {

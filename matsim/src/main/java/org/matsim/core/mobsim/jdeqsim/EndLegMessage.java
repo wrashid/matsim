@@ -98,24 +98,26 @@ public class EndLegMessage extends EventMessage {
 
 		// schedule enter link event
 		// only, if car leg and is not empty
-		if (vehicle.getCurrentLeg().getMode().equals(TransportMode.car) && (vehicle.getCurrentLinkRoute()!=null && vehicle.getCurrentLinkRoute().length!=0)){
-			event = new LinkEnterEvent(this.getMessageArrivalTime(), Id.create(vehicle.getOwnerPerson().getId().toString(), org.matsim.vehicles.Vehicle.class), 
-					vehicle.getCurrentLinkId());
+		if (vehicle.getCurrentLeg().getMode().equals(TransportMode.car)){
+			if (vehicle.getCurrentLinkRoute()!=null && vehicle.getCurrentLinkRoute().length!=0) {
+				event = new LinkEnterEvent(this.getMessageArrivalTime(), Id.create(vehicle.getOwnerPerson().getId().toString(), org.matsim.vehicles.Vehicle.class),
+						vehicle.getCurrentLinkId());
 
+				eventsManager.processEvent(event);
+			}
+
+			// schedule VehicleLeavesTrafficEvent
+			Id<org.matsim.vehicles.Vehicle> vehicleId = Id.create( this.vehicle.getOwnerPerson().getId() , org.matsim.vehicles.Vehicle.class ) ;
+			event = new VehicleLeavesTrafficEvent(this.getMessageArrivalTime(), this.vehicle.getOwnerPerson().getId(), this.vehicle.getCurrentLinkId(),
+					vehicleId, this.vehicle.getCurrentLeg().getMode(), 1.0 );
+			eventsManager.processEvent(event);
+
+			event = new PersonLeavesVehicleEvent(
+					this.getMessageArrivalTime(),
+					this.vehicle.getOwnerPerson().getId(),
+					Id.create(this.vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class));
 			eventsManager.processEvent(event);
 		}
-
-		// schedule VehicleLeavesTrafficEvent
-		Id<org.matsim.vehicles.Vehicle> vehicleId = Id.create( this.vehicle.getOwnerPerson().getId() , org.matsim.vehicles.Vehicle.class ) ;
-		event = new VehicleLeavesTrafficEvent(this.getMessageArrivalTime(), this.vehicle.getOwnerPerson().getId(), this.vehicle.getCurrentLinkId(), 
-				vehicleId, this.vehicle.getCurrentLeg().getMode(), 1.0 );
-		eventsManager.processEvent(event);
-
-		event = new PersonLeavesVehicleEvent(
-				this.getMessageArrivalTime(),
-				this.vehicle.getOwnerPerson().getId(),
-				Id.create(this.vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class));
-		eventsManager.processEvent(event);
 
 		// schedule AgentArrivalEvent
 		event = new PersonArrivalEvent(this.getMessageArrivalTime(), this.vehicle.getOwnerPerson().getId(), this.vehicle.getCurrentLinkId(), this.vehicle.getCurrentLeg().getMode());

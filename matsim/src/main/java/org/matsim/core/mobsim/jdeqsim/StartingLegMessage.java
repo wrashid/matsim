@@ -19,10 +19,12 @@
 
 package org.matsim.core.mobsim.jdeqsim;
 
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.ActivityEndEvent;
 import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
+import org.matsim.api.core.v01.events.PersonEntersVehicleEvent;
 
 /**
  * The micro-simulation internal handler for starting a leg.
@@ -78,9 +80,15 @@ public class StartingLegMessage extends EventMessage {
 		// schedule AgentDepartureEvent
 		event = new PersonDepartureEvent(this.getMessageArrivalTime(), vehicle.getOwnerPerson().getId(), vehicle.getCurrentLinkId(),
 				vehicle.getCurrentLeg().getMode());
-
 		eventsManager.processEvent(event);
 
+		if (vehicle.getCurrentLeg().getMode().equals(TransportMode.car)) {
+			event = new PersonEntersVehicleEvent(
+					this.getMessageArrivalTime(),
+					vehicle.getOwnerPerson().getId(),
+					Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class));
+			eventsManager.processEvent(event);
+		}
 	}
 
 }
