@@ -29,6 +29,7 @@ import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.core.api.experimental.events.TeleportationArrivalEvent;
 import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.mobsim.qsim.agents.ActivityDurationUtils;
 
@@ -117,6 +118,13 @@ public class EndLegMessage extends EventMessage {
 					this.vehicle.getOwnerPerson().getId(),
 					Id.create(this.vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class));
 			eventsManager.processEvent(event);
+		}
+		else {
+			eventsManager.processEvent(
+					new TeleportationArrivalEvent(
+							this.getMessageArrivalTime(),
+							this.vehicle.getOwnerPerson().getId(),
+							this.vehicle.getCurrentLeg().getRoute().getDistance()));
 		}
 
 		// schedule AgentArrivalEvent

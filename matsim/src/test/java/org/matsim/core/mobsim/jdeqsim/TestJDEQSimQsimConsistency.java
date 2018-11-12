@@ -1,10 +1,15 @@
 package org.matsim.core.mobsim.jdeqsim;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.Event;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.controler.PrepareForSimUtils;
@@ -17,10 +22,7 @@ import org.matsim.core.utils.io.IOUtils;
 import org.matsim.examples.ExamplesUtils;
 import org.matsim.testcases.MatsimTestUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class TestJDEQSimQsimConsistency {
@@ -28,7 +30,58 @@ public class TestJDEQSimQsimConsistency {
 	public final MatsimTestUtils utils = new MatsimTestUtils();
 
 	@Test
-	public void testSameSequenceOfEvents() {
+	@Ignore("This test is more informative than the event type count test, but also runs much longer. Meant for debugging")
+	// This could be made much faster by either hand-picking potentially problematic agents, or building them by hand.
+	public void testSameEventTypeSequencePerAgent() {
+		final Config config = utils.loadConfig(
+				IOUtils.newUrl(ExamplesUtils.getTestScenarioURL("berlin"), "config.xml"));
+
+		// fails with JDEQSim
+		config.parallelEventHandling().setSynchronizeOnSimSteps(false);
+		config.parallelEventHandling().setNumberOfThreads(1);
+
+		final Scenario scenario = ScenarioUtils.loadScenario(config);
+		PrepareForSimUtils.createDefaultPrepareForSim(scenario).run();
+
+		//final Collection<Person> persons = new ArrayList<>(scenario.getPopulation().getPersons().values());
+		final Collection<Person> persons = Arrays.asList(scenario.getPopulation().getPersons().get(Id.createPersonId(77862)));
+
+		for (Person person : persons) {
+			scenario.getPopulation().getPersons().clear();
+			scenario.getPopulation().addPerson(person);
+			testSameSequenceOfEvents(scenario);
+		}
+	}
+
+
+	private void testSameSequenceOfEvents(final Scenario scenario) {
+		final Config config = scenario.getConfig();
+
+		final EventStoringHandler jdeqSimEvents = new EventStoringHandler();
+		final EventsManager jdeqSimEventsManager = EventsUtils.createEventsManager(config);
+		jdeqSimEventsManager.addHandler(jdeqSimEvents);
+
+		final EventStoringHandler qSimEvents = new EventStoringHandler();
+		final EventsManager qSimEventsManager = EventsUtils.createEventsManager(config);
+		qSimEventsManager.addHandler(qSimEvents);
+
+		final QSim qSim = new QSimBuilder(config).useDefaults().build(scenario, qSimEventsManager);
+		qSim.run();
+
+		final JDEQSimulation jdeqSim = new JDEQSimulation(config.jdeqSim(), scenario, jdeqSimEventsManager);
+		jdeqSim.run();
+
+		final Person person = scenario.getPopulation().getPersons().values().iterator().next();
+		final List<PlanElement> plan = person.getSelectedPlan().getPlanElements();
+
+		Assert.assertEquals(
+				"Unexpected sequence of event types for "+person+" with plan "+plan,
+				qSimEvents.getEventTypes(),
+				jdeqSimEvents.getEventTypes());
+	}
+
+	@Test
+	public void testSameNumberOfTypesFullBerlin() {
 		final Config config = utils.loadConfig(
 				IOUtils.newUrl(ExamplesUtils.getTestScenarioURL("berlin"), "config.xml"));
 
@@ -80,6 +133,10 @@ public class TestJDEQSimQsimConsistency {
 					Collectors.groupingBy(
 							Event::getEventType,
 							Collectors.counting())));
+		}
+
+		public List<String> getEventTypes() {
+			return events.stream().map(Event::getEventType).collect(Collectors.toList());
 		}
 	}
 }
