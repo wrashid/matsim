@@ -46,9 +46,10 @@ public class LeaveRoadMessage extends EventMessage {
 		Road road = (Road) this.getReceivingUnit();
 		Event event = null;
 
-		event = new LinkLeaveEvent(this.getMessageArrivalTime(), Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class), road.getLink().getId());
-
-		eventsManager.processEvent(event);
+		if (!vehicle.getPreviousActivity().getLinkId().equals(vehicle.getNextActivity().getLinkId())) {
+			event = new LinkLeaveEvent(this.getMessageArrivalTime(), Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class), road.getLink().getId());
+			eventsManager.processEvent(event);
+		}
 	}
 
 }

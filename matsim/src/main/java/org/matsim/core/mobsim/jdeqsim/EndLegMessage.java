@@ -100,7 +100,10 @@ public class EndLegMessage extends EventMessage {
 		// schedule enter link event
 		// only, if car leg and is not empty
 		if (vehicle.getCurrentLeg().getMode().equals(TransportMode.car)){
-			if (vehicle.getCurrentLinkRoute()!=null && vehicle.getCurrentLinkRoute().length!=0) {
+			// enter next link except if in a leg that starts and ends at the same link.
+			// this cannot be checked using the route array, that does not contain start and end link
+			if (!vehicle.getPreviousActivity().getLinkId().equals(vehicle.getNextActivity().getLinkId())) {
+			//if (vehicle.getCurrentLinkRoute()!=null && vehicle.getCurrentLinkRoute().length!=0) {
 				event = new LinkEnterEvent(this.getMessageArrivalTime(), Id.create(vehicle.getOwnerPerson().getId().toString(), org.matsim.vehicles.Vehicle.class),
 						vehicle.getCurrentLinkId());
 

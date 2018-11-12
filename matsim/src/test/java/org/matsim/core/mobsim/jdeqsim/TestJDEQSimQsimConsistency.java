@@ -24,14 +24,13 @@ import org.matsim.testcases.MatsimTestUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class TestJDEQSimQsimConsistency {
 	@Rule
 	public final MatsimTestUtils utils = new MatsimTestUtils();
 
 	@Test
-	@Ignore("This test is more informative than the event type count test, but also runs much longer. Meant for debugging")
-	// This could be made much faster by either hand-picking potentially problematic agents, or building them by hand.
 	public void testSameEventTypeSequencePerAgent() {
 		final Config config = utils.loadConfig(
 				IOUtils.newUrl(ExamplesUtils.getTestScenarioURL("berlin"), "config.xml"));
@@ -44,7 +43,12 @@ public class TestJDEQSimQsimConsistency {
 		PrepareForSimUtils.createDefaultPrepareForSim(scenario).run();
 
 		//final Collection<Person> persons = new ArrayList<>(scenario.getPopulation().getPersons().values());
-		final Collection<Person> persons = Arrays.asList(scenario.getPopulation().getPersons().get(Id.createPersonId(77862)));
+		final Collection<Person> persons =
+				// handpicked IDs
+				IntStream.of(77862, 80390)
+						.mapToObj(Id::createPersonId)
+						.map(scenario.getPopulation().getPersons()::get)
+						.collect(Collectors.toList());
 
 		for (Person person : persons) {
 			scenario.getPopulation().getPersons().clear();
