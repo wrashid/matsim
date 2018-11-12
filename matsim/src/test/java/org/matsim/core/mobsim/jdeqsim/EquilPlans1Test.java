@@ -4,14 +4,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.events.ActivityEndEvent;
-import org.matsim.api.core.v01.events.ActivityStartEvent;
-import org.matsim.api.core.v01.events.Event;
-import org.matsim.api.core.v01.events.LinkEnterEvent;
-import org.matsim.api.core.v01.events.LinkLeaveEvent;
-import org.matsim.api.core.v01.events.PersonArrivalEvent;
-import org.matsim.api.core.v01.events.PersonDepartureEvent;
-import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
+import org.matsim.api.core.v01.events.*;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.gbl.MatsimRandom;
@@ -41,6 +34,7 @@ public class EquilPlans1Test extends AbstractJDEQSimTest {
 		int index = 0;
 		for (List<Event> list : super.eventsByPerson.values()) {
 			wasInLoop = true;
+			System.out.println(list);
 			// checking the time of the first event
 			assertEquals(21600, list.get(index).getTime(), 0.9);
 			assertTrue(list.get(index++) instanceof ActivityEndEvent);
@@ -56,6 +50,7 @@ public class EquilPlans1Test extends AbstractJDEQSimTest {
 			assertTrue(list.get(index++) instanceof ActivityStartEvent);
 			assertTrue(list.get(index++) instanceof ActivityEndEvent);
 			assertTrue(list.get(index++) instanceof PersonDepartureEvent);
+			assertTrue(list.get(index++) instanceof VehicleEntersTrafficEvent);
 			assertTrue(list.get(index++) instanceof PersonArrivalEvent);
 			assertTrue(list.get(index++) instanceof ActivityStartEvent);
 			assertTrue(list.get(index++) instanceof ActivityEndEvent);
@@ -72,7 +67,7 @@ public class EquilPlans1Test extends AbstractJDEQSimTest {
 			assertTrue(list.get(index++) instanceof PersonArrivalEvent);
 			assertTrue(list.get(index) instanceof ActivityStartEvent);
 			// checking the time of the last event
-			assertEquals(38039, list.get(index).getTime(), 0.9);
+			assertEquals(38399, list.get(index).getTime(), 0.9);
 		}
 
 		assertTrue(wasInLoop);

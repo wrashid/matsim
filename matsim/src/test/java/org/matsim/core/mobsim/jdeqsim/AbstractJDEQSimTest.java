@@ -123,7 +123,8 @@ public abstract class AbstractJDEQSimTest {
 						// each leg ends with enter on act link
 						// => only for non empty car legs and non-cars legs this
 						// statement is true
-						if (leg.getMode().equals(TransportMode.car) && ((NetworkRoute) leg.getRoute()).getLinkIds().size() > 0) {
+						if (leg.getMode().equals(TransportMode.car) &&
+								!leg.getRoute().getStartLinkId().equals(leg.getRoute().getEndLinkId())) {
 							assertTrue(list.get(index) instanceof LinkEnterEvent);
 							assertTrue(act.getLinkId().toString().equalsIgnoreCase(
 									((LinkEnterEvent) list.get(index)).getLinkId().toString()));
@@ -131,7 +132,9 @@ public abstract class AbstractJDEQSimTest {
 						}
 
 						// each leg ends with arrival on act link
-						assertTrue(list.get(index) instanceof PersonArrivalEvent);
+						assertTrue(
+								"unexpected event "+list.get(index)+" in "+list,
+								list.get(index) instanceof PersonArrivalEvent);
 						assertTrue(act.getLinkId().toString().equalsIgnoreCase(
 								((PersonArrivalEvent) list.get(index)).getLinkId().toString()));
 						index++;
@@ -166,7 +169,8 @@ public abstract class AbstractJDEQSimTest {
 
 						// if car leg contains empty route, then this check is
 						// not applicable
-						if (((NetworkRoute) leg.getRoute()).getLinkIds().size() > 0) {
+						NetworkRoute networkRoute = (NetworkRoute) leg.getRoute();
+						if (!networkRoute.getStartLinkId().equals(networkRoute.getEndLinkId())) {
 							assertTrue(list.get(index) instanceof LinkLeaveEvent);
 							assertTrue(act.getLinkId().toString().equalsIgnoreCase(
 									((LinkLeaveEvent) list.get(index)).getLinkId().toString()));

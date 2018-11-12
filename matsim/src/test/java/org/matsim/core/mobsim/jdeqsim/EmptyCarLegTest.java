@@ -2,6 +2,7 @@ package org.matsim.core.mobsim.jdeqsim;
 
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.ActivityEndEvent;
@@ -19,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 public class EmptyCarLegTest extends AbstractJDEQSimTest {
 
-	@Test
+	@Test @Ignore
 	public void test_EmptyCarRoute() {
 		
 		Config config = utils.loadConfig(IOUtils.newUrl(utils.packageInputResourcePath(), "config1.xml"));
