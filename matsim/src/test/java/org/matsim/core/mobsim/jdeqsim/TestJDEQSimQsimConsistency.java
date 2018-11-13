@@ -1,5 +1,6 @@
 package org.matsim.core.mobsim.jdeqsim;
 
+import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -7,6 +8,7 @@ import org.junit.Test;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.Event;
+import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
@@ -17,16 +19,20 @@ import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.handler.BasicEventHandler;
 import org.matsim.core.mobsim.qsim.QSim;
 import org.matsim.core.mobsim.qsim.QSimBuilder;
+import org.matsim.core.population.routes.NetworkRoute;
+import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.io.IOUtils;
 import org.matsim.examples.ExamplesUtils;
 import org.matsim.testcases.MatsimTestUtils;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class TestJDEQSimQsimConsistency {
+	private static final Logger log = Logger.getLogger(TestJDEQSimQsimConsistency.class);
 	@Rule
 	public final MatsimTestUtils utils = new MatsimTestUtils();
 
@@ -43,12 +49,14 @@ public class TestJDEQSimQsimConsistency {
 		PrepareForSimUtils.createDefaultPrepareForSim(scenario).run();
 
 		//final Collection<Person> persons = new ArrayList<>(scenario.getPopulation().getPersons().values());
-		final Collection<Person> persons =
-				// handpicked IDs
-				IntStream.of(77862, 80390)
-						.mapToObj(Id::createPersonId)
-						.map(scenario.getPopulation().getPersons()::get)
-						.collect(Collectors.toList());
+		//final Collection<Person> persons =
+		//		// handpicked IDs
+		//		IntStream.of(77862, 80390)
+		//				.mapToObj(Id::createPersonId)
+		//				.map(scenario.getPopulation().getPersons()::get)
+		//				.collect(Collectors.toList());
+		final Collection<Person> persons = pickInterestingAgents(scenario);
+		log.info("perform test with agents "+persons.stream().map(Person::getId).collect(Collectors.toList()));
 
 		for (Person person : persons) {
 			scenario.getPopulation().getPersons().clear();
@@ -57,6 +65,44 @@ public class TestJDEQSimQsimConsistency {
 		}
 	}
 
+	private final Collection<Person> pickInterestingAgents(final Scenario scenario) {
+		Collection<? extends Person> persons = scenario.getPopulation().getPersons().values();
+
+		return Arrays.asList(
+			getFirst( persons, this::hasEmptyCarTrip),
+			getFirst( persons, this::hasTwoLinksCarTrip),
+			getFirst( persons, this::hasNonEmptyCarTrip),
+			getFirst( persons, this::hasNonCarTrip));
+	}
+
+	private final Person getFirst(Collection<? extends Person> persons, Predicate<Person> predicate) {
+		return persons.stream().filter(predicate).findAny().get();
+	}
+
+	private final boolean hasEmptyCarTrip(Person person) {
+		return anyLegMatch(person, l -> l.getMode().equals("car") && l.getRoute().getStartLinkId().equals(l.getRoute().getEndLinkId()));
+	}
+
+	private final boolean hasTwoLinksCarTrip(Person person) {
+		return anyLegMatch(person,
+				l -> l.getMode().equals("car") &&
+						!l.getRoute().getStartLinkId().equals(l.getRoute().getEndLinkId())&&
+						((NetworkRoute) l.getRoute()).getLinkIds().isEmpty());
+	}
+
+	private final boolean hasNonEmptyCarTrip(Person person) {
+		return anyLegMatch(person,
+				l -> l.getMode().equals("car") &&
+						!((NetworkRoute) l.getRoute()).getLinkIds().isEmpty());
+	}
+
+	private final boolean hasNonCarTrip(Person person) {
+		return anyLegMatch(person, l -> !l.getMode().equals("car"));
+	}
+
+	private final boolean anyLegMatch(Person person, Predicate<Leg> predicate) {
+		return TripStructureUtils.getLegs(person.getSelectedPlan()).stream().anyMatch(predicate);
+	}
 
 	private void testSameSequenceOfEvents(final Scenario scenario) {
 		final Config config = scenario.getConfig();

@@ -13,21 +13,8 @@ import org.junit.Rule;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.events.ActivityEndEvent;
-import org.matsim.api.core.v01.events.ActivityStartEvent;
-import org.matsim.api.core.v01.events.Event;
-import org.matsim.api.core.v01.events.LinkEnterEvent;
-import org.matsim.api.core.v01.events.LinkLeaveEvent;
-import org.matsim.api.core.v01.events.PersonArrivalEvent;
-import org.matsim.api.core.v01.events.PersonDepartureEvent;
-import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
-import org.matsim.api.core.v01.events.handler.ActivityEndEventHandler;
-import org.matsim.api.core.v01.events.handler.ActivityStartEventHandler;
-import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
-import org.matsim.api.core.v01.events.handler.LinkLeaveEventHandler;
-import org.matsim.api.core.v01.events.handler.PersonArrivalEventHandler;
-import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
-import org.matsim.api.core.v01.events.handler.VehicleEntersTrafficEventHandler;
+import org.matsim.api.core.v01.events.*;
+import org.matsim.api.core.v01.events.handler.*;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
@@ -123,11 +110,17 @@ public abstract class AbstractJDEQSimTest {
 						// each leg ends with enter on act link
 						// => only for non empty car legs and non-cars legs this
 						// statement is true
-						if (leg.getMode().equals(TransportMode.car) &&
-								!leg.getRoute().getStartLinkId().equals(leg.getRoute().getEndLinkId())) {
-							assertTrue(list.get(index) instanceof LinkEnterEvent);
+						if (leg.getMode().equals(TransportMode.car)) {
+							if (!leg.getRoute().getStartLinkId().equals(leg.getRoute().getEndLinkId())) {
+								assertTrue(list.get(index) instanceof LinkEnterEvent);
+								assertTrue(act.getLinkId().toString().equalsIgnoreCase(
+										((LinkEnterEvent) list.get(index)).getLinkId().toString()));
+								index++;
+							}
+
+							assertTrue(list.get(index) instanceof VehicleLeavesTrafficEvent);
 							assertTrue(act.getLinkId().toString().equalsIgnoreCase(
-									((LinkEnterEvent) list.get(index)).getLinkId().toString()));
+									((VehicleLeavesTrafficEvent) list.get(index)).getLinkId().toString()));
 							index++;
 						}
 
@@ -235,7 +228,8 @@ public abstract class AbstractJDEQSimTest {
 
 
 	private class PersonEventCollector implements ActivityStartEventHandler, ActivityEndEventHandler, LinkEnterEventHandler, 
-			LinkLeaveEventHandler, PersonDepartureEventHandler, PersonArrivalEventHandler, VehicleEntersTrafficEventHandler {
+			LinkLeaveEventHandler, PersonDepartureEventHandler, PersonArrivalEventHandler, VehicleEntersTrafficEventHandler,
+			VehicleLeavesTrafficEventHandler {
 
 		@Override
 		public void reset(int iteration) {
@@ -246,6 +240,18 @@ public abstract class AbstractJDEQSimTest {
 			// save drivers
 			vehicleToDriver.put(event.getVehicleId(), event.getPersonId());
 			
+			if (!eventsByPerson.containsKey(event.getPersonId())) {
+				eventsByPerson.put(event.getPersonId(), new LinkedList<Event>());
+			}
+			eventsByPerson.get(event.getPersonId()).add(event);
+			allEvents.add(event);
+		}
+
+		@Override
+		public void handleEvent(VehicleLeavesTrafficEvent event) {
+			// save drivers
+			vehicleToDriver.put(event.getVehicleId(), event.getPersonId());
+
 			if (!eventsByPerson.containsKey(event.getPersonId())) {
 				eventsByPerson.put(event.getPersonId(), new LinkedList<Event>());
 			}

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 public class EmptyCarLegTest extends AbstractJDEQSimTest {
 
-	@Test @Ignore
+	@Test @Ignore("Not true anymore when making consistent with QSim (which enters the link)")
 	public void test_EmptyCarRoute() {
 		
 		Config config = utils.loadConfig(IOUtils.newUrl(utils.packageInputResourcePath(), "config1.xml"));

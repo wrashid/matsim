@@ -46,11 +46,13 @@ public class EquilPlans1Test extends AbstractJDEQSimTest {
 			assertTrue(list.get(index++) instanceof LinkEnterEvent);
 			assertTrue(list.get(index++) instanceof LinkLeaveEvent);
 			assertTrue(list.get(index++) instanceof LinkEnterEvent);
+			assertTrue(list.get(index++) instanceof VehicleLeavesTrafficEvent);
 			assertTrue(list.get(index++) instanceof PersonArrivalEvent);
 			assertTrue(list.get(index++) instanceof ActivityStartEvent);
 			assertTrue(list.get(index++) instanceof ActivityEndEvent);
 			assertTrue(list.get(index++) instanceof PersonDepartureEvent);
 			assertTrue(list.get(index++) instanceof VehicleEntersTrafficEvent);
+			assertTrue(list.get(index++) instanceof VehicleLeavesTrafficEvent);
 			assertTrue(list.get(index++) instanceof PersonArrivalEvent);
 			assertTrue(list.get(index++) instanceof ActivityStartEvent);
 			assertTrue(list.get(index++) instanceof ActivityEndEvent);
@@ -64,6 +66,7 @@ public class EquilPlans1Test extends AbstractJDEQSimTest {
 			assertTrue(list.get(index++) instanceof LinkEnterEvent);
 			assertTrue(list.get(index++) instanceof LinkLeaveEvent);
 			assertTrue(list.get(index++) instanceof LinkEnterEvent);
+			assertTrue(list.get(index++) instanceof VehicleLeavesTrafficEvent);
 			assertTrue(list.get(index++) instanceof PersonArrivalEvent);
 			assertTrue(list.get(index) instanceof ActivityStartEvent);
 			// checking the time of the last event
