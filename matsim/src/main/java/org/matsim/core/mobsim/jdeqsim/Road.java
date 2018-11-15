@@ -125,7 +125,7 @@ public class Road extends SimUnit {
 		double maxInverseInFlowCapacity = 3600 / (config.getMinimumInFlowCapacity()
 				* config.getFlowCapacityFactor() * NetworkUtils.getNumberOfLanesAsInt(Time.UNDEFINED_TIME, link));
 
-		this.inverseOutFlowCapacity = 1 / (((Link) link).getFlowCapacityPerSec() * config.getFlowCapacityFactor());
+		this.inverseOutFlowCapacity = 1 / (link.getFlowCapacityPerSec() * config.getFlowCapacityFactor());
 
 		if (this.inverseOutFlowCapacity > maxInverseInFlowCapacity) {
 			this.inverseInFlowCapacity = maxInverseInFlowCapacity;
