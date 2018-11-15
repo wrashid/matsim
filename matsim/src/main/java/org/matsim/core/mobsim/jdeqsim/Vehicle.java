@@ -94,6 +94,10 @@ public class Vehicle extends SimUnit {
 		// an agent starts the first leg at the end_time of the fist act
 		double departureTime = firstAct.getEndTime();
 
+		if (departureTime < scheduler.getSimTime()) {
+			throw new IllegalStateException("Agent "+ownerPerson.getId()+" has departure time in the past ("+departureTime+")");
+		}
+
 		// this is the link, where the first activity took place
 		setCurrentLinkId(firstAct.getLinkId());
 

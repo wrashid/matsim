@@ -4,7 +4,7 @@
 <person id="1">
 	<plan>
 		<act type="h" x="-25000" y="0" link="1" end_time="06:00" />
-		<leg mode="bike">
+		<leg mode="bike" trav_time="00:10:00">
 			<route> </route>
 		</leg>
 		<act type="h" x="-25000" y="0" link="1" />

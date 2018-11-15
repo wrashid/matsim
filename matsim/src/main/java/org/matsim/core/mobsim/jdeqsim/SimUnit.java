@@ -35,7 +35,10 @@ public abstract class SimUnit {
 	public void sendMessage(Message m, SimUnit targetUnit, double messageArrivalTime) {
 		m.setSendingUnit(this);
 		m.setReceivingUnit(targetUnit);
-		m.setMessageArrivalTime(Math.max(messageArrivalTime, scheduler.getSimTime()));
+		if (messageArrivalTime < scheduler.getSimTime()) {
+			throw new IllegalStateException("got message for the past scheduled for "+messageArrivalTime+" at "+scheduler.getSimTime());
+		}
+		m.setMessageArrivalTime(messageArrivalTime);
 		scheduler.schedule(m);
 	}
 

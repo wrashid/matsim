@@ -25,6 +25,8 @@ import org.matsim.api.core.v01.events.ActivityEndEvent;
 import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.PersonEntersVehicleEvent;
+import org.matsim.api.core.v01.population.Leg;
+import org.matsim.core.utils.misc.Time;
 
 /**
  * The micro-simulation internal handler for starting a leg.
@@ -46,7 +48,17 @@ public class StartingLegMessage extends EventMessage {
 			Road road = Road.getRoad(vehicle.getCurrentLinkId());
 			road.enterRequest(vehicle, getMessageArrivalTime());
 		} else {
-			scheduleEndLegMessage(getMessageArrivalTime() + vehicle.getCurrentLeg().getTravelTime());
+			final Leg leg = vehicle.getCurrentLeg();
+
+			final double travelTime = leg.getRoute().getTravelTime() != Time.UNDEFINED_TIME ?
+					leg.getRoute().getTravelTime() :
+					leg.getTravelTime();
+
+			if (travelTime == Time.UNDEFINED_TIME) {
+				throw new RuntimeException("Leg "+leg+" has no valid travel time");
+			}
+
+			scheduleEndLegMessage(getMessageArrivalTime() + travelTime);
 		}
 	}
 
