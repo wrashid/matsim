@@ -85,7 +85,7 @@ public class JDEQSimConfigGroup extends ReflectiveConfigGroup {
 	}
 
 	@StringGetter(END_TIME)
-	private String getSimulationEndTimeAsString() {
+	public String getSimulationEndTimeAsString() {
 		if (simulationEndTime != Double.MAX_VALUE) {
 			return Time.writeTime(simulationEndTime);
 		}
@@ -95,7 +95,7 @@ public class JDEQSimConfigGroup extends ReflectiveConfigGroup {
 	}
 
 	@StringSetter(END_TIME)
-	private void setSimulationEndTime(String simulationEndTime) {
+	public void setSimulationEndTime(String simulationEndTime) {
 		double parsedTime = Time.parseTime(simulationEndTime);
 		if (!Time.isUndefinedTime(parsedTime)) {
 			this.simulationEndTime = parsedTime;
@@ -104,6 +104,10 @@ public class JDEQSimConfigGroup extends ReflectiveConfigGroup {
 
 	public double getSimulationEndTime() {
 		return simulationEndTime;
+	}
+
+	public void setSimulationEndTime(double simulationEndTime) {
+		this.simulationEndTime = simulationEndTime;
 	}
 
 	@StringGetter(GAP_TRAVEL_SPEED)
