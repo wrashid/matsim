@@ -31,7 +31,6 @@ import org.matsim.core.mobsim.framework.Mobsim;
 import org.matsim.core.mobsim.jdeqsim.util.Timer;
 
 import javax.inject.Inject;
-
 import java.util.HashMap;
 
 

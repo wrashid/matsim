@@ -54,20 +54,32 @@ public class Scheduler {
 	}
 
 	public void startSimulation() {
-		Message m;
-		while (!queue.isEmpty() && simTime < simulationEndTime) {
+		Message m = null;
+		while (!queue.isEmpty()) {
 			m = queue.getNextMessage();
-			if (m != null) {
-				if (m.getMessageArrivalTime() < simTime) {
-					log.error("Problem processing message "+m);
-					throw new IllegalStateException("Got a message for the past: simulated time is "+simTime+
-							", message is for "+m.getMessageArrivalTime());
-				}
+
+			// is it really possible for the message to be null but the queue non empty?
+			if (m == null) continue;
+
+			if (m.getMessageArrivalTime() < simTime) {
+				log.error("Problem processing message "+m);
+				throw new IllegalStateException("Got a message for the past: simulated time is "+simTime+
+						", message is for "+m.getMessageArrivalTime());
+			}
+
+			if (m.getMessageArrivalTime() > simulationEndTime) {
+				// do not process any event after simulation end time
+				simTime = simulationEndTime;
+				if (m instanceof EventMessage) ((EventMessage) m).handleAbort();
+			}
+			else {
 				simTime = m.getMessageArrivalTime();
+
 				m.processEvent();
 				m.handleMessage();
+
+				printLog();
 			}
-			printLog();
 		}
 	}
 

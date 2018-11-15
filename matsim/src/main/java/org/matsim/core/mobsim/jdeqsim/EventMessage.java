@@ -19,6 +19,8 @@
 
 package org.matsim.core.mobsim.jdeqsim;
 
+import org.matsim.api.core.v01.events.PersonStuckEvent;
+
 /**
  * The basic EventMessage type.
  *
@@ -39,4 +41,11 @@ public abstract class EventMessage extends Message {
 		this.vehicle = vehicle;
 	}
 
+	public void handleAbort() {
+		eventsManager.processEvent(new PersonStuckEvent(
+				scheduler.getSimTime(),
+				vehicle.getOwnerPerson().getId(),
+				vehicle.getCurrentLinkId(),
+				vehicle.getCurrentLeg().getMode()));
+	}
 }

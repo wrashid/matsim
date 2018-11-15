@@ -19,13 +19,13 @@
 
 package org.matsim.core.mobsim.jdeqsim;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.utils.misc.Time;
+
+import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * The road is simulated as an active agent, moving arround vehicles.

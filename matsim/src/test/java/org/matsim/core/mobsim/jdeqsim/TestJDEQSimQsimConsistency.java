@@ -2,15 +2,12 @@ package org.matsim.core.mobsim.jdeqsim;
 
 import org.apache.log4j.Logger;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
@@ -29,7 +26,6 @@ import org.matsim.testcases.MatsimTestUtils;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class TestJDEQSimQsimConsistency {
 	private static final Logger log = Logger.getLogger(TestJDEQSimQsimConsistency.class);
@@ -44,6 +40,10 @@ public class TestJDEQSimQsimConsistency {
 		// fails with JDEQSim
 		config.parallelEventHandling().setSynchronizeOnSimSteps(false);
 		config.parallelEventHandling().setNumberOfThreads(1);
+
+		// make sure some agents are "stuck"
+		config.qsim().setEndTime(20 * 3600);
+		config.jdeqSim().setSimulationEndTime(20 * 3600);
 
 		final Scenario scenario = ScenarioUtils.loadScenario(config);
 		PrepareForSimUtils.createDefaultPrepareForSim(scenario).run();
@@ -131,13 +131,28 @@ public class TestJDEQSimQsimConsistency {
 	}
 
 	@Test
-	public void testSameNumberOfTypesFullBerlin() {
+	public void testSameNumberOfTypesFullBerlinNoStuck() {
+		testSameNumberOfTypesFullBerlin(false);
+	}
+
+	@Test
+	public void testSameNumberOfTypesFullBerlinStuck() {
+		testSameNumberOfTypesFullBerlin(true);
+	}
+
+	public void testSameNumberOfTypesFullBerlin(boolean withStuck) {
 		final Config config = utils.loadConfig(
 				IOUtils.newUrl(ExamplesUtils.getTestScenarioURL("berlin"), "config.xml"));
 
 		// fails with JDEQSim
 		config.parallelEventHandling().setSynchronizeOnSimSteps(false);
 		config.parallelEventHandling().setNumberOfThreads(1);
+
+		if (withStuck) {
+			// make sure some agents are "stuck"
+			config.qsim().setEndTime(20 * 3600);
+			config.jdeqSim().setSimulationEndTime(20 * 3600);
+		}
 
 		final Scenario scenario = ScenarioUtils.loadScenario(config);
 		// This creates vehicles for each agent, which is expected by QSim

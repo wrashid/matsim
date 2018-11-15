@@ -19,12 +19,9 @@
 
 package org.matsim.core.mobsim.jdeqsim;
 
-import java.util.List;
-
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.*;
-import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Plan;
@@ -32,6 +29,8 @@ import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.api.experimental.events.TeleportationArrivalEvent;
 import org.matsim.core.config.groups.PlansConfigGroup;
 import org.matsim.core.mobsim.qsim.agents.ActivityDurationUtils;
+
+import java.util.List;
 
 /**
  * The micro-simulation internal handler for ending a leg.
