@@ -42,21 +42,9 @@ public class StartingLegMessage extends EventMessage {
 	public void handleMessage() {
 		// if current leg is in car mode, then enter request in first road
 		if (vehicle.getCurrentLeg().getMode().equals(TransportMode.car)) {
-
-			// if leg start and ends at same link, then end leg, else simulate leg
-			//if (vehicle.getPreviousActivity().getLinkId().equals(vehicle.getNextActivity().getLinkId())) {
-			if (false && vehicle.getCurrentLinkRoute().length == 0) {
-				// move to first link in next leg and schedule an end leg
-				// message
-				// duration of leg = 0 (departure and arrival time is the same)
-				scheduleEndLegMessage(getMessageArrivalTime());
-
-			} else {
-				// start the new leg
-				Road road = Road.getRoad(vehicle.getCurrentLinkId());
-				road.enterRequest(vehicle, getMessageArrivalTime());
-			}
-
+			// start the new leg
+			Road road = Road.getRoad(vehicle.getCurrentLinkId());
+			road.enterRequest(vehicle, getMessageArrivalTime());
 		} else {
 			scheduleEndLegMessage(getMessageArrivalTime() + vehicle.getCurrentLeg().getTravelTime());
 		}
