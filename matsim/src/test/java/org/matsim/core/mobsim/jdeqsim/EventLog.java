@@ -30,6 +30,12 @@ import java.util.LinkedList;
  * @author rashid_waraich
  */
 public class EventLog {
+	// CONSTANTS
+	public static final String START_LEG = "start leg";
+	public static final String END_LEG = "end leg";
+	public static final String ENTER_LINK = "enter link";
+	public static final String LEAVE_LINK = "leave link";
+
 	double time = 0.0;
 	int vehicleId = 0;
 	int legNo = 0;
@@ -265,9 +271,9 @@ public class EventLog {
 
 		for (int i = 0; i < eventLog1.size(); i++) {
 			if (eventLog1.get(i).vehicleId == vehicleId) {
-				if (eventLog1.get(i).type.equalsIgnoreCase(JDEQSimConfigGroup.START_LEG)) {
+				if (eventLog1.get(i).type.equalsIgnoreCase(START_LEG)) {
 					startLegTime = eventLog1.get(i).time;
-				} else if (eventLog1.get(i).type.equalsIgnoreCase(JDEQSimConfigGroup.END_LEG)) {
+				} else if (eventLog1.get(i).type.equalsIgnoreCase(END_LEG)) {
 					travelTime += eventLog1.get(i).time - startLegTime;
 				}
 			}
@@ -290,9 +296,9 @@ public class EventLog {
 		HashMap<Integer, Double> startingTime = new HashMap<Integer, Double>();
 
 		for (int i = 0; i < eventLog1.size(); i++) {
-			if (eventLog1.get(i).type.equalsIgnoreCase(JDEQSimConfigGroup.START_LEG)) {
+			if (eventLog1.get(i).type.equalsIgnoreCase(START_LEG)) {
 				startingTime.put(eventLog1.get(i).vehicleId, eventLog1.get(i).time);
-			} else if (eventLog1.get(i).type.equalsIgnoreCase(JDEQSimConfigGroup.END_LEG)) {
+			} else if (eventLog1.get(i).type.equalsIgnoreCase(END_LEG)) {
 				travelTime += eventLog1.get(i).time - startingTime.get(eventLog1.get(i).vehicleId);
 			}
 		}

@@ -35,7 +35,7 @@ public abstract class SimUnit {
 	public void sendMessage(Message m, SimUnit targetUnit, double messageArrivalTime) {
 		m.setSendingUnit(this);
 		m.setReceivingUnit(targetUnit);
-		m.setMessageArrivalTime(messageArrivalTime);
+		m.setMessageArrivalTime(Math.max(messageArrivalTime, scheduler.getSimTime()));
 		scheduler.schedule(m);
 	}
 

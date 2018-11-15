@@ -31,11 +31,6 @@ public class JDEQSimConfigGroup extends ReflectiveConfigGroup {
 
 	public final static String NAME = "JDEQSim";
 
-	// CONSTANTS
-	public static final String START_LEG = "start leg";
-	public static final String END_LEG = "end leg";
-	public static final String ENTER_LINK = "enter link";
-	public static final String LEAVE_LINK = "leave link";
 	/**
 	 *
 	 * the priorities of the messages. a higher priority comes first in the
@@ -46,10 +41,12 @@ public class JDEQSimConfigGroup extends ReflectiveConfigGroup {
 	 * important
 	 *
 	 */
+	// td, nov 18: not sure this belongs in the config group
 	public static final int PRIORITY_LEAVE_ROAD_MESSAGE = 200;
 	public static final int PRIORITY_ARRIVAL_MESSAGE = 150;
 	public static final int PRIORITY_DEPARTUARE_MESSAGE = 125;
 	public static final int PRIORITY_ENTER_ROAD_MESSAGE = 100;
+
 	public final static String SQUEEZE_TIME = "squeezeTime";
 	public final static String FLOW_CAPACITY_FACTOR = "flowCapacityFactor";
 	public final static String STORAGE_CAPACITY_FACTOR = "storageCapacityFactor";

@@ -58,6 +58,11 @@ public class Scheduler {
 		while (!queue.isEmpty() && simTime < simulationEndTime) {
 			m = queue.getNextMessage();
 			if (m != null) {
+				if (m.getMessageArrivalTime() < simTime) {
+					log.error("Problem processing message "+m);
+					throw new IllegalStateException("Got a message for the past: simulated time is "+simTime+
+							", message is for "+m.getMessageArrivalTime());
+				}
 				simTime = m.getMessageArrivalTime();
 				m.processEvent();
 				m.handleMessage();

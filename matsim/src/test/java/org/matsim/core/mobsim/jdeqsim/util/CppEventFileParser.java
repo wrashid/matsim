@@ -13,7 +13,6 @@ import org.matsim.api.core.v01.events.PersonArrivalEvent;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.mobsim.jdeqsim.EventLog;
-import org.matsim.core.mobsim.jdeqsim.JDEQSimConfigGroup;
 import org.matsim.core.utils.io.IOUtils;
 
 /**
@@ -80,13 +79,13 @@ public class CppEventFileParser {
 
 				// change type label
 				if (eventType.equalsIgnoreCase("starting")) {
-					eventType = JDEQSimConfigGroup.START_LEG;
+					eventType = EventLog.START_LEG;
 				} else if (eventType.equalsIgnoreCase("end")) {
-					eventType = JDEQSimConfigGroup.END_LEG;
+					eventType = EventLog.END_LEG;
 				} else if (eventType.equalsIgnoreCase("enter")) {
-					eventType = JDEQSimConfigGroup.ENTER_LINK;
+					eventType = EventLog.ENTER_LINK;
 				} else if (eventType.equalsIgnoreCase("leave")) {
-					eventType = JDEQSimConfigGroup.LEAVE_LINK;
+					eventType = EventLog.LEAVE_LINK;
 				}
 
 				// ignore 'enter net' events (which seem useless)
@@ -140,7 +139,7 @@ public class CppEventFileParser {
 				CppEventFileParser.printNotEqualEvents(personEvent, deqSimEvent);
 				return false;
 			}
-			if (!deqSimEvent.getType().equalsIgnoreCase(JDEQSimConfigGroup.START_LEG)) {
+			if (!deqSimEvent.getType().equalsIgnoreCase(EventLog.START_LEG)) {
 				CppEventFileParser.printNotEqualEvents(personEvent, deqSimEvent);
 				return false;
 			}
@@ -155,7 +154,7 @@ public class CppEventFileParser {
 				CppEventFileParser.printNotEqualEvents(personEvent, deqSimEvent);
 				return false;
 			}
-			if (!deqSimEvent.getType().equalsIgnoreCase(JDEQSimConfigGroup.ENTER_LINK)) {
+			if (!deqSimEvent.getType().equalsIgnoreCase(EventLog.ENTER_LINK)) {
 				CppEventFileParser.printNotEqualEvents(personEvent, deqSimEvent);
 				return false;
 			}
@@ -170,7 +169,7 @@ public class CppEventFileParser {
 				CppEventFileParser.printNotEqualEvents(personEvent, deqSimEvent);
 				return false;
 			}
-			if (!deqSimEvent.getType().equalsIgnoreCase(JDEQSimConfigGroup.LEAVE_LINK)) {
+			if (!deqSimEvent.getType().equalsIgnoreCase(EventLog.LEAVE_LINK)) {
 				CppEventFileParser.printNotEqualEvents(personEvent, deqSimEvent);
 				return false;
 			}
@@ -186,7 +185,7 @@ public class CppEventFileParser {
 				return false;
 			}
 
-			if (!deqSimEvent.getType().equalsIgnoreCase(JDEQSimConfigGroup.END_LEG)) {
+			if (!deqSimEvent.getType().equalsIgnoreCase(EventLog.END_LEG)) {
 				CppEventFileParser.printNotEqualEvents(personEvent, deqSimEvent);
 				return false;
 			}
