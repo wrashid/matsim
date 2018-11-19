@@ -20,6 +20,7 @@
 package org.matsim.core.mobsim.jdeqsim;
 
 import org.matsim.api.core.v01.events.PersonStuckEvent;
+import org.matsim.core.mobsim.qsim.agents.ActivityDurationUtils;
 
 /**
  * The basic EventMessage type.
@@ -42,10 +43,16 @@ public abstract class EventMessage extends Message {
 	}
 
 	public void handleAbort() {
+		// Agents/vehicles have no concept of "being in an activity": need to check based on plan
+		final boolean traveling = ActivityDurationUtils.calculateDepartureTime(
+				vehicle.getPreviousActivity(),
+				scheduler.getSimTime(),
+				vehicle.getActivityEndTimeInterpretation()) <= scheduler.getSimTime();
+
 		eventsManager.processEvent(new PersonStuckEvent(
 				scheduler.getSimTime(),
 				vehicle.getOwnerPerson().getId(),
-				vehicle.getCurrentLinkId(),
-				vehicle.getCurrentLeg().getMode()));
+				traveling ? vehicle.getCurrentLinkId() : null,
+				traveling ? vehicle.getCurrentLeg().getMode() : null));
 	}
 }

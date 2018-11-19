@@ -20,6 +20,7 @@
 package org.matsim.core.mobsim.jdeqsim;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
 import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
 
@@ -46,8 +47,14 @@ public class EnterRoadMessage extends EventMessage {
 	public void processEvent() {
 		// the first EnterLink in a leg is a Wait2LinkEvent
 		if (vehicle.getLinkIndex() == -1) {
-			eventsManager.processEvent( new VehicleEntersTrafficEvent(this.getMessageArrivalTime(), vehicle.getOwnerPerson().getId(), vehicle.getCurrentLinkId(),
-					Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class), null, 1.0));
+			eventsManager.processEvent(
+					new VehicleEntersTrafficEvent(
+							this.getMessageArrivalTime(),
+							vehicle.getOwnerPerson().getId(),
+							vehicle.getCurrentLinkId(),
+							Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class),
+							TransportMode.car,
+							1.0));
 		} else {
 			eventsManager.processEvent( new LinkEnterEvent(this.getMessageArrivalTime(), Id.create(vehicle.getOwnerPerson().getId(), org.matsim.vehicles.Vehicle.class), vehicle.getCurrentLinkId()));
 		}
