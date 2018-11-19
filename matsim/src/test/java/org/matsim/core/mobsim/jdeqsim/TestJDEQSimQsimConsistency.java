@@ -128,6 +128,11 @@ public class TestJDEQSimQsimConsistency {
 				"Unexpected sequence of event types for "+person+" with plan "+plan,
 				qSimEvents.getEventTypes(),
 				jdeqSimEvents.getEventTypes());
+
+		Assert.assertEquals(
+				"JDEQSim did not generate the same events attributes as QSim",
+				qSimEvents.getNonTimeAttributes(),
+				jdeqSimEvents.getNonTimeAttributes());
 	}
 
 	@Test
@@ -202,6 +207,15 @@ public class TestJDEQSimQsimConsistency {
 
 		public List<String> getEventTypes() {
 			return events.stream().map(Event::getEventType).collect(Collectors.toList());
+		}
+
+		public List<Map<String,String>> getNonTimeAttributes() {
+			final List<Map<String,String>> attributes =
+					events.stream()
+							.map(e -> new HashMap<>(e.getAttributes()))
+							.collect(Collectors.toList());
+			attributes.forEach(m -> m.remove("time"));
+			return attributes;
 		}
 	}
 }
