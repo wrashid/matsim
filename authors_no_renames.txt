@@ -1,0 +1,41 @@
+1  boescpa <patrick.boesch@ivt.baug.ethz.ch>
+1  Colin Sheppard <colinthegaunt@gmail.com>
+1  ctchervenkov <ctchervenkov@gmail.com>
+1  Joseph Molloy <joe.m34@gmail.com>
+1  mmoyo <mmoyo@users.sf.net>
+1  Moritz Neeb <moritz.neeb@campus.tu-berlin.de>
+1  tschlenther <schlenther@vsp.tu-berlin.de>
+2  jillenberger <johannes.illenberger@alumni.tu-berlin.de>
+3  Kai Martins-Turner <kt86@users.noreply.github.com>
+3  komeiste <komeiste@users.sf.net>
+3  Nico Kühnel <nkuehnel2@gmail.com>
+5  balacmi <milos.balac@ivt.baug.ethz.ch>
+5  Pieter J. Fourie <fourie@ivt.baug.ethz.ch>
+5  Tilmann Schlenther <schlenther@vsp.tu-berlin.de>
+6  rashid_waraich <rashid_waraich@users.sf.net>
+6  sergio537 <sergio537@gmail.com>
+7  kirillmueller <kirillmueller@users.sf.net>
+7  yu_vsp <yu_vsp@users.sf.net>
+8  Andreas Horni <andreashorni@hotmail.com>
+10  tnicolai79 <tnicolai79@users.sf.net>
+12  droeder <roeder@senozon.de>
+13  benkick <kickhoefer@vsp.tu-berlin.de>
+17  balmermi <balmermi@users.sf.net>
+21  Andreas Neumann <neumann@senozon.de>
+21  Gregor Leich <leich@vsp.tu-berlin.de>
+24  Ihab Kaddoura <kaddoura@vsp.tu-berlin.de>
+27  laemmel <gregor.laemmel@gmail.com>
+29  Sebastian Hörl <sebastian.hoerl@ivt.baug.ethz.ch>
+36  Joschka Bischoff <bischoff@vsp.tu-berlin.de>
+38  dziemke <ziemke@vsp.tu-berlin.de>
+41  gabriel.thunig <gabriel.thunig@vsp.tu-berlin.de>
+64  Johan W. Joubert <johan.joubert@up.ac.za>
+110  Michal Maciejewski <michal.mac@gmail.com>
+136  Theresa Thunig <thunig@vsp.tu-berlin.de>
+205  grether <dominik.grether@gmail.com>
+234  cdobler <dobler@senozon.com>
+247  Amit Agarwal <amit.agarwal@campus.tu-berlin.de>
+337  Thibaut Dubernet <thibaut.dubernet@ivt.baug.ethz.ch>
+685  Michael Zilske <michael.zilske@tu-berlin.de>
+926  Marcel Rieser <rieser@simunto.com>
+1685  nagel <kai.nagel@tu-berlin.de>

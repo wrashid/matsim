@@ -12,7 +12,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.contrib.carsharing.relocation.infrastructure.RelocationZone;
 import org.matsim.core.utils.collections.Tuple;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
-import org.matsim.core.utils.geometry.transformations.CH1903LV03toWGS84;
+import org.matsim.core.utils.geometry.transformations.TransformationFactory;
 import org.matsim.core.utils.io.MatsimXmlWriter;
 import org.matsim.core.utils.misc.Time;
 
@@ -25,7 +25,10 @@ public class RelocationZoneKmlWriter extends MatsimXmlWriter {
 	protected Map<Id<RelocationZone>, Coord[]> coords;
 
 	public RelocationZoneKmlWriter() {
-		this.coordinateTransformation = new CH1903LV03toWGS84();
+		this.coordinateTransformation =
+				TransformationFactory.getCoordinateTransformation(
+						TransformationFactory.CH1903_LV03,
+						TransformationFactory.WGS84);
 	}
 
 	public void setPolygons(Map<Id<RelocationZone>, MultiPolygon> polygons) {

@@ -1,0 +1,190 @@
+abergsten <abergsten@users.sf.net>
+
+agarwalamit <agarwalamit@users.sf.net>
+Amit Agarwal <amit.agarwal@campus.tu-berlin.de>
+
+ahubert <ahubert@users.sf.net>
+
+andreas77 <andreashorni@hotmail.com>
+Andreas Horni <andreashorni@hotmail.com>
+
+Andreas Neumann <neumann@senozon.de>
+neuma <neuma@users.noreply.github.com>
+vsp_neumann <neumann@senozon.de>
+
+balacmi <milos.balac@ivt.baug.ethz.ch>
+
+balmermi <balmermi@users.sf.net>
+
+benkick <benkick@users.sf.net>
+benkick <kickhoefer@vsp.tu-berlin.de>
+
+boescpa <boescpa@users.sf.net>
+boescpa <patrick.boesch@ivt.baug.ethz.ch>
+
+boffo <boffo@users.sf.net>
+
+cdobler <dobler@senozon.com>
+skull5 <dobler@senozon.com>
+
+ciarif <ciarif@users.sf.net>
+
+Colin Sheppard <colinthegaunt@gmail.com>
+
+ctchervenkov <ctchervenkov@gmail.com>
+
+Daniel <Daniel@192.168.35.110>
+
+danieldressler <danieldressler@users.sf.net>
+DanielDressler <DanielDressler@users.sf.net>
+
+Daniel <roeder@senozon.de>
+dan-ro <daniel_roeder@web.de>
+droeder <daniel_roeder@web.de>
+d-roeder <d-roeder@users.noreply.github.com>
+droeder <roeder@senozon.de>
+
+dgrether <dominik.grether@gmail.com>
+grether <dominik.grether@gmail.com>
+
+dzetterberg <dzetterberg@users.sf.net>
+
+dziemke <dziemke@vsp.tu-berlin.de>
+dziemke <ziemke@vsp.tu-berlin.de>
+
+fabrice_marchal <fabrice_marchal@users.sf.net>
+
+flovie <flovie@users.sf.net>
+Flovie <Flovie@users.sf.net>
+
+gabriel <gabriel.thunig@web.de>
+gabriel.thunig <gabriel.thunig@vsp.tu-berlin.de>
+gabrielthunig <gabriel.thunig@web.de>
+Gabriel Thunig <gabriel.thunig@web.de>
+
+gleich <gleich@192.168.0.44>
+gleich <gleich@vsp.tu-berlin.de>
+Gregor Leich <leich@vsp.tu-berlin.de>
+vsp-gleich <vsp-gleich@users.noreply.github.com>
+
+GrgrLmml <gregor.laemmel@gmail.com>
+laemmel <gregor.laemmel@gmail.com>
+
+hubertkluepfel <hubertkluepfel@yahoo.de>
+
+Ihab Kaddoura <kaddoura@vsp.tu-berlin.de>
+ikaddoura <kaddoura@vsp.tu-berlin.de>
+kaddoura <kaddoura@users.sf.net>
+
+jamesvaughan <jamesvaughan@users.sf.net>
+
+janek <uservsp_wopwd@192.168.35.106>
+
+jbischoff <bischoff@vsp.tu-berlin.de>
+jfbischoff <bischoff@vsp.tu-berlin.de>
+Joschka Bischoff <bischoff@vsp.tu-berlin.de>
+
+jillenberger <jillenberger@users.sf.net>
+jillenberger <johannes.illenberger@alumni.tu-berlin.de>
+
+jkhackney <jkhackney@users.sf.net>
+
+Johan W Joubert <johan.joubert@up.ac.za>
+Johan W. Joubert <johan.joubert@up.ac.za>
+jwjoubert <johan.joubert@up.ac.za>
+JWJoubert <johan.joubert@up.ac.za>
+
+
+Joseph Molloy <joe.m34@gmail.com>
+
+Kai Martins-Turner <kt86@users.noreply.github.com>
+kturner <martins-turner@vsp.tu-berlin.de>
+
+Kai Nagel <2008@kainagel.org>
+kainagel <kainagel@users.noreply.github.com>
+kainagel <nagel@vsp.tu-berlin.de>
+nagel <kai.nagel@tu-berlin.de>
+vsp_nagel <2008@kainagel.org>
+
+kirillmueller <kirillmueller@users.sf.net>
+
+komeiste <komeiste@users.sf.net>
+
+
+manuelschneider <manuelschneider@users.sf.net>
+
+Marcel Rieser <mrieser@mrieser.ch>
+Marcel Rieser <rieser@senozon.com>
+Marcel Rieser <rieser@simunto.com>
+mrieser <rieser@gmail.com>
+
+matsim-sa <fourie@ivt.baug.ethz.ch>
+pieterfourie <fourie@ivt.baug.ethz.ch>
+Pieter J. Fourie <fourie@ivt.baug.ethz.ch>
+
+Matthias_Feil <Matthias_Feil@users.sf.net>
+
+matthiasrost <matthiasrost@users.sf.net>
+
+Michael Zilske <michael.zilske@gmail.com>
+Michael Zilske <michael.zilske@tu-berlin.de>
+michaz <michael.zilske@gmail.com>
+
+Michal Maciejewski <michal.mac@gmail.com>
+Michal Maciejewski <michalmac@users.noreply.github.com>
+michalmac <michal.mac@gmail.com>
+michal-m <michal.mac@gmail.com>
+
+mmoyo <mmoyo@users.sf.net>
+
+mohit9920 <mohit9920@users.sf.net>
+
+Moritz Neeb <moritz.neeb@campus.tu-berlin.de>
+
+msieg <msieg@users.sf.net>
+
+Nico Kühnel <nkuehnel2@gmail.com>
+Nico <nkuehnel2@gmail.com>
+nkuehnel <nkuehnel2@gmail.com>
+
+oblonski <oblonski@users.sf.net>
+
+olthoff <olthoff@users.sf.net>
+
+rashid_waraich <rashid_waraich@users.sf.net>
+wrashid <sfA1kewo>
+
+rschneid-btu <rschneid-btu@users.sf.net>
+
+scnadine <scnadine@users.sf.net>
+
+Sebastian Hörl <hoerl.sebastian@gmail.com>
+Sebastian Hörl <sebastian.hoerl@ivt.baug.ethz.ch>
+
+sergio537 <sergio537@gmail.com>
+sergio537 <sergio537@users.sf.net>
+
+Theresa Thunig <thunig@vsp.tu-berlin.de>
+tthunig <theresa.thunig@yahoo.de>
+tthunig <thunig@vsp.tu-berlin.de>
+tthunig <tthunig@vsp.tu-berlin.de>
+
+thibautd <thibaut.dubernet@ivt.baug.ethz.ch>
+Thibaut Dubernet <thibautd@ethz.ch>
+Thibaut Dubernet <thibaut.dubernet@ivt.baug.ethz.ch>
+
+Tilmann Schlenther <schlenther@vsp.tu-berlin.de>
+
+tnicolai79 <tnicolai79@users.sf.net>
+
+tschlenther <schlenther@vsp.tu-berlin.de>
+
+vsp_strippgen <vsp_strippgen@users.sf.net>
+
+wdoering <wdoering@users.sf.net>
+
+wisineew <wisineew@users.sf.net>
+
+yalver <yalver@users.sf.net>
+
+yu_vsp <yu_vsp@users.sf.net>
