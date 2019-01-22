@@ -27,7 +27,11 @@ import org.matsim.contrib.dvrp.schedule.*;
 import org.matsim.core.mobsim.framework.DriverAgent;
 import org.matsim.core.mobsim.framework.MobsimDriverAgent;
 import org.matsim.core.mobsim.framework.PassengerAgent;
+import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicle;
+import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicleImpl;
 import org.matsim.vehicles.Vehicle;
+import org.matsim.vehicles.VehicleImpl;
+import org.matsim.vehicles.VehicleUtils;
 
 /**
  * @author michalm
@@ -37,6 +41,8 @@ public class DvrpVehicleImpl implements DvrpVehicle {
 	private Link startLink;
 	private final int capacity;
 
+	QVehicleImpl delegate;
+	
 	// time window
 	private final double serviceBeginTime;
 	private double serviceEndTime;
@@ -52,6 +58,13 @@ public class DvrpVehicleImpl implements DvrpVehicle {
 		this.serviceEndTime = serviceEndTime;
 
 		schedule = new ScheduleImpl(this);
+		
+		/* i am not sure what vehicle type the delegate should be assigned to. As a temporary solution, the default could get assigned.
+		 * Or should the basic VehicleImpl rather be a parameter in the DvrpVehicleImpl constructor?
+		 * tschlenther jan' 19
+		 */
+		delegate = new QVehicleImpl(new VehicleImpl(id, VehicleUtils.getDefaultVehicleType()));
+	
 	}
 
 	@Override
@@ -101,105 +114,71 @@ public class DvrpVehicleImpl implements DvrpVehicle {
 	@Override
 	public void resetSchedule() {
 		schedule = new ScheduleImpl(this);
-		
-		//---------------------------------------------------
-
-	}
-
-	@Override
-	public void setCurrentLink(Link link) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void setDriver(DriverAgent driver) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public double getLinkEnterTime() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public void setLinkEnterTime(double linkEnterTime) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public double getMaximumVelocity() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public double getFlowCapacityConsumptionInEquivalents() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public double getEarliestLinkExitTime() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public void setEarliestLinkExitTime(double earliestLinkEndTime) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public Vehicle getVehicle() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public MobsimDriverAgent getDriver() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public double getSizeInEquivalents() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
-	public Link getCurrentLink() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean addPassenger(PassengerAgent passenger) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean removePassenger(PassengerAgent passenger) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public Collection<? extends PassengerAgent> getPassengers() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public int getPassengerCapacity() {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 	
+	//--------------------------  DELEGATE METHODS  -------------------------
+
+	public double getEarliestLinkExitTime() {
+		return delegate.getEarliestLinkExitTime();
+	}
+
+	public void setEarliestLinkExitTime(double earliestLinkEndTime) {
+		delegate.setEarliestLinkExitTime(earliestLinkEndTime);
+	}
+
+	public void setCurrentLink(Link link) {
+		delegate.setCurrentLink(link);
+	}
+
+	public Vehicle getVehicle() {
+		return delegate.getVehicle();
+	}
+
+	public void setDriver(DriverAgent driver) {
+		delegate.setDriver(driver);
+	}
+
+	public double getLinkEnterTime() {
+		return delegate.getLinkEnterTime();
+	}
+
+	public void setLinkEnterTime(double linkEnterTime) {
+		delegate.setLinkEnterTime(linkEnterTime);
+	}
+
+	public MobsimDriverAgent getDriver() {
+		return delegate.getDriver();
+	}
+
+	public double getMaximumVelocity() {
+		return delegate.getMaximumVelocity();
+	}
+
+	public double getSizeInEquivalents() {
+		return delegate.getSizeInEquivalents();
+	}
+
+	public double getFlowCapacityConsumptionInEquivalents() {
+		return delegate.getFlowCapacityConsumptionInEquivalents();
+	}
+
+	public Link getCurrentLink() {
+		return delegate.getCurrentLink();
+	}
+
+	public boolean addPassenger(PassengerAgent passenger) {
+		return delegate.addPassenger(passenger);
+	}
+
+	public boolean removePassenger(PassengerAgent passenger) {
+		return delegate.removePassenger(passenger);
+	}
+
+	public Collection<? extends PassengerAgent> getPassengers() {
+		return delegate.getPassengers();
+	}
+
+	public int getPassengerCapacity() {
+		return delegate.getPassengerCapacity();
+	}
 }
