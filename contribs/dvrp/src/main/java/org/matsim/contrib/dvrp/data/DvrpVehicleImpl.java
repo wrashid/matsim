@@ -19,15 +19,21 @@
 
 package org.matsim.contrib.dvrp.data;
 
+import java.util.Collection;
+
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.schedule.*;
+import org.matsim.core.mobsim.framework.DriverAgent;
+import org.matsim.core.mobsim.framework.MobsimDriverAgent;
+import org.matsim.core.mobsim.framework.PassengerAgent;
+import org.matsim.vehicles.Vehicle;
 
 /**
  * @author michalm
  */
-public class VehicleImpl implements DvrpVehicle {
-	private final Id<DvrpVehicle> id;
+public class DvrpVehicleImpl implements DvrpVehicle {
+	private final Id<Vehicle> id;
 	private Link startLink;
 	private final int capacity;
 
@@ -37,7 +43,7 @@ public class VehicleImpl implements DvrpVehicle {
 
 	private Schedule schedule;
 
-	public VehicleImpl(Id<DvrpVehicle> id, Link startLink, int capacity, double serviceBeginTime,
+	public DvrpVehicleImpl(Id<Vehicle> id, Link startLink, int capacity, double serviceBeginTime,
 			double serviceEndTime) {
 		this.id = id;
 		this.startLink = startLink;
@@ -49,7 +55,7 @@ public class VehicleImpl implements DvrpVehicle {
 	}
 
 	@Override
-	public Id<DvrpVehicle> getId() {
+	public Id<Vehicle> getId() {
 		return id;
 	}
 
@@ -95,5 +101,105 @@ public class VehicleImpl implements DvrpVehicle {
 	@Override
 	public void resetSchedule() {
 		schedule = new ScheduleImpl(this);
+		
+		//---------------------------------------------------
+
 	}
+
+	@Override
+	public void setCurrentLink(Link link) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setDriver(DriverAgent driver) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public double getLinkEnterTime() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setLinkEnterTime(double linkEnterTime) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public double getMaximumVelocity() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getFlowCapacityConsumptionInEquivalents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double getEarliestLinkExitTime() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setEarliestLinkExitTime(double earliestLinkEndTime) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Vehicle getVehicle() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public MobsimDriverAgent getDriver() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public double getSizeInEquivalents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public Link getCurrentLink() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean addPassenger(PassengerAgent passenger) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean removePassenger(PassengerAgent passenger) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Collection<? extends PassengerAgent> getPassengers() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getPassengerCapacity() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	
 }

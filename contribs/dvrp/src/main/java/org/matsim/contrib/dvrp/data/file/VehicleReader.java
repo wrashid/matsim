@@ -24,7 +24,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.dvrp.data.FleetImpl;
 import org.matsim.contrib.dvrp.data.DvrpVehicle;
-import org.matsim.contrib.dvrp.data.VehicleImpl;
+import org.matsim.contrib.dvrp.data.DvrpVehicleImpl;
 import org.matsim.core.utils.io.MatsimXmlParser;
 import org.xml.sax.Attributes;
 
@@ -77,6 +77,6 @@ public class VehicleReader extends MatsimXmlParser {
 
 	protected DvrpVehicle createVehicle(Id<DvrpVehicle> id, Link startLink, int capacity, double t0, double t1,
 			Attributes atts) {
-		return new VehicleImpl(id, startLink, capacity, t0, t1);
+		return new DvrpVehicleImpl(id, startLink, capacity, t0, t1);
 	}
 }

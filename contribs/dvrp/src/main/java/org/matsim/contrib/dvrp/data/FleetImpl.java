@@ -22,15 +22,16 @@ package org.matsim.contrib.dvrp.data;
 import java.util.*;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.vehicles.Vehicle;
 
 /**
  * @author michalm
  */
 public class FleetImpl implements Fleet {
-	private final Map<Id<DvrpVehicle>, DvrpVehicle> vehicles = new LinkedHashMap<>();
+	private final Map<Id<Vehicle>, DvrpVehicle> vehicles = new LinkedHashMap<>();
 
 	@Override
-	public Map<Id<DvrpVehicle>, ? extends DvrpVehicle> getVehicles() {
+	public Map<Id<Vehicle>, ? extends DvrpVehicle> getVehicles() {
 		return Collections.unmodifiableMap(vehicles);
 	}
 

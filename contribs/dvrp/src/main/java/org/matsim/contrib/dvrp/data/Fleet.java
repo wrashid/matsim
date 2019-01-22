@@ -22,12 +22,13 @@ package org.matsim.contrib.dvrp.data;
 import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.vehicles.Vehicle;
 
 /**
  * @author michalm
  */
 public interface Fleet {
-	Map<Id<DvrpVehicle>, ? extends DvrpVehicle> getVehicles();
+	Map<Id<Vehicle>, ? extends DvrpVehicle> getVehicles();
 
 	/**
 	 * 

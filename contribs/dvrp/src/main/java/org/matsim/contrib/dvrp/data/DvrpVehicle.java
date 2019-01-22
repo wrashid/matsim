@@ -19,14 +19,14 @@
 
 package org.matsim.contrib.dvrp.data;
 
-import org.matsim.api.core.v01.Identifiable;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.schedule.Schedule;
+import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicle;
 
 /**
  * @author michalm
  */
-public interface DvrpVehicle extends Identifiable<DvrpVehicle> {
+public interface DvrpVehicle extends QVehicle {
 
 	/**
 	 * @return the link at which vehicle starts operating (i.e. depot)

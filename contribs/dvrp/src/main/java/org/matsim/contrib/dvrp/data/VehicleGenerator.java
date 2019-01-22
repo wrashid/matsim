@@ -33,13 +33,13 @@ public class VehicleGenerator {
 	}
 	
 	private final UniformRandom uniform = RandomUtils.getGlobalUniform();
-	private final List<VehicleImpl> vehicles = new ArrayList<>();
+	private final List<DvrpVehicleImpl> vehicles = new ArrayList<>();
 
 	private final double minWorkTime;
 	private final double maxWorkTime;
 	private final VehicleCreator vehicleCreator;
 
-	private Queue<VehicleImpl> activeVehicles;
+	private Queue<DvrpVehicleImpl> activeVehicles;
 	private double previousTime;
 	private double currentTime;
 
@@ -109,7 +109,7 @@ public class VehicleGenerator {
 		for (int i = 0; i < count; i++) {
 			double t0 = Math.floor(uniform.nextDouble(previousTime, currentTime));
 			double workTime = Math.round(uniform.nextDouble(minWorkTime, maxWorkTime));
-			VehicleImpl veh = (VehicleImpl)vehicleCreator.createVehicle(t0, t0 + workTime);
+			DvrpVehicleImpl veh = (DvrpVehicleImpl)vehicleCreator.createVehicle(t0, t0 + workTime);
 			activeVehicles.add(veh);
 			vehicles.add(veh);
 		}
@@ -117,7 +117,7 @@ public class VehicleGenerator {
 
 	private void removeVehiclesBeforeT1(int count) {
 		for (int i = 0; i < count; i++) {
-			VehicleImpl veh = activeVehicles.poll();
+			DvrpVehicleImpl veh = activeVehicles.poll();
 			double t1 = Math.floor(uniform.nextDouble(previousTime, currentTime));
 			veh.setServiceEndTime(t1);
 		}
