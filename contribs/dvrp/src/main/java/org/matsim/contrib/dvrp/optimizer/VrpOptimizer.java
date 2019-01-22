@@ -40,5 +40,5 @@ public interface VrpOptimizer {
 	 * Called by the framework when it moves on to the next task. It is presumably the task of the optimizer to update
 	 * the "currentTask" setting.
 	 */
-	void nextTask(Vehicle vehicle);
+	void nextTask(DvrpVehicle vehicle);
 }

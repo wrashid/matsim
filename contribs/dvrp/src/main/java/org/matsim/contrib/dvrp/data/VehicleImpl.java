@@ -26,8 +26,8 @@ import org.matsim.contrib.dvrp.schedule.*;
 /**
  * @author michalm
  */
-public class VehicleImpl implements Vehicle {
-	private final Id<Vehicle> id;
+public class VehicleImpl implements DvrpVehicle {
+	private final Id<DvrpVehicle> id;
 	private Link startLink;
 	private final int capacity;
 
@@ -37,7 +37,7 @@ public class VehicleImpl implements Vehicle {
 
 	private Schedule schedule;
 
-	public VehicleImpl(Id<Vehicle> id, Link startLink, int capacity, double serviceBeginTime,
+	public VehicleImpl(Id<DvrpVehicle> id, Link startLink, int capacity, double serviceBeginTime,
 			double serviceEndTime) {
 		this.id = id;
 		this.startLink = startLink;
@@ -49,7 +49,7 @@ public class VehicleImpl implements Vehicle {
 	}
 
 	@Override
-	public Id<Vehicle> getId() {
+	public Id<DvrpVehicle> getId() {
 		return id;
 	}
 

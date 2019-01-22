@@ -36,7 +36,7 @@ public class TaxiStatsCalculator {
 	private final TaxiStats dailyStats = new TaxiStats(TaxiStatsCalculators.DAILY_STATS_ID);
 	private final List<TaxiStats> taxiStats;
 
-	public TaxiStatsCalculator(Iterable<? extends Vehicle> vehicles) {
+	public TaxiStatsCalculator(Iterable<? extends DvrpVehicle> vehicles) {
 		hours = TaxiStatsCalculators.calcHourCount(vehicles);
 		hourlyStats = new TaxiStats[hours];
 		for (int h = 0; h < hours; h++) {
@@ -45,7 +45,7 @@ public class TaxiStatsCalculator {
 
 		taxiStats = TaxiStatsCalculators.createStatsList(hourlyStats, dailyStats);
 
-		for (Vehicle v : vehicles) {
+		for (DvrpVehicle v : vehicles) {
 			updateStatsForVehicle(v);
 		}
 	}
@@ -58,7 +58,7 @@ public class TaxiStatsCalculator {
 		return dailyStats;
 	}
 
-	private void updateStatsForVehicle(Vehicle vehicle) {
+	private void updateStatsForVehicle(DvrpVehicle vehicle) {
 		Schedule schedule = vehicle.getSchedule();
 		if (schedule.getStatus() == ScheduleStatus.UNPLANNED) {
 			return;// do not evaluate - the vehicle is unused

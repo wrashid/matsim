@@ -30,7 +30,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.contrib.dvrp.data.Vehicle;
+import org.matsim.contrib.dvrp.data.DvrpVehicle;
 import org.matsim.contrib.dvrp.data.VehicleImpl;
 import org.matsim.contrib.dvrp.data.file.VehicleWriter;
 import org.matsim.core.config.ConfigUtils;
@@ -56,7 +56,7 @@ public class CreateTaxiVehicles {
 		int seats = 4;
 		String networkfile = "cottbus_robotaxi/network.xml.gz";
 		String taxisFile = "./src/main/resources/cottbus_robotaxi/taxis_"+numberofVehicles+".xml";
-		List<Vehicle> vehicles = new ArrayList<>();
+		List<DvrpVehicle> vehicles = new ArrayList<>();
 		Random random = MatsimRandom.getLocalInstance();
 		new MatsimNetworkReader(scenario.getNetwork()).readFile(networkfile);
 		List<Id<Link>> allLinks = new ArrayList<>();
@@ -69,7 +69,7 @@ public class CreateTaxiVehicles {
 			}
 			while (!startLink.getAllowedModes().contains(TransportMode.car));
 			//for multi-modal networks: Only links where cars can ride should be used.
-			Vehicle v = new VehicleImpl(Id.create("taxi"+i, Vehicle.class), startLink, seats, operationStartTime, operationEndTime);
+			DvrpVehicle v = new VehicleImpl(Id.create("taxi"+i, DvrpVehicle.class), startLink, seats, operationStartTime, operationEndTime);
 		    vehicles.add(v);    
 			
 		}

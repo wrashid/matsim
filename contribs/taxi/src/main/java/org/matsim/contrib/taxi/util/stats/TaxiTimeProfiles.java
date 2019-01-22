@@ -23,7 +23,7 @@ import java.util.Collection;
 
 import org.matsim.contrib.dvrp.data.Fleet;
 import org.matsim.contrib.dvrp.data.Request;
-import org.matsim.contrib.dvrp.data.Vehicle;
+import org.matsim.contrib.dvrp.data.DvrpVehicle;
 import org.matsim.contrib.dvrp.schedule.Schedule.ScheduleStatus;
 import org.matsim.contrib.dvrp.schedule.ScheduleInquiry;
 import org.matsim.contrib.taxi.data.TaxiRequest.TaxiRequestStatus;
@@ -47,7 +47,7 @@ public class TaxiTimeProfiles {
 
 	public static Long[] calculateTaxiTaskTypeCounts(Fleet fleet) {
 		LongEnumAdder<TaxiTaskType> counter = new LongEnumAdder<>(TaxiTaskType.class);
-		for (Vehicle veh : fleet.getVehicles().values()) {
+		for (DvrpVehicle veh : fleet.getVehicles().values()) {
 			if (veh.getSchedule().getStatus() == ScheduleStatus.STARTED) {
 				TaxiTask currentTask = (TaxiTask)veh.getSchedule().getCurrentTask();
 				counter.increment(currentTask.getTaxiTaskType());

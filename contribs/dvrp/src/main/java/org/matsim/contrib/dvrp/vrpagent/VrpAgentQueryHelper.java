@@ -23,7 +23,7 @@ import java.util.*;
 
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.*;
-import org.matsim.contrib.dvrp.data.Vehicle;
+import org.matsim.contrib.dvrp.data.DvrpVehicle;
 import org.matsim.contrib.dvrp.path.VrpPaths;
 import org.matsim.contrib.dvrp.schedule.*;
 import org.matsim.contrib.dvrp.schedule.Schedule.ScheduleStatus;
@@ -50,7 +50,7 @@ public class VrpAgentQueryHelper implements NonPlanAgentQueryHelper {
 
 	@Override
 	public Activity getCurrentActivity(MobsimAgent mobsimAgent) {
-		Vehicle vehicle = getVehicle(mobsimAgent);
+		DvrpVehicle vehicle = getVehicle(mobsimAgent);
 		Schedule schedule = vehicle.getSchedule();
 
 		if (schedule.getStatus() == ScheduleStatus.STARTED) {
@@ -68,7 +68,7 @@ public class VrpAgentQueryHelper implements NonPlanAgentQueryHelper {
 		return new VrpSchedulePlan(getVehicle(mobsimAgent));
 	}
 
-	private List<PlanElement> initPlanElements(Vehicle vehicle) {
+	private List<PlanElement> initPlanElements(DvrpVehicle vehicle) {
 		List<PlanElement> planElements = new ArrayList<>();
 		Schedule schedule = vehicle.getSchedule();
 
@@ -85,7 +85,7 @@ public class VrpAgentQueryHelper implements NonPlanAgentQueryHelper {
 		return planElements;
 	}
 
-	private Vehicle getVehicle(MobsimAgent mobsimAgent) {
+	private DvrpVehicle getVehicle(MobsimAgent mobsimAgent) {
 		return ((VrpAgentLogic)((DynAgent)mobsimAgent).getAgentLogic()).getVehicle();
 	}
 
@@ -105,7 +105,7 @@ public class VrpAgentQueryHelper implements NonPlanAgentQueryHelper {
 	private final class VrpSchedulePlan implements Plan {
 		private List<PlanElement> unmodifiablePlanElements;
 
-		private VrpSchedulePlan(Vehicle vehicle) {
+		private VrpSchedulePlan(DvrpVehicle vehicle) {
 			unmodifiablePlanElements = Collections.unmodifiableList(initPlanElements(vehicle));
 		}
 

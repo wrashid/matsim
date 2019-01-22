@@ -29,7 +29,7 @@ import org.matsim.contrib.util.random.*;
  */
 public class VehicleGenerator {
 	public interface VehicleCreator {//move to generator
-		Vehicle createVehicle(double t0, double t1);
+		DvrpVehicle createVehicle(double t0, double t1);
 	}
 	
 	private final UniformRandom uniform = RandomUtils.getGlobalUniform();
@@ -123,7 +123,7 @@ public class VehicleGenerator {
 		}
 	}
 
-	public List<? extends Vehicle> getVehicles() {
+	public List<? extends DvrpVehicle> getVehicles() {
 		return vehicles;
 	}
 }
