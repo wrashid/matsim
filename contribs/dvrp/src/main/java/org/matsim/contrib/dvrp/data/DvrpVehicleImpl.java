@@ -31,6 +31,7 @@ import org.matsim.core.mobsim.framework.PassengerAgent;
 import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicleImpl;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleImpl;
+import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
 /**
@@ -50,7 +51,7 @@ public class DvrpVehicleImpl implements DvrpVehicle {
 	private Schedule schedule;
 
 	public DvrpVehicleImpl(Id<Vehicle> id, Link startLink, int capacity, double serviceBeginTime,
-			double serviceEndTime) {
+			double serviceEndTime, VehicleType vehicleType) {
 		this.id = id;
 		this.startLink = startLink;
 		this.capacity = capacity;
@@ -64,10 +65,18 @@ public class DvrpVehicleImpl implements DvrpVehicle {
 		 * tschlenther jan' 19
 		 * 
 		 * until now, the VrpAgentSource was inserting QVehicles of a vehicleType that had to be bound beforehand with annotation VrpAgentSourceQSimModule.DVRP_VEHICLE_TYPE
-		 * 
+		 * so i guess, we can assume that the vehicleType is given as a parameter.
+		 * maybe give two constructors, one with a VehicleType parameter, one without.
+		 * tschlenther jan' 19
 		 */
-		delegate = new QVehicleImpl(new VehicleImpl(id, VehicleUtils.getDefaultVehicleType()));
+		delegate = new QVehicleImpl(new VehicleImpl(id, vehicleType));
 	
+	}
+	
+	public DvrpVehicleImpl(Id<Vehicle> id, Link startLink, int capacity, double serviceBeginTime,
+			double serviceEndTime) {
+		this(id,startLink, capacity, serviceBeginTime,
+			serviceEndTime, VehicleUtils.getDefaultVehicleType());
 	}
 
 	@Override
