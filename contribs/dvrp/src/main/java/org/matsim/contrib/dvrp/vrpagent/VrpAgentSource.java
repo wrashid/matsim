@@ -30,6 +30,7 @@ import org.matsim.core.mobsim.framework.AgentSource;
 import org.matsim.core.mobsim.qsim.QSim;
 import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicle;
 import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicleImpl;
+import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 import org.matsim.vehicles.VehiclesFactory;
@@ -52,21 +53,23 @@ public class VrpAgentSource implements AgentSource {
 
 	@Override
 	public void insertAgentsIntoMobsim() {
-		VehiclesFactory vehicleFactory = VehicleUtils.getFactory();
 
 		for (DvrpVehicle vrpVeh : fleet.getVehicles().values()) {
-			Id<DvrpVehicle> id = vrpVeh.getId();
+			Id<Vehicle> id = vrpVeh.getId();
 			Id<Link> startLinkId = vrpVeh.getStartLink().getId();
 
 			VrpAgentLogic vrpAgentLogic = new VrpAgentLogic(optimizer, nextActionCreator, vrpVeh);
 			DynAgent vrpAgent = new DynAgent(Id.createPersonId(id), startLinkId, qSim.getEventsManager(),
 					vrpAgentLogic);
-			QVehicle mobsimVehicle = new QVehicleImpl(
-					vehicleFactory.createVehicle(Id.create(id, org.matsim.vehicles.Vehicle.class), vehicleType));
-			vrpAgent.setVehicle(mobsimVehicle);
-			mobsimVehicle.setDriver(vrpAgent);
+			
+			//basically, creating a QVehicle should be obsolete now, since the DvrpVehicle itself is a QVehicle
+//			QVehicle mobsimVehicle = new QVehicleImpl(
+//					vehicleFactory.createVehicle(Id.create(id, org.matsim.vehicles.Vehicle.class), vehicleType));
+			
+			vrpAgent.setVehicle(vrpVeh);
+			vrpVeh.setDriver(vrpAgent);
 
-			qSim.addParkedVehicle(mobsimVehicle, startLinkId);
+			qSim.addParkedVehicle(vrpVeh, startLinkId);
 			qSim.insertAgentIntoMobsim(vrpAgent);
 		}
 	}

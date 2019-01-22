@@ -23,11 +23,11 @@ import java.util.Collection;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.contrib.dvrp.run.AbstractDvrpModeQSimModule;
 import org.matsim.contrib.dvrp.schedule.*;
 import org.matsim.core.mobsim.framework.DriverAgent;
 import org.matsim.core.mobsim.framework.MobsimDriverAgent;
 import org.matsim.core.mobsim.framework.PassengerAgent;
-import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicle;
 import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicleImpl;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleImpl;
@@ -62,6 +62,9 @@ public class DvrpVehicleImpl implements DvrpVehicle {
 		/* i am not sure what vehicle type the delegate should be assigned to. As a temporary solution, the default could get assigned.
 		 * Or should the basic VehicleImpl rather be a parameter in the DvrpVehicleImpl constructor?
 		 * tschlenther jan' 19
+		 * 
+		 * until now, the VrpAgentSource was inserting QVehicles of a vehicleType that had to be bound beforehand with annotation VrpAgentSourceQSimModule.DVRP_VEHICLE_TYPE
+		 * 
 		 */
 		delegate = new QVehicleImpl(new VehicleImpl(id, VehicleUtils.getDefaultVehicleType()));
 	

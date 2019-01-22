@@ -26,6 +26,7 @@ import org.matsim.contrib.dvrp.data.FleetImpl;
 import org.matsim.contrib.dvrp.data.DvrpVehicle;
 import org.matsim.contrib.dvrp.data.DvrpVehicleImpl;
 import org.matsim.core.utils.io.MatsimXmlParser;
+import org.matsim.vehicles.Vehicle;
 import org.xml.sax.Attributes;
 
 import java.util.Map;
@@ -62,7 +63,7 @@ public class VehicleReader extends MatsimXmlParser {
 	}
 
 	private DvrpVehicle createVehicle(Attributes atts) {
-		Id<DvrpVehicle> id = Id.create(atts.getValue("id"), DvrpVehicle.class);
+		Id<Vehicle> id = Id.create(atts.getValue("id"), Vehicle.class);
 		Link startLink = Objects.requireNonNull(links.get(Id.createLinkId(atts.getValue("start_link"))));
         double cap = ReaderUtils.getDouble(atts, "capacity", DEFAULT_CAPACITY);
         int capacity = (int) cap;
@@ -75,7 +76,7 @@ public class VehicleReader extends MatsimXmlParser {
 		return createVehicle(id, startLink, capacity, t0, t1, atts);
 	}
 
-	protected DvrpVehicle createVehicle(Id<DvrpVehicle> id, Link startLink, int capacity, double t0, double t1,
+	protected DvrpVehicle createVehicle(Id<Vehicle> id, Link startLink, int capacity, double t0, double t1,
 			Attributes atts) {
 		return new DvrpVehicleImpl(id, startLink, capacity, t0, t1);
 	}
