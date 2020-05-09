@@ -30,7 +30,6 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.core.config.groups.PlansConfigGroup;
-import org.matsim.core.config.groups.PlansConfigGroup.ActivityDurationInterpretation;
 import org.matsim.core.population.routes.NetworkRoute;
 
 /**
@@ -41,12 +40,12 @@ import org.matsim.core.population.routes.NetworkRoute;
 public class Vehicle extends SimUnit {
 
 	private static final Logger log = Logger.getLogger(Vehicle.class);
-	private Person ownerPerson = null;
-	private Leg currentLeg = null;
-	private int legIndex;
-	private Id<Link> currentLinkId = null;
-	private int linkIndex;
-	private Id<Link>[] currentLinkRoute = null;
+	private final Person ownerPerson;
+	private volatile Leg currentLeg = null;
+	private volatile int legIndex;
+	private volatile Id<Link> currentLinkId = null;
+	private volatile int linkIndex;
+	private volatile Id<Link>[] currentLinkRoute = null;
 	private final PlansConfigGroup.ActivityDurationInterpretation activityEndTimeInterpretation;
 
 	public Vehicle(Scheduler scheduler, Person ownerPerson, PlansConfigGroup.ActivityDurationInterpretation activityDurationInterpretation) {

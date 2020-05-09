@@ -2,18 +2,18 @@ package org.matsim.core.mobsim.qsim.jdeqsimengine;
 
 import org.matsim.core.mobsim.framework.Steppable;
 import org.matsim.core.mobsim.jdeqsim.Message;
-import org.matsim.core.mobsim.jdeqsim.MessageQueue;
-import org.matsim.core.mobsim.jdeqsim.Scheduler;
+import org.matsim.core.mobsim.jdeqsim.MessageQueueImpl;
+import org.matsim.core.mobsim.jdeqsim.SchedulerImpl;
 
 import javax.inject.Inject;
 
-public class SteppableScheduler extends Scheduler implements Steppable {
+public class SteppableSchedulerImpl extends SchedulerImpl implements Steppable {
 
     private Message lookahead;
     private boolean finished = false;
 
     @Inject
-    public SteppableScheduler(MessageQueue queue) {
+    public SteppableSchedulerImpl(MessageQueueImpl queue) {
         super(queue);
     }
 

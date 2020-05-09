@@ -27,11 +27,11 @@ class JDEQSimEngine implements MobsimEngine, ActivityHandler {
     private Scenario scenario;
     private EventsManager eventsManager;
     private Timer t;
-    private SteppableScheduler scheduler;
+    private SteppableSchedulerImpl scheduler;
     private int numberOfAgents = 0;
     private AgentCounter agentCounter;
 
-    public JDEQSimEngine(JDEQSimConfigGroup config, Scenario scenario, EventsManager eventsManager, AgentCounter agentCounter, SteppableScheduler scheduler) {
+    public JDEQSimEngine(JDEQSimConfigGroup config, Scenario scenario, EventsManager eventsManager, AgentCounter agentCounter, SteppableSchedulerImpl scheduler) {
         this.config = config;
         this.scheduler = scheduler;
         this.scenario = scenario;

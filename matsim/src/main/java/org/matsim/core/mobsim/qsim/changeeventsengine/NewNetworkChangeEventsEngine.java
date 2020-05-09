@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.mobsim.jdeqsim.Message;
-import org.matsim.core.mobsim.jdeqsim.MessageQueue;
+import org.matsim.core.mobsim.jdeqsim.MessageQueueImpl;
 import org.matsim.core.mobsim.qsim.InternalInterface;
 import org.matsim.core.mobsim.qsim.interfaces.NetsimLink;
 import org.matsim.core.mobsim.qsim.interfaces.TimeVariantLink;
@@ -17,12 +17,12 @@ import java.util.Queue;
 class NewNetworkChangeEventsEngine implements NetworkChangeEventsEngineI {
 	private static final Logger log = Logger.getLogger( NewNetworkChangeEventsEngine.class ) ;
 
-	private final MessageQueue messageQueue;
+	private final MessageQueueImpl messageQueue;
 	private final Network network;
 	private InternalInterface internalInterface;
 
 	@Inject
-	NewNetworkChangeEventsEngine(Network network, MessageQueue messageQueue) {
+	NewNetworkChangeEventsEngine(Network network, MessageQueueImpl messageQueue) {
 		this.network = network;
 		this.messageQueue = messageQueue;
 	}

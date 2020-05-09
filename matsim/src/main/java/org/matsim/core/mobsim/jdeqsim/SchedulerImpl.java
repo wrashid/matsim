@@ -27,12 +27,57 @@ import org.matsim.core.gbl.Gbl;
  *
  * @author rashid_waraich
  */
-public interface Scheduler {
+public class SchedulerImpl implements Scheduler{
+	
+	private static final Logger log = Logger.getLogger(SchedulerImpl.class);
+	private double simTime = 0;
+	protected final MessageQueueImpl queue;
+	private double simulationStartTime = System.currentTimeMillis();
+	private final double simulationEndTime;
+	private double hourlyLogTime = 3600;
 
-	public void schedule(Message m);
-	public void unschedule(Message m);
+	public SchedulerImpl(MessageQueueImpl queue) {
+		this(queue, Double.MAX_VALUE);
+	}
 
-	public void startSimulation() ;
+	public SchedulerImpl(MessageQueueImpl messageQueue, double simulationEndTime) {
+		this.queue = messageQueue;
+		this.simulationEndTime = simulationEndTime;
+	}
 
-	public double getSimTime();
+	public void schedule(Message m) {
+		queue.putMessage(m);
+	}
+
+	public void unschedule(Message m) {
+		queue.removeMessage(m);
+	}
+
+	public void startSimulation() {
+		Message m;
+		while (!queue.isEmpty() && simTime < simulationEndTime) {
+			m = queue.getNextMessage();
+			if (m != null) {
+				simTime = m.getMessageArrivalTime();
+				m.processEvent();
+				m.handleMessage();
+			}
+			printLog();
+		}
+	}
+
+	public double getSimTime() {
+		return simTime;
+	}
+
+	private void printLog() {
+
+		// print output each hour
+		if (simTime / hourlyLogTime > 1) {
+			hourlyLogTime = simTime + 3600;
+			log.info("Simulation at " + simTime / 3600 + "[h]; s/r:" + simTime / (System.currentTimeMillis() - simulationStartTime) * 1000);
+			Gbl.printMemoryUsage();
+		}
+	}
+
 }

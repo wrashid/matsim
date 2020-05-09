@@ -5,7 +5,7 @@
 	<groupId>org.matsim</groupId>
 	<artifactId>matsim</artifactId>
 	<name>MATSim</name>
-  <version>0.10.1-beam-13</version>
+  <version>0.10.1-beam-17</version>
 	<description>Multi-Agent Transport Simulation</description>
 	<url>http://ci.matsim.org:8080/job/MATSim_M2/ws/matsim/target/site</url>
 	<inceptionYear>2005</inceptionYear>
@@ -288,14 +288,20 @@
 			<url>https://jitpack.io</url>
 		</repository>
 		<repository>
+			<!-- Geotools is not on Maven central -->
+			<id>osgeo_repo</id>
+			<name>Geotools repository</name>
+			<url>https://repo.osgeo.org/repository/release</url>
+		</repository>
+		<repository>
             <!-- Geotools is not on Maven central -->
 			<id>osgeo</id>
 			<name>Geotools repository</name>
-			<url>http://download.osgeo.org/webdav/geotools</url>
+			<url>https://download.osgeo.org/webdav/geotools</url>
 		</repository>
         <repository>
             <id>matsim</id>
-            <url>http://dl.bintray.com/matsim/matsim</url>
+            <url>https://dl.bintray.com/matsim/matsim</url>
         </repository>
 	</repositories>
 
@@ -422,6 +428,6 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<svnRevision>${buildNumber}</svnRevision>
-		<geotools.version>14.0</geotools.version>
+		<geotools.version>14.5</geotools.version>
     </properties>
 </project>

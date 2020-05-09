@@ -2,16 +2,16 @@ package org.matsim.core.mobsim.qsim.messagequeueengine;
 
 import org.matsim.core.mobsim.framework.events.MobsimBeforeSimStepEvent;
 import org.matsim.core.mobsim.framework.listeners.MobsimBeforeSimStepListener;
-import org.matsim.core.mobsim.qsim.jdeqsimengine.SteppableScheduler;
+import org.matsim.core.mobsim.qsim.jdeqsimengine.SteppableSchedulerImpl;
 
 import javax.inject.Inject;
 
 class MessageQueueEngine implements MobsimBeforeSimStepListener {
 
-	private final SteppableScheduler scheduler;
+	private final SteppableSchedulerImpl scheduler;
 
 	@Inject
-	MessageQueueEngine(final SteppableScheduler scheduler) {
+	MessageQueueEngine(final SteppableSchedulerImpl scheduler) {
 		this.scheduler = scheduler;
 	}
 

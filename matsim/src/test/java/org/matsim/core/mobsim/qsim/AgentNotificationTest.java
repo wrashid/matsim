@@ -24,7 +24,7 @@ import org.matsim.core.mobsim.framework.MobsimAgent;
 import org.matsim.core.mobsim.framework.MobsimDriverAgent;
 import org.matsim.core.mobsim.framework.PlanAgent;
 import org.matsim.core.mobsim.jdeqsim.Message;
-import org.matsim.core.mobsim.jdeqsim.MessageQueue;
+import org.matsim.core.mobsim.jdeqsim.MessageQueueImpl;
 import org.matsim.core.mobsim.qsim.agents.AgentFactory;
 import org.matsim.core.mobsim.qsim.agents.PersonDriverAgentImpl;
 import org.matsim.core.mobsim.qsim.agents.PopulationAgentSource;
@@ -56,7 +56,7 @@ public class AgentNotificationTest {
 		Netsim simulation;
 
 		@Inject
-		MessageQueue messageQueue;
+        MessageQueueImpl messageQueue;
 
 		@Override
 		public MobsimAgent createMobsimAgentFromPerson(Person p) {
